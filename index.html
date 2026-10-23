@@ -7,26 +7,27 @@
   <meta name="description" content="模型平权，自营 AI 账号与订阅商城。精选 ChatGPT、Claude、Cursor 等 AI 工具，清楚了解套餐、价格与交付，为真正需要的能力付费。">
   <title>模型平权 · AI 账号与订阅</title>
   <link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
-  <link rel="stylesheet" href="assets/styles.css">
-  <link rel="stylesheet" href="assets/interface.css">
-  <script src="assets/store.js" defer></script>
-  <script src="assets/app.js" defer></script>
+  <link rel="stylesheet" href="assets/styles.css?v=6e91834b223d">
+  <link rel="stylesheet" href="assets/interface.css?v=0964b5298138">
+  <link rel="stylesheet" href="assets/studio.css?v=5d366bd946e0">
+  <script src="assets/store.js?v=258062725101" defer></script>
+  <script src="assets/app.js?v=134ea256a455" defer></script>
 </head>
 <body>
   <a href="#main" class="skip-link">跳转到主要内容</a>
+  <div class="application-frame">
   <div class="topbar"><div class="container"><span><i class="live-dot"></i> THINKPASSER / AI SUBSCRIPTIONS</span><span class="store-tagline">AI 工具与订阅 · 自营商店</span><a href="#/help">购买文档 ↗</a></div></div>
   <header class="site-header"><div class="container header-main">
     <a class="brand" href="#/" aria-label="模型平权首页"><span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span><span>模型平权<small>THINKPASSER</small></span></a>
-    <nav class="primary-nav" aria-label="主导航"><a href="#/" data-nav="home">精选工具</a><a href="#/accounts" data-nav="accounts">商品目录</a><a href="#/value" data-nav="value">选购原则</a><a href="#/orders" class="mobile-order-link">我的订单</a></nav>
+    <nav class="primary-nav" aria-label="主导航"><a href="#/" data-nav="accounts">商店</a><a href="#/orders" data-nav="orders">我的订单</a><a href="#/help" data-nav="help">文档</a></nav>
     <form id="global-search" class="search-box" role="search"><span id="search-icon"></span><input aria-label="搜索账号" name="q" autocomplete="off" placeholder="搜索你需要的 AI 工具"><kbd>⌘ K</kbd></form>
-    <div class="header-actions"><a href="#/orders" class="icon-button" aria-label="我的订单" data-icon="receipt"></a><a href="#/cart" class="icon-button cart-button" aria-label="购物车"><span data-icon="bag"></span><span id="cart-count" class="cart-count" hidden>0</span></a><button class="icon-button mobile-menu" id="menu-toggle" aria-label="打开导航" aria-expanded="false" data-icon="menu"></button></div>
+    <div class="header-actions"><a href="#/value" class="header-guide">选购指南 <span>↗</span></a><a href="#/cart" class="icon-button cart-button" aria-label="购物车"><span data-icon="bag"></span><span id="cart-count" class="cart-count" hidden>0</span></a><button class="icon-button mobile-menu" id="menu-toggle" aria-label="打开导航" aria-expanded="false" data-icon="menu"></button></div>
   </div></header>
   <div class="brand-strip"><div class="container" id="brand-strip"></div></div>
   <main id="main" class="container" tabindex="-1"></main>
-  <footer class="site-footer"><div class="container">
-    <div class="footer-main"><div class="footer-intro"><a class="brand" href="#/"><span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span><span>模型平权<small>THINKPASSER</small></span></a><p>AI 账号与订阅。<br>按任务选工具，按需要选套餐。</p><span class="footer-note">ACCOUNT CATALOG / 自营商店</span></div><div><h3>探索商品</h3><a href="#/accounts">全部 AI 账号</a><a href="#/accounts/claude">Claude 专区</a><a href="#/accounts?category=code">开发者工具</a><a href="#/accounts?category=creative">创作工具</a></div><div><h3>购买与服务</h3><a href="#/orders">我的订单</a><a href="#/help">购买与使用帮助</a><a href="#/help?tab=after">交付与售后</a><a href="#/value">我们的选品原则</a></div><div><h3>关于模型平权</h3><a href="#/about">关于我们</a><a href="#/policy/privacy">隐私说明</a><a href="#/policy/terms">购买须知</a><div class="payment-icons"><span>支付宝</span><span>微信支付</span></div><small>套餐透明 · 按需选择</small></div></div>
-    <div class="footer-bottom"><span>© 2026 模型平权 Thinkpasser</span><span>独立自营商店 · 所提及的产品名称与商标归各自所有者所有</span><a href="#/policy/terms">购买须知 ↗</a></div>
-  </div></footer>
+  <footer class="app-status"><span><i></i> 模型平权自营 <b>/</b> THINKPASSER</span><span class="status-right"><a href="#/about">关于</a><a href="#/policy/privacy">隐私</a><a href="#/policy/terms">购买须知</a><span class="status-currency">CNY / ¥</span></span></footer>
+  </div>
+
   <button id="support-button" class="support-float" aria-label="订单与售后帮助"><span data-icon="headphones"></span><span>帮助</span></button>
   <div id="toast" class="toast" role="status" aria-live="polite"></div>
   <dialog id="support-dialog" aria-labelledby="support-title"><button class="dialog-close icon-button" data-close-dialog aria-label="关闭" data-icon="close"></button><div class="dialog-icon" data-icon="headphones"></div><h2 id="support-title">订单与使用帮助</h2><p>遇到购买或账号问题，先找到对应订单，查看交付内容与使用说明。</p><a class="button primary full" href="#/orders" data-close-dialog>查看我的订单</a><a class="button secondary full" href="#/help" data-close-dialog>浏览帮助中心</a><small>当前客服通道尚未连接，请保留问题记录。</small></dialog>

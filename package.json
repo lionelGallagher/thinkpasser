@@ -4,7 +4,8 @@
   "private": true,
   "description": "模型平权 · 自营 AI 账号商城前台",
   "scripts": {
-    "test": "node --test tests/store.test.cjs",
+    "test": "node --test tests/store.test.cjs tests/release.test.cjs",
+    "assets:version": "node scripts/version-assets.cjs",
     "preview": "python -m http.server 4173 --bind 127.0.0.1"
   }
 }
