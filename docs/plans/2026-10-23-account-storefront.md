@@ -4,7 +4,7 @@
 
 **Goal:** Replace the model-advice prototype with an interactive self-operated AI account shop.
 
-**Architecture:** Static multi-view application with hash routing. Separate deterministic commerce rules from DOM rendering; keep price calculations in integer cents and keep unpaid demo orders local to the browser.
+**Architecture:** Static multi-view application with hash routing. Separate deterministic commerce rules from DOM rendering; keep price calculations in integer cents. Per subsequent user instructions, include explicitly marked simulated payment, randomly generated demo account delivery and local after-sales records; no backend implementation.
 
 **Tech Stack:** HTML, CSS, browser JavaScript, Node built-in test runner; no install or build step.
 
@@ -25,7 +25,7 @@ Files: index.html, assets/styles.css, assets/app.js.
 
 1. Build store navigation, product art and cards, home and catalog views.
 2. Add brand, price, ownership and delivery filtering, sorting and empty states.
-3. Implement product detail, cart, checkout, order history and help pages.
+3. Implement product detail, cart, checkout, demo cashier, account delivery, order history, local after-sales and help pages.
 4. Add responsive layouts, focus handling, local persistence error handling and old-route redirects.
 
 ### Task 3: Verification and documentation
