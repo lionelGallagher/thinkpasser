@@ -12,10 +12,82 @@
     { id: 'cursor', name: 'Cursor', label: 'AI 代码编辑器', color: '#252832', bg: '#eceef2', mark: 'C' },
     { id: 'midjourney', name: 'Midjourney', label: '图像创作', color: '#637ca2', bg: '#eaf0f7', mark: 'MJ' },
     { id: 'perplexity', name: 'Perplexity', label: '搜索与研究', color: '#257b80', bg: '#e7f2f1', mark: 'P' },
-    { id: 'notion', name: 'Notion AI', label: '笔记与办公', color: '#292a2e', bg: '#f2efea', mark: 'N' },
+    { id: 'notion', name: 'Notion', label: '知识与协作', color: '#292a2e', bg: '#f2efea', mark: 'N' },
     { id: 'copilot', name: 'Copilot', label: '办公助手', color: '#6156b7', bg: '#efecfb', mark: 'Co' }
   ];
-  const MODES = { private: '独享账号', shared: '共享账号', topup: '账号代充' };
+  const MODES = { private: '独享账号', shared: '共享账号', topup: '账号代充', team: '团队席位', family: '家庭订阅' };
+  const PLAN_SOURCES = {
+    claude: 'https://claude.com/pricing',
+    chatgpt: 'https://learn.chatgpt.com/docs/pricing',
+    gemini: 'https://one.google.com/about/google-ai-plans/',
+    cursor: 'https://cursor.com/pricing',
+    midjourney: 'https://docs.midjourney.com/hc/en-us/articles/27870484040333-Comparing-Midjourney-Plans',
+    perplexity: 'https://www.perplexity.ai/hub/pricing',
+    notion: 'https://www.notion.com/pricing',
+    copilot: 'https://www.microsoft.com/en-us/copilot/pricing/individuals'
+  };
+  // Official plan families and store offers are separate: a listed plan is not a claim of stock.
+  const PLAN_CATALOG = {
+    claude: [
+      { id: 'claude-pro', tier: 'Pro', summary: '面向日常写作、研究与编程的个人套餐' },
+      { id: 'claude-max5', tier: 'Max 5x', summary: '比 Pro 更高的使用额度，适合持续工作', note: '5x 为相对 Pro 的使用量档位，仍受官方额度与时段限制。' },
+      { id: 'claude-max20', tier: 'Max 20x', summary: 'Max 高使用量档位，面向高频和重度任务', note: '20x 为相对 Pro 的使用量档位，不代表无限使用或固定性能倍数。' },
+      { id: 'claude-team-standard', tier: 'Team Standard', mode: 'team', summary: '团队标准席位，集中管理成员与订阅' },
+      { id: 'claude-team-premium', tier: 'Team Premium', mode: 'team', summary: '团队高级席位，按成员需要配置使用量' },
+      { id: 'claude-enterprise', tier: 'Enterprise', mode: 'team', summary: '企业部署与管理方案，按组织需求确认' }
+    ],
+    chatgpt: [
+      { id: 'chatgpt-go', tier: 'Go', summary: '个人入门付费方案，适合轻量日常使用' },
+      { id: 'chatgpt-plus', tier: 'Plus', summary: '面向日常工作与创作的个人订阅' },
+      { id: 'chatgpt-pro', tier: 'Pro', summary: '研究与编程等高频工作的个人进阶方案', note: 'Pro 有不同使用量档位，具体档位与额度需在开通前确认。' },
+      { id: 'chatgpt-business', tier: 'Business', mode: 'team', summary: '团队工作区与成员管理方案' },
+      { id: 'chatgpt-enterprise', tier: 'Enterprise', mode: 'team', summary: '企业级工作区，按组织需求确认方案' }
+    ],
+    gemini: [
+      { id: 'gemini-plus', tier: 'AI Plus', summary: 'Google AI 入门订阅，按实际权益选择' },
+      { id: 'gemini-pro', tier: 'AI Pro', match: 'Pro', summary: 'Google AI 日常工作与创作方案' },
+      { id: 'gemini-ultra5', tier: 'AI Ultra 5x', summary: 'Google AI Ultra 的 5x 使用量档位' },
+      { id: 'gemini-ultra20', tier: 'AI Ultra 20x', summary: 'Google AI Ultra 的 20x 高使用量档位' }
+    ],
+    cursor: [
+      { id: 'cursor-plus', tier: 'Plus', summary: '当前入门方案；可用模型范围需先确认', note: '当前 Plus 不包含第三方模型，具体支持范围以官方说明为准。' },
+      { id: 'cursor-premium', tier: 'Premium', summary: '当前个人开发套餐，按使用规则计费', note: '第三方模型用量与订阅分开计费，具体单价和预付规则见官方说明。' },
+      { id: 'cursor-super', tier: 'Super', summary: '当前高频开发使用量档位', note: '第三方模型用量与订阅分开计费，具体单价和预付规则见官方说明。' },
+      { id: 'cursor-ultra', tier: 'Ultra', summary: '当前个人高使用量档位', note: '第三方模型用量与订阅分开计费，具体单价和预付规则见官方说明。' },
+      { id: 'cursor-teams', tier: 'Teams', mode: 'team', summary: '按席位配置的团队开发方案' },
+      { id: 'cursor-enterprise', tier: 'Enterprise', mode: 'team', summary: '企业开发与组织管理方案' },
+      { id: 'cursor-start-legacy', tier: 'Start', legacy: true, summary: '存量客户套餐，需核对续订资格' },
+      { id: 'cursor-pro-legacy', tier: 'Pro', legacy: true, summary: '存量 Pro 套餐，开通前确认账号资格' },
+      { id: 'cursor-proplus-legacy', tier: 'Pro+', legacy: true, summary: '存量 Pro+ 套餐，开通前确认账号资格' }
+    ],
+    midjourney: [
+      { id: 'midjourney-basic', tier: 'Basic', summary: '从基础图像创作开始，按套餐额度使用' },
+      { id: 'midjourney-standard', tier: 'Standard', summary: '适合持续图像创作的标准方案' },
+      { id: 'midjourney-pro', tier: 'Pro', summary: '更高创作配额与隐身模式方案' },
+      { id: 'midjourney-mega', tier: 'Mega', summary: '高频视觉创作方案，购买前确认配额' }
+    ],
+    perplexity: [
+      { id: 'perplexity-pro', tier: 'Pro', summary: '面向日常检索、资料整理与研究' },
+      { id: 'perplexity-max', tier: 'Max', summary: '面向持续研究与重度使用的个人方案' },
+      { id: 'perplexity-enterprise-pro', tier: 'Enterprise Pro', mode: 'team', summary: '团队研究与企业管理席位' },
+      { id: 'perplexity-enterprise-max', tier: 'Enterprise Max', mode: 'team', summary: '企业高使用量席位，按成员需要配置' }
+    ],
+    notion: [
+      { id: 'notion-plus', tier: 'Plus', aiAccess: 'trial', summary: '基础协作工作区；AI 仅含试用权益', note: 'Plus 不等于完整 Notion AI 订阅。AI 长期使用权益应查看 Business 或 Enterprise。' },
+      { id: 'notion-business', tier: 'Business', mode: 'team', aiAccess: 'included', summary: '包含 Notion AI 的商业工作区方案' },
+      { id: 'notion-enterprise', tier: 'Enterprise', mode: 'team', aiAccess: 'included', summary: '企业工作区与 Notion AI 管理方案' }
+    ],
+    copilot: [
+      { id: 'copilot-personal', tier: '365 Personal', displayName: 'Microsoft 365 Personal', summary: '单人办公订阅，包含对应 Copilot 权益' },
+      { id: 'copilot-family', tier: '365 Family', displayName: 'Microsoft 365 Family', mode: 'family', summary: '家庭办公订阅，AI 权益归属需单独确认', note: '办公应用中的 Copilot 权益仅供订阅所有者使用，不能按家庭成员人数承诺 AI 席位。' },
+      { id: 'copilot-premium', tier: '365 Premium', displayName: 'Microsoft 365 Premium', summary: '个人与家庭办公的进阶 AI 订阅' },
+      { id: 'copilot-365-pro', tier: '365 Pro', displayName: 'Microsoft 365 Pro', summary: 'Microsoft 365 高使用量个人方案' },
+      { id: 'copilot-business', tier: 'Copilot Business', mode: 'team', summary: '企业 Copilot 附加许可，需核对基础订阅', officialUrl: 'https://www.microsoft.com/en-us/copilot/pricing/business' },
+      { id: 'copilot-business-standard', tier: 'Business Standard + Copilot', mode: 'team', summary: '办公应用与 Copilot 一体的企业标准方案', officialUrl: 'https://www.microsoft.com/en-us/copilot/pricing/business' },
+      { id: 'copilot-business-premium', tier: 'Business Premium + Copilot', mode: 'team', summary: '办公、安全与 Copilot 一体的企业高级方案', officialUrl: 'https://www.microsoft.com/en-us/copilot/pricing/business' },
+      { id: 'copilot-pro-legacy', tier: 'Pro', legacy: true, summary: '旧版 Copilot Pro；资格与可用性需单独确认' }
+    ]
+  };
   const raw = [
     ['claude-pro-private', 'claude', 'Pro', 'private', 12900, 12, 'instant', '独立使用，交付完整账号信息', '热门'],
     ['chatgpt-plus-private', 'chatgpt', 'Plus', 'private', 11900, 18, 'instant', '日常对话、写作与创作，一个账号搞定', '精选'],
@@ -34,33 +106,49 @@
     ['copilot-pro-private', 'copilot', 'Pro', 'private', 9900, 0, 'manual', '文档与办公场景的 AI 账号方案', '暂时售罄'],
     ['midjourney-basic-private', 'midjourney', 'Basic', 'private', 7900, 14, 'instant', '从第一张 AI 图像开始创作', '入门之选']
   ];
-  const PRODUCTS = raw.map(([id, brand, tier, mode, price, stock, delivery, desc, badge], rank) => ({
-    id, brand, tier, mode, price, stock, delivery, desc, badge, rank,
-    name: `${BRANDS.find(b => b.id === brand).name} ${tier} ${MODES[mode]}`,
-    terms: [1, 3],
-    category: ['cursor'].includes(brand) ? 'code' : ['midjourney'].includes(brand) ? 'creative' : ['notion', 'copilot'].includes(brand) ? 'office' : 'assistant'
-  }));
+  function offer(bid, plan, data, rank) {
+    const mode = data.mode || plan.mode || 'private';
+    return {
+      ...plan, ...data, brand: bid, plan: plan.id, rank, mode,
+      tier: plan.tier, name: `${plan.displayName || `${BRANDS.find(b => b.id === bid).name} ${plan.tier}`} ${MODES[mode]}`,
+      officialUrl: plan.officialUrl || PLAN_SOURCES[bid], terms: [1, 3],
+      category: bid === 'cursor' ? 'code' : bid === 'midjourney' ? 'creative' : ['notion', 'copilot'].includes(bid) ? 'office' : 'assistant'
+    };
+  }
+  const PRODUCTS = raw.map(([id, bid, tier, mode, price, stock, delivery, desc, badge], rank) => {
+    const plan = PLAN_CATALOG[bid].find(p => p.tier === tier || p.match === tier);
+    return offer(bid, plan, { id, mode, price, stock, delivery, desc: plan.aiAccess === 'trial' || plan.legacy ? plan.summary : desc, badge }, rank);
+  });
+  for (const [bid, plans] of Object.entries(PLAN_CATALOG)) for (const plan of plans) {
+    if (!PRODUCTS.some(p => p.plan === plan.id)) PRODUCTS.push(offer(bid, plan, {
+      id: `${plan.id}-${plan.mode || 'private'}`, price: null, stock: 0, delivery: 'manual', desc: plan.summary, badge: '待上架'
+    }, PRODUCTS.length));
+  }
 
   function product(id) { return PRODUCTS.find(p => p.id === id); }
   function brand(id) { return BRANDS.find(b => b.id === id); }
   function money(cents) { return (cents / 100).toFixed(2); }
   function filterProducts(options = {}) {
-    const { q = '', mode = '', brand: bid = '', category = '', delivery = '', sort = 'recommended' } = options;
+    const { q = '', mode = '', brand: bid = '', category = '', plan = '', delivery = '', sort = 'recommended' } = options;
     const min = options.min === '' || options.min == null ? 0 : Number(options.min);
     const max = options.max === '' || options.max == null ? Infinity : Number(options.max);
     const terms = String(q).trim().toLocaleLowerCase().split(/\s+/).filter(Boolean);
-    const list = PRODUCTS.filter(p => (!bid || p.brand === bid) && (!mode || p.mode === mode)
+    const hasPriceFilter = (options.min !== '' && options.min != null) || (options.max !== '' && options.max != null);
+    const list = PRODUCTS.filter(p => (!bid || p.brand === bid) && (!mode || p.mode === mode) && (!plan || p.plan === plan)
       && (!category || p.category === category) && (!delivery || p.delivery === delivery)
-      && p.price >= min && p.price <= max
+      && (p.price === null ? !hasPriceFilter : p.price >= min && p.price <= max)
       && terms.every(term => `${p.name} ${p.desc} ${p.mode === 'private' ? '私人 private' : ''}`.toLocaleLowerCase().includes(term)));
-    if (sort === 'price-asc') list.sort((a, b) => a.price - b.price || a.rank - b.rank);
-    else if (sort === 'price-desc') list.sort((a, b) => b.price - a.price || a.rank - b.rank);
+    if (sort === 'price-asc' || sort === 'price-desc') list.sort((a, b) => {
+      if (a.price === null || b.price === null) return a.price === b.price ? a.rank - b.rank : a.price === null ? 1 : -1;
+      return (sort === 'price-asc' ? a.price - b.price : b.price - a.price) || a.rank - b.rank;
+    });
     else if (sort === 'stock') list.sort((a, b) => b.stock - a.stock || a.rank - b.rank);
     return list;
   }
   function quote(id, months = 1, qty = 1) {
     const p = product(id);
     if (!p) throw new Error('该商品不存在或已下架');
+    if (!Number.isSafeInteger(p.price) || p.price <= 0) throw new Error('该套餐尚未设置店铺售价，请等待上架');
     if (!p.terms.includes(months)) throw new Error('请选择有效的使用期限');
     if (!Number.isSafeInteger(qty) || qty < 1) throw new Error('购买数量必须为正整数');
     if (qty > p.stock) throw new Error('购买数量超过当前库存');
@@ -154,5 +242,5 @@
     }
     return { state, repaired };
   }
-  return { BRANDS, PRODUCTS, MODES, LOGIN_URLS, product, brand, money, filterProducts, quote, normalizeCart, createOrder, completeDemoOrder, restoreState };
+  return { BRANDS, PRODUCTS, MODES, PLAN_CATALOG, LOGIN_URLS, product, brand, money, filterProducts, quote, normalizeCart, createOrder, completeDemoOrder, restoreState };
 });

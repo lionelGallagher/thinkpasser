@@ -23,7 +23,7 @@ body:has(dialog[open]){overflow:hidden}
 .topbar>.container{min-height:32px;display:flex;align-items:center;justify-content:space-between;gap:12px}
 .topbar span{display:flex;align-items:center;gap:8px}
 .live-dot{width:6px;height:6px;background:#698075;border-radius:50%}
-.preview-label{font-size:10px;color:#8b8e99}
+.store-tagline{font-size:10px;color:#8b8e99}
 .site-header{position:sticky;top:0;z-index:30;background:rgba(255,255,255,.96);border-bottom:1px solid var(--line);backdrop-filter:blur(16px)}
 .header-main{height:82px;display:flex;align-items:center;gap:36px}
 .brand{display:inline-flex;align-items:center;gap:10px;white-space:nowrap;font-size:20px;font-weight:800;letter-spacing:.7px;line-height:1.3}
@@ -545,7 +545,7 @@ to{opacity:1;transform:translateY(0)}
 
 @media(max-width:760px){.topbar>.container{min-height:29px;font-size:10px}
 .topbar a{display:none}
-.preview-label{font-size:8px}
+.store-tagline{font-size:8px}
 .container{padding:0 19px}
 .header-main{gap:18px;height:67px;position:relative}
 .brand{font-size:17px;gap:8px}
@@ -821,3 +821,23 @@ main{padding-bottom:40px!important}
 
 .mobile-order-link{display:none!important}
 @media(max-width:760px){.primary-nav.open{gap:15px;font-size:11px}.primary-nav.open a[data-nav="value"],.primary-nav.open .mobile-order-link{display:flex!important}}
+
+/* Product plan navigation and unpriced availability states. */
+#catalog-results{scroll-margin-top:105px;outline:none}
+.price-pending{display:inline-flex;flex-direction:column;font-size:17px;line-height:1.5;font-weight:650;color:#53637e;letter-spacing:-.3px}
+.price-pending small{font-size:9px;font-weight:400;letter-spacing:0;color:#929cad}
+.plan-chips{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 22px}
+.plan-chips a{display:inline-flex;align-items:center;gap:5px;background:#fff;border:1px solid var(--line);border-radius:7px;padding:7px 12px;color:#8090a7;font-size:11px}
+.plan-chips a:hover,.plan-chips a.active{color:var(--blue);border-color:#bdccff;background:#f1f4ff}
+.plan-chips small{font-size:8px;background:#f1eee9;border-radius:3px;padding:0 3px;color:#a89177}
+.catalog-pagination{display:flex;justify-content:center;gap:7px;margin:25px 0 6px}
+.catalog-pagination a,.catalog-pagination>span{display:grid;place-items:center;width:32px;height:32px;border:1px solid var(--line);border-radius:7px;background:#fff;font:11px var(--mono);color:#8a98ae}
+.catalog-pagination a.active{border-color:var(--blue);background:var(--blue);color:#fff}
+.catalog-pagination>span{opacity:.4}
+.plan-notice{font-size:10px;color:#a28561;margin-top:13px;background:#fff9ee;border:1px solid #f0e5d2;border-radius:7px;padding:9px 12px}
+.plan-availability{border:1px solid var(--line);border-radius:10px;background:#fff;padding:19px;margin-top:20px}
+.plan-availability>b{font-size:12px;font-weight:600;color:#75849b}
+.plan-availability p{font-size:11px;color:#98a4b5;margin-top:5px;margin-bottom:15px}
+.official-plan-link{margin-top:17px;color:#7e94bd}
+.filter-sidebar{max-height:calc(100vh - 124px);overflow:auto;scrollbar-width:thin}
+@media(max-width:760px){.filter-sidebar{max-height:none}.plan-chips{gap:6px;margin-bottom:18px}.plan-chips a{font-size:10px;padding:6px 9px}.price-pending{font-size:15px}.price-pending small{font-size:8px}.detail-price-box .price-pending{font-size:25px}.plan-availability{padding:16px}}

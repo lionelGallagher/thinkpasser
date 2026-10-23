@@ -21,7 +21,8 @@ test('low-price sorting orders a copy and keeps the source catalog unchanged', (
   const original = Store.PRODUCTS.map(p => p.id);
   const sorted = Store.filterProducts({ sort: 'price-asc' });
   assert.ok(sorted.length >= 12);
-  assert.ok(sorted.every((p, index) => index === 0 || p.price >= sorted[index - 1].price));
+  const priced = sorted.filter(p => Number.isSafeInteger(p.price));
+  assert.ok(priced.every((p, index) => index === 0 || p.price >= priced[index - 1].price));
   assert.deepEqual(Store.PRODUCTS.map(p => p.id), original);
 });
 
@@ -97,4 +98,49 @@ test('state recovery quarantines malformed orders without breaking valid order h
   assert.deepEqual(result.state.orders, [valid]);
   assert.deepEqual(result.state.favorites, []);
   assert.equal(result.repaired, true);
+});
+
+test('catalog includes all audited paid plan families, including Claude Max 20x', () => {
+  const expected = {
+    claude: ['Pro', 'Max 5x', 'Max 20x', 'Team Standard', 'Team Premium', 'Enterprise'],
+    chatgpt: ['Go', 'Plus', 'Pro', 'Business', 'Enterprise'],
+    gemini: ['AI Plus', 'AI Pro', 'AI Ultra 5x', 'AI Ultra 20x'],
+    cursor: ['Plus', 'Premium', 'Super', 'Ultra', 'Teams', 'Enterprise', 'Pro', 'Pro+'],
+    midjourney: ['Basic', 'Standard', 'Pro', 'Mega'],
+    perplexity: ['Pro', 'Max', 'Enterprise Pro', 'Enterprise Max'],
+    notion: ['Plus', 'Business', 'Enterprise'],
+    copilot: ['365 Personal', '365 Family', '365 Premium', '365 Pro', 'Copilot Business', 'Business Standard + Copilot', 'Business Premium + Copilot']
+  };
+  for (const [brand, tiers] of Object.entries(expected)) {
+    const actual = new Set(Store.PRODUCTS.filter(p => p.brand === brand).map(p => p.tier));
+    for (const tier of tiers) assert.ok(actual.has(tier), `${brand} is missing ${tier}`);
+  }
+});
+
+test('brand, plan and ownership filtering isolates the selected plan', () => {
+  const list = Store.filterProducts({ brand: 'claude', plan: 'claude-max20', mode: 'private' });
+  assert.equal(list.length, 1);
+  assert.equal(list[0].tier, 'Max 20x');
+  assert.ok(Store.PRODUCTS.every(p => p.plan && p.officialUrl?.startsWith('https://')));
+  assert.equal(new Set(Store.PRODUCTS.map(p => p.id)).size, Store.PRODUCTS.length);
+});
+
+test('unpriced plans never become zero-price orders and sort after priced products', () => {
+  const p = Store.PRODUCTS.find(p => p.brand === 'claude' && p.tier === 'Max 20x');
+  assert.equal(p.price, null);
+  assert.equal(p.stock, 0);
+  assert.throws(() => Store.quote(p.id, 1, 1), /售价/);
+  const sorted = Store.filterProducts({ sort: 'price-asc' });
+  let reachedUnpriced = false;
+  for (const p of sorted) {
+    if (p.price === null) reachedUnpriced = true;
+    else assert.equal(reachedUnpriced, false);
+  }
+  assert.ok(Store.filterProducts({ max: 20000 }).every(p => Number.isSafeInteger(p.price)));
+});
+
+test('AI entitlements and legacy plans are stated explicitly', () => {
+  assert.equal(Store.product('notion-plus-private').aiAccess, 'trial');
+  assert.equal(Store.product('copilot-pro-private').legacy, true);
+  assert.equal(Store.product('cursor-pro-private').legacy, true);
 });
