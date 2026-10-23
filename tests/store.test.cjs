@@ -179,3 +179,28 @@ test('team seats include workspace, role and a clearly synthetic invitation', ()
   assert.ok(seat.invitationUrl.startsWith('https://delivery.thinkpasser.test/invite/'));
   assert.equal(Store.restoreState({ cart: [], favorites: [], orders: [order] }).state.orders.length, 1);
 });
+
+test('terminal queries resolve an exact plan and ownership without running code', () => {
+  assert.equal(typeof Store.resolveCatalogCommand, 'function');
+  const result = Store.resolveCatalogCommand('tp show claude --plan max20 --mode private');
+  assert.equal(result.type, 'product');
+  assert.equal(result.product.id, 'claude-max20-private');
+  assert.equal(result.product.price, Store.product('claude-max20-private').price);
+  assert.equal(Store.resolveCatalogCommand('show cursor --plan premium').product.id, 'cursor-premium-private');
+});
+
+test('terminal list, search and help use the current catalog', () => {
+  assert.equal(typeof Store.resolveCatalogCommand, 'function');
+  assert.equal(Store.resolveCatalogCommand('help').type, 'help');
+  assert.deepEqual(Store.resolveCatalogCommand('list claude').products, Store.filterProducts({ brand: 'claude' }));
+  assert.deepEqual(Store.resolveCatalogCommand('search Max 20x').products, Store.filterProducts({ q: 'Max 20x' }));
+});
+
+test('unsupported terminal input returns useful errors and never changes catalog state', () => {
+  assert.equal(typeof Store.resolveCatalogCommand, 'function');
+  const before = JSON.stringify(Store.PRODUCTS);
+  for (const input of ['rm -rf /', 'show missing', 'show claude --plan missing', 'show claude --unknown flag', 'show claude; alert(1)', '<script>alert(1)</script>', 'search', 'x'.repeat(201)]) {
+    assert.equal(Store.resolveCatalogCommand(input).type, 'error', input);
+  }
+  assert.equal(JSON.stringify(Store.PRODUCTS), before);
+});

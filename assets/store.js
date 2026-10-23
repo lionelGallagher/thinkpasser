@@ -174,6 +174,35 @@
     else if (sort === 'stock') list.sort((a, b) => b.stock - a.stock || a.rank - b.rank);
     return list;
   }
+  function resolveCatalogCommand(input) {
+    const text = String(input ?? '').trim();
+    const fail = message => ({ type: 'error', message });
+    if (!text || text.length > 200) return fail('输入 1–200 个字符；使用 help 查看指令。');
+    const tokens = text.split(/\s+/);
+    if (tokens[0].toLowerCase() === 'tp') tokens.shift();
+    const command = (tokens.shift() || '').toLowerCase();
+    if (command === 'help' && !tokens.length) return { type: 'help' };
+    if (command === 'search') {
+      const q = tokens.join(' ');
+      return q ? { type: 'search', query: q, products: filterProducts({ q }) } : fail('用法：search <关键词>');
+    }
+    if (!['show', 'list'].includes(command)) return fail('未识别的查询指令。输入 help 查看用法。');
+    const bid = (tokens.shift() || '').toLowerCase();
+    if ((bid && !brand(bid)) || (command === 'show' && !bid)) return fail('请选择工具：claude、chatgpt、cursor 等。');
+    if (command === 'list') return tokens.length ? fail('用法：list [工具名称]') : { type: 'list', brand: bid, products: filterProducts({ brand: bid }) };
+    const options = {};
+    while (tokens.length) {
+      const flag = tokens.shift(), value = tokens.shift();
+      if (!['--plan', '--mode'].includes(flag) || !value || Object.hasOwn(options, flag)) return fail('用法：show <工具> [--plan 套餐] [--mode 方式]');
+      options[flag] = value.toLowerCase();
+    }
+    if (options['--mode'] && !Object.hasOwn(MODES, options['--mode'])) return fail('账号方式：private / shared / topup / team / family');
+    const normalize = value => value.toLowerCase().replace(/[^a-z0-9+]/g, '');
+    const list = filterProducts({ brand: bid, mode: options['--mode'] || '' }).filter(p => !options['--plan']
+      || [p.tier, p.plan.slice(bid.length + 1)].some(name => normalize(name) === normalize(options['--plan'])));
+    const found = list.find(p => p.mode === 'private' && !p.legacy) || list[0];
+    return found ? { type: 'product', product: found } : fail('没有找到对应方案。用 list ' + bid + ' 查看可选套餐。');
+  }
   function quote(id, months = 1, qty = 1) {
     const p = product(id);
     if (!p) throw new Error('该商品不存在或已下架');
@@ -278,5 +307,5 @@
     }
     return { state, repaired };
   }
-  return { BRANDS, PRODUCTS, MODES, PLAN_CATALOG, PRICING, LOGIN_URLS, product, brand, money, filterProducts, quote, normalizeCart, createOrder, completeDemoOrder, restoreState };
+  return { BRANDS, PRODUCTS, MODES, PLAN_CATALOG, PRICING, LOGIN_URLS, product, brand, money, filterProducts, resolveCatalogCommand, quote, normalizeCart, createOrder, completeDemoOrder, restoreState };
 });
