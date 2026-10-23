@@ -61,15 +61,7 @@ body:has(dialog[open]){overflow:hidden}
 .brand-strip .wordmark{font-size:14px;letter-spacing:-1px}
 main{min-height:55vh;padding-bottom:60px!important}
 main:focus{outline:none}
-.hero-layout{display:grid;grid-template-columns:minmax(0,2.3fr) minmax(250px,1fr);gap:16px;margin-top:26px}
-.hero{position:relative;min-height:336px;border:1px solid #e1e7fa;border-radius:18px;overflow:hidden;background:#eef2ff;display:flex;align-items:center;padding:39px 40px}
-.hero:before{content:"";position:absolute;inset:0;background-image:linear-gradient(#315cff06 1px,transparent 1px),linear-gradient(90deg,#315cff06 1px,transparent 1px);background-size:32px 32px;mask-image:linear-gradient(90deg,transparent,#000)}
-.hero-copy{position:relative;z-index:2;width:64%}
 .eyebrow{display:flex;align-items:center;gap:7px;color:#697ba6;font:10px/1.5 var(--mono);letter-spacing:1.6px;text-transform:uppercase}
-.hero h1{font-size:37px;font-weight:800;line-height:1.45;letter-spacing:-1px;margin:14px 0 15px}
-.hero h1 em{color:var(--blue);font-style:normal}
-.hero p{color:#7d869a;font-size:12px;line-height:1.9;max-width:340px}
-.hero-actions{display:flex;gap:12px;align-items:center;margin-top:23px}
 .button{display:inline-flex;align-items:center;justify-content:center;gap:8px;border:1px solid transparent;border-radius:8px;font-size:13px;font-weight:600;line-height:1.4;min-height:41px;padding:10px 18px;transition:background .18s,transform .18s,border-color .18s}
 .button svg{width:16px;height:16px}
 .button.primary{color:#fff;background:var(--blue);box-shadow:0 4px 10px #335cff13}
@@ -81,37 +73,6 @@ main:focus{outline:none}
 .button.full{width:100%}
 .button.large{min-height:48px}
 .button.small{min-height:32px;padding:7px 12px;font-size:12px}
-.hero-art{position:absolute;right:-10px;width:42%;height:100%;top:0;display:flex;align-items:center;justify-content:center;transform:rotate(-9deg)}
-.orbit{position:absolute;width:290px;height:290px;border:1px solid #dbe3fa;border-radius:50%}
-.orbit:after{content:"";position:absolute;inset:25px;border:1px solid #dbe3fa;border-radius:50%}
-.floating-account{position:absolute;width:168px;border-radius:13px;background:#fff;padding:17px 15px;box-shadow:0 12px 35px #33497612;border:1px solid #e5eaf2;transform:rotate(9deg)}
-.fa-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:9px}
-.floating-account .brand-logo{width:25px;height:25px}
-.floating-account b{display:block;font-size:14px}
-.floating-account p{font-size:9px;color:#919aab;margin:3px 0 9px}
-.fa-bottom{border-top:1px solid #f0f2f5;padding-top:8px;display:flex;justify-content:space-between;align-items:center;font:9px var(--mono);color:#8b94a3}
-.fa-bottom span:last-child{color:#279477}
-.floating-account.one{left:5%;top:22px;transform:rotate(-4deg);opacity:.85}
-.floating-account.two{left:18%;top:112px;z-index:2;transform:rotate(14deg)}
-.floating-account.three{left:1%;top:213px;transform:rotate(-1deg);z-index:3}
-.hero-side{display:grid;grid-template-rows:1fr 1fr;gap:16px}
-.mini-hero{position:relative;overflow:hidden;border:1px solid #eae1d9;background:#f3e9e0;border-radius:16px;padding:22px 24px;display:flex;flex-direction:column;justify-content:center;min-height:158px}
-.mini-hero .eyebrow{color:#af8a73;font-size:9px}
-.mini-hero h2{font-size:20px;margin:7px 0 9px;line-height:1.5;letter-spacing:-.4px}
-.mini-hero .brand-logo{position:absolute;right:20px;bottom:22px;width:63px;height:63px;opacity:.35;transform:rotate(-8deg)}
-.mini-hero a{font-size:11px;display:flex;align-items:center;gap:6px;width:fit-content;position:relative;z-index:1;color:#9d755c}
-.mini-hero a svg{width:14px;height:14px}
-.mini-hero.dark{border-color:#232b39;background:#202836;color:#f3f5f8}
-.mini-hero.dark .eyebrow{color:#788aa6}
-.mini-hero.dark h2{font-weight:600}
-.mini-hero.dark a{color:#a7b7d2}
-.mini-hero.dark .brand-logo{color:#98abc7;opacity:.3;width:70px;height:70px;right:16px}
-.service-strip{display:grid;grid-template-columns:repeat(4,1fr);margin:22px 0 0;padding:16px 2px;border-bottom:1px solid var(--line)}
-.service-item{display:flex;justify-content:center;align-items:center;gap:10px;border-right:1px solid var(--line)}
-.service-item:last-child{border:0}
-.service-item>svg{width:22px;height:22px;color:#687791;stroke-width:1.5}
-.service-item b{font-size:12px;font-weight:600;display:block}
-.service-item span{font-size:10px;color:#959ca8;display:block;margin-top:1px}
 .section{margin-top:39px}
 .section-heading{display:flex;align-items:flex-end;justify-content:space-between;gap:20px;margin-bottom:18px}
 .section-heading h2{font-size:23px;letter-spacing:-.5px;font-weight:750;line-height:1.5}
@@ -161,15 +122,6 @@ main:focus{outline:none}
 .product-footnote span{display:flex;align-items:center;gap:4px}
 .stock-dot{display:inline-block;width:4px;height:4px;border-radius:50%;background:#77ad8e}
 .stock-dot.out{background:#c8cdd5}
-.principle-band{display:grid;grid-template-columns:1fr 1fr;gap:28px;background:#f0f2f6;border:1px solid #e8ebf1;border-radius:15px;padding:31px 34px;margin-top:39px;align-items:center}
-.principle-band h2{font-size:24px;letter-spacing:-.5px;margin:9px 0 11px;line-height:1.55}
-.principle-band p{font-size:12px;max-width:420px;color:#8a92a1;line-height:1.9}
-.principle-band .text-link{margin-top:17px;color:#52699e}
-.principle-points{display:grid;gap:17px;padding-left:28px;border-left:1px solid #dce1ec}
-.principle-point{display:flex;align-items:flex-start;gap:13px}
-.point-index{font:10px var(--mono);color:#a5aec0;margin-top:4px}
-.principle-point b{display:block;font-size:12px;font-weight:600}
-.principle-point p{font-size:10px;margin-top:3px}
 .brands-grid{display:grid;grid-template-columns:repeat(8,minmax(0,1fr));gap:11px}
 .brand-tile{border:1px solid var(--line);border-radius:11px;background:#fff;padding:16px 8px;display:flex;align-items:center;flex-direction:column;gap:8px;transition:border .15s}
 .brand-tile:hover{border-color:#b4c4ff}
@@ -451,10 +403,7 @@ to{opacity:1;transform:translateY(0)}
 .text-document p{font-size:12px;line-height:2;color:#929eaf;margin-top:10px}
 .mobile-filter-close{display:none}
 
-
 @media(min-width:1440px){.container{max-width:1344px}
-.hero{min-height:354px}
-.hero h1{font-size:40px}
 .product-art{height:146px}
 .detail-art{height:365px}
 .cart-thumb{height:73px}
@@ -464,14 +413,6 @@ to{opacity:1;transform:translateY(0)}
 .primary-nav{gap:18px;font-size:12px}
 .search-box{max-width:220px}
 .search-box kbd{display:none}
-.hero{padding:30px}
-.hero h1{font-size:32px}
-.hero-art{right:-20px}
-.floating-account{width:145px;padding:14px 12px}
-.hero-copy{width:67%}
-.hero p{max-width:270px;font-size:11px}
-.mini-hero{padding:19px}
-.mini-hero h2{font-size:18px}
 .product-grid{gap:13px}
 .product-content{padding:13px}
 .product-art .art-wordmark{font-size:21px}
@@ -496,32 +437,12 @@ to{opacity:1;transform:translateY(0)}
 .header-actions{gap:8px}
 .brand{font-size:18px}
 .brand-mark{width:35px;height:35px}
-.hero-layout{grid-template-columns:1fr 260px;gap:13px}
-.hero{padding:27px 25px;min-height:330px}
-.hero-copy{width:75%}
-.hero h1{font-size:28px}
-.hero-art{width:35%;right:1px;opacity:.7}
-.floating-account{width:120px;padding:12px 10px}
-.floating-account b{font-size:11px}
-.floating-account .brand-logo{width:20px;height:20px}
-.fa-bottom{font-size:7px}
-.floating-account.one{top:35px;left:-9%}
-.floating-account.two{left:12%;top:122px}
-.floating-account.three{left:-9%;top:213px}
-.mini-hero{padding:20px 19px}
-.mini-hero .brand-logo{width:50px;height:50px;right:12px}
 .product-grid{grid-template-columns:repeat(3,minmax(0,1fr))}
 .home-products .product-card:nth-child(n+7){display:none}
 .product-art{height:132px}
 .catalog-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
 .brands-grid{grid-template-columns:repeat(4,1fr)}
 .brand-tile{padding:14px 7px}
-.service-item{gap:8px}
-.service-item b{font-size:11px}
-.service-item span{font-size:9px}
-.service-item>svg{width:19px;height:19px}
-.principle-band{padding:28px;gap:20px}
-.principle-band h2{font-size:22px}
 .footer-main{grid-template-columns:1.4fr 1fr 1fr;gap:28px}
 .footer-main>div:last-child{display:none}
 .footer-bottom{flex-wrap:wrap;row-gap:8px}
@@ -568,30 +489,7 @@ to{opacity:1;transform:translateY(0)}
 .brand-strip a{font-size:10px}
 .brand-strip .all-category{padding-right:16px}
 .brand-strip .brand-logo{width:14px;height:14px}
-.hero-layout{grid-template-columns:1fr;margin-top:19px;gap:12px}
-.hero{padding:28px 27px;min-height:305px}
-.hero-copy{width:64%}
-.hero h1{font-size:31px;margin-top:13px}
-.hero p{font-size:11px;max-width:285px}
 .eyebrow{font-size:8px;letter-spacing:1.2px}
-.hero-art{right:2%;width:37%;opacity:1}
-.floating-account{width:146px;padding:13px}
-.floating-account b{font-size:12px}
-.floating-account.one{top:16px}
-.floating-account.two{top:108px}
-.floating-account.three{top:204px}
-.hero-side{grid-template-columns:1fr 1fr;grid-template-rows:auto;gap:12px}
-.mini-hero{min-height:139px;padding:18px 20px}
-.mini-hero h2{font-size:18px;margin-top:6px}
-.mini-hero .brand-logo{width:43px;height:43px;right:12px;bottom:17px}
-.mini-hero.dark .brand-logo{width:49px;height:49px}
-.mini-hero a{font-size:10px}
-.service-strip{grid-template-columns:repeat(2,1fr);row-gap:20px;padding:18px 0;margin-top:9px}
-.service-item{justify-content:flex-start;padding-left:21px}
-.service-item:nth-child(2){border:0}
-.service-item>svg{width:20px;height:20px}
-.service-item b{font-size:11px}
-.service-item span{font-size:9px}
 .section{margin-top:29px}
 .section-heading{gap:10px;margin-bottom:15px}
 .section-heading h2{font-size:21px}
@@ -611,12 +509,6 @@ to{opacity:1;transform:translateY(0)}
 .tag{font-size:8px;padding:1px 4px}
 .product-footnote{font-size:8px}
 .price{font-size:22px}
-.principle-band{grid-template-columns:1fr;padding:25px;gap:22px;margin-top:29px}
-.principle-band h2{font-size:24px}
-.principle-band p{font-size:11px}
-.principle-points{padding:20px 0 0;border:0;border-top:1px solid #dce1ec;gap:15px}
-.principle-point b{font-size:12px}
-.principle-point p{font-size:10px}
 .brands-grid{gap:9px}
 .brand-tile b{font-size:10px}
 .brand-tile small{font-size:8px}
@@ -739,26 +631,6 @@ main{padding-bottom:40px!important}
 .brand{font-size:16px}
 .brand small{font-size:6px}
 .brand-mark{width:29px;height:29px}
-.hero{padding:25px 22px;min-height:303px}
-.hero h1{font-size:27px}
-.hero-copy{width:69%}
-.hero p{max-width:215px;font-size:10px}
-.hero-actions{gap:8px;margin-top:21px}
-.hero-actions .button{font-size:10px;padding:10px 12px;min-height:36px}
-.hero-actions .button.ghost{padding:6px}
-.hero-art{right:1%;width:32%;opacity:.8}
-.floating-account{width:122px;padding:12px 10px}
-.floating-account b{font-size:11px}
-.floating-account p{font-size:8px}
-.fa-bottom{font-size:7px}
-.mini-hero{padding:17px 15px;min-height:135px}
-.mini-hero h2{font-size:16px}
-.mini-hero .eyebrow{font-size:7px}
-.mini-hero .brand-logo{width:36px;height:36px;right:10px;bottom:18px}
-.mini-hero.dark .brand-logo{width:43px;height:43px}
-.service-item{padding-left:10px;gap:9px}
-.service-item b{font-size:10px}
-.service-item span{font-size:8px}
 .section-heading h2{font-size:19px}
 .section-heading h2 small{font-size:7px;margin-left:6px}
 .section-heading p{font-size:9px}
@@ -810,14 +682,10 @@ main{padding-bottom:40px!important}
 
 @media(prefers-reduced-motion:reduce){*,*:before,*:after{animation:none!important;transition:none!important;scroll-behavior:auto!important}
 }
-
-
-/* Keep secondary information readable and touch actions comfortable. */
-.product-desc,.section-heading p,.page-header p,.white-panel p,.principle-band p,.editorial-hero p,.value-panel p{color:#788598}
 .product-footnote,.footer-main>div>a:not(.brand),.footer-note{color:#8893a3}
 .tag{color:#778396}
 .credential-field>button{min-height:28px;padding:3px 5px}
-@media(max-width:420px){.product-content h3{font-size:12px}.product-desc{font-size:10px}.product-footnote{font-size:8px}.tag{font-size:8px}.hero-art{right:-6%;opacity:.65}.hero-copy{width:73%}.hero p{max-width:218px}.product-art .art-wordmark{font-size:18px}}
+@media(max-width:420px){.product-content h3{font-size:12px}.product-desc{font-size:10px}.product-footnote{font-size:8px}.tag{font-size:8px}.product-art .art-wordmark{font-size:18px}}
 
 .mobile-order-link{display:none!important}
 @media(max-width:760px){.primary-nav.open{gap:15px;font-size:11px}.primary-nav.open a[data-nav="value"],.primary-nav.open .mobile-order-link{display:flex!important}}

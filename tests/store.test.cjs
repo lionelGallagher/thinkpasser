@@ -125,8 +125,8 @@ test('brand, plan and ownership filtering isolates the selected plan', () => {
   assert.equal(new Set(Store.PRODUCTS.map(p => p.id)).size, Store.PRODUCTS.length);
 });
 
-test('unpriced plans never become zero-price orders and sort after priced products', () => {
-  const p = Store.PRODUCTS.find(p => p.brand === 'claude' && p.tier === 'Max 20x');
+test('custom enterprise quotes never become zero-price orders and sort after priced products', () => {
+  const p = Store.PRODUCTS.find(p => p.brand === 'notion' && p.tier === 'Enterprise');
   assert.equal(p.price, null);
   assert.equal(p.stock, 0);
   assert.throws(() => Store.quote(p.id, 1, 1), /售价/);
@@ -139,8 +139,43 @@ test('unpriced plans never become zero-price orders and sort after priced produc
   assert.ok(Store.filterProducts({ max: 20000 }).every(p => Number.isSafeInteger(p.price)));
 });
 
+test('publicly priced plans have store prices and can complete the purchase flow', () => {
+  assert.ok(Store.PRICING);
+  const max20 = Store.product('claude-max20-private');
+  assert.ok(max20.stock > 0);
+  assert.ok(max20.price > 200 * Store.PRICING.fx.USD * 100);
+  const pending = Store.createOrder([{ id: max20.id, months: 1, qty: 1 }], { email: 'pricing@example.test', payment: 'alipay', agreed: true });
+  const completed = Store.completeDemoOrder(pending);
+  assert.equal(completed.deliveries.length, 1);
+  assert.equal(completed.total, max20.price);
+  for (const p of Store.PRODUCTS.filter(p => p.reference && p.mode !== 'shared')) {
+    assert.ok(Number.isSafeInteger(p.price) && p.price > 0, p.id);
+    const cost = Math.round(p.reference.minor * Store.PRICING.fx[p.reference.currency]);
+    assert.ok(p.price > cost, p.id);
+    if (p.stock > 0) assert.ok(Store.quote(p.id, 3, 1).total / 3 > cost, p.id);
+  }
+  assert.ok(Store.PRODUCTS.filter(p => p.price === null).every(p => p.tier === 'Enterprise'));
+});
+
+test('a price update does not reprice existing completed order snapshots', () => {
+  const order = Store.completeDemoOrder(Store.createOrder([{ id: 'claude-pro-private', months: 1, qty: 1 }], { email: 'history@example.test', payment: 'alipay', agreed: true }));
+  const historical = { ...order, total: 12900, lines: order.lines.map(line => ({ ...line, unit: 12900, total: 12900 })) };
+  const restored = Store.restoreState({ orders: [historical], cart: [], favorites: [] });
+  assert.equal(restored.state.orders.length, 1);
+  assert.equal(restored.state.orders[0].total, 12900);
+});
+
 test('AI entitlements and legacy plans are stated explicitly', () => {
   assert.equal(Store.product('notion-plus-private').aiAccess, 'trial');
   assert.equal(Store.product('copilot-pro-private').legacy, true);
   assert.equal(Store.product('cursor-pro-private').legacy, true);
+});
+
+test('team seats include workspace, role and a clearly synthetic invitation', () => {
+  const order = Store.completeDemoOrder(Store.createOrder([{ id: 'claude-team-standard-team', months: 1, qty: 1 }], { email: 'team@example.test', payment: 'alipay', agreed: true }));
+  const seat = order.deliveries[0];
+  assert.ok(seat.workspace);
+  assert.equal(seat.role, '成员');
+  assert.ok(seat.invitationUrl.startsWith('https://delivery.thinkpasser.test/invite/'));
+  assert.equal(Store.restoreState({ cart: [], favorites: [], orders: [order] }).state.orders.length, 1);
 });

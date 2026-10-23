@@ -16,6 +16,29 @@
     { id: 'copilot', name: 'Copilot', label: '办公助手', color: '#6156b7', bg: '#efecfb', mark: 'Co' }
   ];
   const MODES = { private: '独享账号', shared: '共享账号', topup: '账号代充', team: '团队席位', family: '家庭订阅' };
+  // Merchant settlement assumptions, not a live FX quote. Public prices exclude tax.
+  const PRICING = { checkedAt: '2026-10-23', fx: { USD: 7.2, INR: 0.085 }, markupBps: 1200, defaultStock: 20 };
+  const PUBLIC_PRICES = {
+    'claude-pro': 20, 'claude-max5': 100, 'claude-max20': 200, 'claude-team-standard': 25, 'claude-team-premium': 125,
+    'chatgpt-go': 8, 'chatgpt-plus': 20, 'chatgpt-pro': 100, 'chatgpt-pro-200': 200, 'chatgpt-pro-500': 500, 'chatgpt-business': 25,
+    'gemini-plus': 7.99, 'gemini-pro': 19.99, 'gemini-ultra5': 100, 'gemini-ultra20': 200,
+    'cursor-plus': 8, 'cursor-premium': 30, 'cursor-super': 100, 'cursor-ultra': 200, 'cursor-teams': 30, 'cursor-teams-super': 100, 'cursor-teams-ultra': 200,
+    'cursor-pro-legacy': 20, 'cursor-proplus-legacy': 60,
+    'midjourney-basic': 10, 'midjourney-standard': 30, 'midjourney-pro': 60, 'midjourney-mega': 120,
+    'perplexity-pro': 20, 'perplexity-max': 200, 'perplexity-enterprise-pro': 40, 'perplexity-enterprise-max': 325,
+    'notion-plus': 12, 'notion-business': 24,
+    'copilot-personal': 9.99, 'copilot-family': 12.99, 'copilot-premium': 19.99, 'copilot-365-pro': 99.99,
+    'copilot-business': 25.2, 'copilot-business-standard': 28.2, 'copilot-business-premium': 38.4, 'copilot-pro-legacy': 20
+  };
+  function referencePrice(planId) {
+    if (planId === 'cursor-start-legacy') return { minor: 64900, currency: 'INR' };
+    return Object.hasOwn(PUBLIC_PRICES, planId) ? { minor: Math.round(PUBLIC_PRICES[planId] * 100), currency: 'USD' } : null;
+  }
+  function storePrice(reference) {
+    if (!reference) return null;
+    const cost = Math.round(reference.minor * PRICING.fx[reference.currency]);
+    return Math.ceil(cost * (10000 + PRICING.markupBps) / 1000000) * 100;
+  }
   const PLAN_SOURCES = {
     claude: 'https://claude.com/pricing',
     chatgpt: 'https://learn.chatgpt.com/docs/pricing',
@@ -39,8 +62,10 @@
     chatgpt: [
       { id: 'chatgpt-go', tier: 'Go', summary: '个人入门付费方案，适合轻量日常使用' },
       { id: 'chatgpt-plus', tier: 'Plus', summary: '面向日常工作与创作的个人订阅' },
-      { id: 'chatgpt-pro', tier: 'Pro', summary: '研究与编程等高频工作的个人进阶方案', note: 'Pro 有不同使用量档位，具体档位与额度需在开通前确认。' },
-      { id: 'chatgpt-business', tier: 'Business', mode: 'team', summary: '团队工作区与成员管理方案' },
+      { id: 'chatgpt-pro', tier: 'Pro', displayName: 'ChatGPT Pro $100 档', summary: 'Pro 入门使用量档位，官方月付参考 $100', note: '本商品对应 Pro $100 档；更高使用量请另选 $200 或 $500 档。' },
+      { id: 'chatgpt-pro-200', tier: 'Pro $200', summary: 'Pro 进阶使用量档位，官方月付参考 $200' },
+      { id: 'chatgpt-pro-500', tier: 'Pro $500', summary: 'Pro 高使用量档位，官方月付参考 $500' },
+      { id: 'chatgpt-business', tier: 'Business', mode: 'team', summary: '团队工作区与成员管理方案', note: '新建官方 Business 工作区至少 2 人；本商品按单个团队席位计价。' },
       { id: 'chatgpt-enterprise', tier: 'Enterprise', mode: 'team', summary: '企业级工作区，按组织需求确认方案' }
     ],
     gemini: [
@@ -54,9 +79,11 @@
       { id: 'cursor-premium', tier: 'Premium', summary: '当前个人开发套餐，按使用规则计费', note: '第三方模型用量与订阅分开计费，具体单价和预付规则见官方说明。' },
       { id: 'cursor-super', tier: 'Super', summary: '当前高频开发使用量档位', note: '第三方模型用量与订阅分开计费，具体单价和预付规则见官方说明。' },
       { id: 'cursor-ultra', tier: 'Ultra', summary: '当前个人高使用量档位', note: '第三方模型用量与订阅分开计费，具体单价和预付规则见官方说明。' },
-      { id: 'cursor-teams', tier: 'Teams', mode: 'team', summary: '按席位配置的团队开发方案' },
+      { id: 'cursor-teams', tier: 'Teams', mode: 'team', summary: '团队 Premium 席位，按成员配置使用量' },
+      { id: 'cursor-teams-super', tier: 'Teams Super', mode: 'team', summary: '团队 Super 席位，高频开发使用量档位' },
+      { id: 'cursor-teams-ultra', tier: 'Teams Ultra', mode: 'team', summary: '团队 Ultra 席位，高使用量档位' },
       { id: 'cursor-enterprise', tier: 'Enterprise', mode: 'team', summary: '企业开发与组织管理方案' },
-      { id: 'cursor-start-legacy', tier: 'Start', legacy: true, summary: '存量客户套餐，需核对续订资格' },
+      { id: 'cursor-start-legacy', tier: 'Start', legacy: true, summary: '印度地区存量套餐，需核对地区与续订资格', note: '官方参考 ₹649 / 月，仅适用于印度地区符合条件的存量账号。' },
       { id: 'cursor-pro-legacy', tier: 'Pro', legacy: true, summary: '存量 Pro 套餐，开通前确认账号资格' },
       { id: 'cursor-proplus-legacy', tier: 'Pro+', legacy: true, summary: '存量 Pro+ 套餐，开通前确认账号资格' }
     ],
@@ -108,10 +135,12 @@
   ];
   function offer(bid, plan, data, rank) {
     const mode = data.mode || plan.mode || 'private';
+    const reference = referencePrice(plan.id);
     return {
-      ...plan, ...data, brand: bid, plan: plan.id, rank, mode,
+      ...plan, ...data, brand: bid, plan: plan.id, rank, mode, reference,
+      price: mode === 'shared' ? data.price : storePrice(reference),
       tier: plan.tier, name: `${plan.displayName || `${BRANDS.find(b => b.id === bid).name} ${plan.tier}`} ${MODES[mode]}`,
-      officialUrl: plan.officialUrl || PLAN_SOURCES[bid], terms: [1, 3],
+      officialUrl: plan.officialUrl || (bid === 'cursor' && plan.legacy ? 'https://cursor.com/docs/account/pricing/legacy-cursor-plans' : PLAN_SOURCES[bid]), terms: [1, 3],
       category: bid === 'cursor' ? 'code' : bid === 'midjourney' ? 'creative' : ['notion', 'copilot'].includes(bid) ? 'office' : 'assistant'
     };
   }
@@ -121,7 +150,7 @@
   });
   for (const [bid, plans] of Object.entries(PLAN_CATALOG)) for (const plan of plans) {
     if (!PRODUCTS.some(p => p.plan === plan.id)) PRODUCTS.push(offer(bid, plan, {
-      id: `${plan.id}-${plan.mode || 'private'}`, price: null, stock: 0, delivery: 'manual', desc: plan.summary, badge: '待上架'
+      id: `${plan.id}-${plan.mode || 'private'}`, price: null, stock: referencePrice(plan.id) ? PRICING.defaultStock : 0, delivery: 'manual', desc: plan.summary, badge: referencePrice(plan.id) ? '' : '企业询价'
     }, PRODUCTS.length));
   }
 
@@ -202,7 +231,12 @@
       expiration.setUTCMonth(expiration.getUTCMonth() + line.months + 1);
       expiration.setUTCDate(0);
       expiration.setUTCDate(Math.min(day, expiration.getUTCDate()));
-      return { id: randomToken(12), productId: line.id, name: line.name, brand: line.brand, email: `ai_${randomToken(10).toLowerCase()}@demo.thinkpasser.test`, password: `Mx!${randomToken(18)}`, recoveryCode: `DEMO-${randomToken(8)}-${randomToken(8)}`, loginUrl: LOGIN_URLS[line.brand], expiresAt: expiration.getTime(), months: line.months, mode: product(line.id).mode };
+      const delivery = { id: randomToken(12), productId: line.id, name: line.name, brand: line.brand, email: `ai_${randomToken(10).toLowerCase()}@demo.thinkpasser.test`, password: `Mx!${randomToken(18)}`, recoveryCode: `DEMO-${randomToken(8)}-${randomToken(8)}`, loginUrl: LOGIN_URLS[line.brand], expiresAt: expiration.getTime(), months: line.months, mode: product(line.id).mode };
+      if (delivery.mode === 'team') Object.assign(delivery, {
+        workspace: `Thinkpasser ${randomToken(6).toUpperCase()}`,
+        role: '成员', invitationUrl: `https://delivery.thinkpasser.test/invite/${randomToken(24)}`
+      });
+      return delivery;
     }));
     return { ...order, demo: true, status: 'completed', paidAt, paymentRef: `DEMO${randomToken(20)}`, deliveries };
   }
@@ -220,6 +254,8 @@
       || !o.deliveries.every(d => d && product(d.productId) && d.brand === product(d.productId).brand && typeof d.name === 'string'
         && typeof d.email === 'string' && d.email.endsWith('@demo.thinkpasser.test') && typeof d.password === 'string' && d.password.length >= 16
         && typeof d.recoveryCode === 'string' && d.recoveryCode.startsWith('DEMO-') && d.loginUrl === LOGIN_URLS[d.brand]
+        && (d.workspace == null || (d.mode === 'team' && typeof d.workspace === 'string' && d.workspace.length <= 80 && d.role === '成员'
+          && typeof d.invitationUrl === 'string' && /^https:\/\/delivery\.thinkpasser\.test\/invite\/[A-Za-z0-9]+$/.test(d.invitationUrl)))
         && validDate(d.expiresAt) && d.expiresAt > o.paidAt && o.lines.some(l => l.id === d.productId && l.months === d.months)))) return false;
     if (o.ticket && (typeof o.ticket.message !== 'string' || !validDate(o.ticket.createdAt) || typeof o.ticket.id !== 'string')) return false;
     return true;
@@ -242,5 +278,5 @@
     }
     return { state, repaired };
   }
-  return { BRANDS, PRODUCTS, MODES, PLAN_CATALOG, LOGIN_URLS, product, brand, money, filterProducts, quote, normalizeCart, createOrder, completeDemoOrder, restoreState };
+  return { BRANDS, PRODUCTS, MODES, PLAN_CATALOG, PRICING, LOGIN_URLS, product, brand, money, filterProducts, quote, normalizeCart, createOrder, completeDemoOrder, restoreState };
 });
