@@ -1,0 +1,260 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "name": "登录密码方式",
+      "schema": "LoginRequest",
+      "valid": true,
+      "value": {
+        "email": "demo@example.invalid",
+        "password": "example-only",
+        "client": "web"
+      }
+    },
+    {
+      "name": "登录验证码方式",
+      "schema": "LoginRequest",
+      "valid": true,
+      "value": {
+        "email": "demo@example.invalid",
+        "challengeId": "00000000-0000-4000-8000-000000000001",
+        "code": "123456",
+        "client": "web"
+      }
+    },
+    {
+      "name": "拒绝两套登录凭据混用",
+      "schema": "LoginRequest",
+      "valid": false,
+      "value": {
+        "email": "demo@example.invalid",
+        "password": "example-only",
+        "challengeId": "00000000-0000-4000-8000-000000000001",
+        "code": "123456",
+        "client": "web"
+      }
+    },
+    {
+      "name": "拒绝无凭据登录",
+      "schema": "LoginRequest",
+      "valid": false,
+      "value": {
+        "email": "demo@example.invalid",
+        "client": "web"
+      }
+    },
+    {
+      "name": "纯电脑报价",
+      "schema": "QuoteRequest",
+      "valid": true,
+      "value": {
+        "kind": "new",
+        "productId": "00000000-0000-4000-8000-000000000001",
+        "quantity": 1,
+        "ai": []
+      }
+    },
+    {
+      "name": "新购报价不能冒用现有租约",
+      "schema": "QuoteRequest",
+      "valid": false,
+      "value": {
+        "kind": "new",
+        "productId": "00000000-0000-4000-8000-000000000001",
+        "quantity": 1,
+        "leaseId": "00000000-0000-4000-8000-000000000002",
+        "ai": []
+      }
+    },
+    {
+      "name": "已有电脑加购",
+      "schema": "QuoteRequest",
+      "valid": true,
+      "value": {
+        "kind": "ai_addon",
+        "leaseId": "00000000-0000-4000-8000-000000000002",
+        "ai": [
+          "claude",
+          "codex"
+        ]
+      }
+    },
+    {
+      "name": "不能重复选同一种AI",
+      "schema": "QuoteRequest",
+      "valid": false,
+      "value": {
+        "kind": "ai_addon",
+        "leaseId": "00000000-0000-4000-8000-000000000002",
+        "ai": [
+          "claude",
+          "claude"
+        ]
+      }
+    },
+    {
+      "name": "禁止前端自报主体",
+      "schema": "SessionRequest",
+      "valid": false,
+      "value": {
+        "client": "web",
+        "actorId": "forged",
+        "clientKeyJwk": {
+          "kty": "OKP",
+          "crv": "Ed25519",
+          "x": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        }
+      }
+    },
+    {
+      "name": "设备连接请求",
+      "schema": "SessionRequest",
+      "valid": true,
+      "value": {
+        "client": "web",
+        "clientKeyJwk": {
+          "kty": "OKP",
+          "crv": "Ed25519",
+          "x": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        }
+      }
+    },
+    {
+      "name": "AI故障必须关联AI",
+      "schema": "TicketRequest",
+      "valid": false,
+      "value": {
+        "leaseId": "00000000-0000-4000-8000-000000000002",
+        "kind": "ai_fault",
+        "description": "example"
+      }
+    },
+    {
+      "name": "供方不能无证据报可验收",
+      "schema": "TaskReport",
+      "valid": false,
+      "value": {
+        "expectedVersion": 1,
+        "outcome": "reported"
+      }
+    },
+    {
+      "name": "有效供方回报",
+      "schema": "TaskReport",
+      "valid": true,
+      "value": {
+        "expectedVersion": 1,
+        "outcome": "reported",
+        "evidenceRef": "evidence/example",
+        "externalRef": "supplier-1"
+      }
+    },
+    {
+      "name": "收回需环境选择及确认",
+      "schema": "Unassign",
+      "valid": false,
+      "value": {
+        "expectedVersion": 1
+      }
+    },
+    {
+      "name": "保留文件收回",
+      "schema": "Unassign",
+      "valid": true,
+      "value": {
+        "expectedVersion": 1,
+        "environmentMode": "preserve_files",
+        "confirmationId": "00000000-0000-4000-8000-000000000001"
+      }
+    },
+    {
+      "name": "退款金额不可为负",
+      "schema": "Refund",
+      "valid": false,
+      "value": {
+        "id": "00000000-0000-4000-8000-000000000001",
+        "state": "reserved",
+        "amountMinor": -1,
+        "currency": "CNY"
+      }
+    },
+    {
+      "name": "AI加购至少一项",
+      "schema": "QuoteRequest",
+      "valid": false,
+      "value": {
+        "kind": "ai_addon",
+        "leaseId": "00000000-0000-4000-8000-000000000002",
+        "ai": []
+      }
+    },
+    {
+      "name": "客户指定账号不可缺邮箱",
+      "schema": "QuoteRequest",
+      "valid": false,
+      "value": {
+        "kind": "new",
+        "productId": "00000000-0000-4000-8000-000000000001",
+        "quantity": 1,
+        "ai": [
+          "claude"
+        ],
+        "aiAccounts": [
+          {
+            "provider": "claude",
+            "source": "customer"
+          }
+        ]
+      }
+    },
+    {
+      "name": "卡订阅资源可独立登记",
+      "schema": "ResourceRegistration",
+      "valid": true,
+      "value": {
+        "resourceKind": "card_subscription",
+        "externalRef": "SUPPLIER-SUB-001",
+        "providers": [
+          "claude"
+        ],
+        "quoteCurrency": "CNY",
+        "costMinor": 28000,
+        "capacity": 3,
+        "validUntil": 1800000000000
+      }
+    },
+    {
+      "name": "资源引用不接收完整卡号",
+      "schema": "ResourceRegistration",
+      "valid": false,
+      "value": {
+        "resourceKind": "card_subscription",
+        "externalRef": "4111111111111111",
+        "providers": [
+          "claude"
+        ],
+        "quoteCurrency": "CNY",
+        "costMinor": 28000,
+        "capacity": 3,
+        "validUntil": 1800000000000
+      }
+    },
+    {
+      "name": "卡订阅资源不接收CVV",
+      "schema": "ResourceRegistration",
+      "valid": false,
+      "value": {
+        "resourceKind": "card_subscription",
+        "externalRef": "SUPPLIER-SUB-001",
+        "providers": [
+          "claude"
+        ],
+        "quoteCurrency": "CNY",
+        "costMinor": 28000,
+        "capacity": 3,
+        "validUntil": 1800000000000,
+        "cvv": "123"
+      }
+    }
+  ]
+}

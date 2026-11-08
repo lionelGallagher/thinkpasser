@@ -5,6 +5,10 @@
 *.json text eol=lf
 *.cjs text eol=lf
 *.mjs text eol=lf
+*.ts text eol=lf
+*.vue text eol=lf
+*.css text eol=lf
+backend/contracts/requirements.txt text eol=lf
 *.py text eol=lf
 *.rs text eol=lf
 *.proto text eol=lf

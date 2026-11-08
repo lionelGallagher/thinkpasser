@@ -4,6 +4,10 @@
 
 仓库按四个端和一个后端划分。
 
+开发设计入口：[技术架构总览](docs/architecture.md)，统一说明五个模块、供货与订单、机器连接密码、远控授权、租期、售后和回收，以及已有实现与待接入能力。
+
+[详细设计与开发交接](docs/design/README.md)进一步给出数据、事务、接口、权限、页面和难点验证。业务后端采用Java／Spring Boot＋MySQL及Maven；原生与网页远控按各自适合的技术实现。仅提供Windows／Mac桌面客户端，无手机App。
+
 ## 五个目录
 
 ```text
@@ -24,11 +28,11 @@ thinkpasser/
 
 | 目录 | 职责 | 当前状态 |
 | --- | --- | --- |
-| [client](client/README.md) | 平台登录、账号切换、已分配电脑、远控、接管、购买回跳；被控端集成 | 已有 RustDesk 裁剪及构建准备，未编译成可发布客户端 |
-| [web](web/README.md) | 商品浏览、购买续费、客户控制台和浏览器内远控 | 已有合成画面和协议验证，尚未连接真实 Windows／Mac |
-| [admin](admin/README.md) | 平台管理机器、账号、资源、商品、任务、售后及结算 | 职责已确定，产品界面和业务接口待实现 |
-| [supplier](supplier/README.md) | 供应商入驻、资源登记、报价、接单、交付回报及售后 | 职责已确定，产品界面和业务接口待实现 |
-| [backend](backend/README.md) | 身份权限、商品订单、供货编排、租约分配、收退款、远控授权及回收 | 已有纯规则和健康参考实现，生产 API、数据库及真实适配器待接入 |
+| [client](client/README.md) | 平台登录、账号切换、独享电脑和远控界面；被控端集成 | 已有[桌面界面交互预览](client/preview/README.md)及RustDesk裁剪准备，原生安装包和真实接入待完成 |
+| [web](web/README.md) | 商品、购买续费、客户控制台与浏览器远控 | 已有可交互演示前端及协议验证，尚未连接真实Windows／Mac |
+| [admin](admin/README.md) | 机器、账号、商品、供方、交付、售后和结算 | 已有本地演示前端，生产业务接口待接入 |
+| [supplier](supplier/README.md) | 两类供方的资源、接单、回报、验收及成本 | 已有本地演示前端，真实供应能力待接入 |
+| [backend](backend/README.md) | 四端统一业务、权限、租约、资金与生命周期 | Java／MySQL详细设计和API契约已整理；现有纯规则与健康参考代码，生产实现待开发 |
 
 `web/remote-desktop/` 中的会话授权和网关是验证工程的参考模块，不是已经上线的后端。正式身份、库存、支付及授权以 `backend/` 的服务端实现为准。
 
@@ -71,7 +75,22 @@ thinkpasser/
 
 ## 本地验证
 
-当前验证代码使用 Node.js 内置模块，无需安装第三方 npm 依赖。已验证环境：Node.js 22.22.2、Python 3.12.10；设备健康参考实现使用 `node:sqlite`。
+前端使用Vue 3＋TypeScript，先安装依赖再运行。已验证环境为Node.js 22.22.2、Python 3.12.10；规则和协议参考仍使用Node内置模块，设备健康参考使用`node:sqlite`。
+
+```powershell
+npm install
+npm run dev
+```
+
+入口：[客户网页](http://127.0.0.1:5180/web/)、[管理端](http://127.0.0.1:5180/admin/)、[供应商端](http://127.0.0.1:5180/supplier/)、[桌面界面预览](http://127.0.0.1:5180/client/preview/)。演示数据仅保存本机，页面明确标识不会产生真实付款、开通或远控操作。
+
+```powershell
+npm run test:ui
+npm run build
+npm run verify:design
+```
+
+构建输出到`.preview/dist/`。完整操作链路、Python契约校验及当前验收边界见[前端交接](docs/design/07-frontend-handoff.md)。原有参考验证：
 
 ```powershell
 npm test
@@ -100,12 +119,15 @@ npm run demo:device-health
 
 ## 当前实现状态
 
-已保留可复用的租期计算、原生裁剪准备、网页协议与浏览器合成验证、设备健康参考链路。尚无完整产品前台、内部管理端、供应商门户、生产后端或真实供应和支付接入。
+四端交互前端、统一详细设计、API及状态契约已建立；桌面客户端当前为网页界面预览。可复用的租期计算、原生裁剪准备、网页协议和设备健康参考继续保留。生产Java后端、真实供应支付、完整原生客户端和真机网页远控尚未接入。
+
+类型检查、构建、规则和DOM组件交互测试分别验证其覆盖范围。实际浏览器截图未完成，不能将DOM模拟测试当成像素、焦点和跨浏览器验收。
 
 真实交付、权限、收退款、Windows／Mac 远控、长期运行和清理回库仍需端到端验收。不得将本地参考实现或测试通过当成生产能力已经完成。
 
 ## 需求与许可资料
 
+- [技术架构总览](docs/architecture.md)
 - [需求与实现范围](docs/plans/2026-11-08-remote-computer-requirements.md)
 - [原始答卷及最终确认](docs/questionnaires/远程电脑平台完整需求确认表.md)
 - [文档索引](docs/README.md)

@@ -1,0 +1,6854 @@
+{
+  "openapi": "3.1.1",
+  "info": {
+    "title": "Thinkpasser implementation contract",
+    "version": "1.0.0",
+    "description": "详细设计契约；所有端点待实现。时间为UTC epoch毫秒；金额为最小货币单位。外部支付回调由渠道独立协议接入。"
+  },
+  "servers": [
+    {
+      "url": "https://api.example.invalid/v1",
+      "description": "占位；不是真实服务"
+    }
+  ],
+  "security": [
+    {
+      "cookieAuth": []
+    },
+    {
+      "bearerAuth": []
+    }
+  ],
+  "paths": {
+    "/auth/challenges": {
+      "post": {
+        "operationId": "createAuthChallenge",
+        "summary": "createAuthChallenge",
+        "description": "业务处理及前置条件见 docs/design/02-api-and-permissions.md 与事务 T01",
+        "x-roles": [
+          "public"
+        ],
+        "x-transaction": "T01",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "成功；不代表外部副作用已完成",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Challenge"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "401": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "403": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "404": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "409": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "422": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "429": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "503": {
+            "$ref": "#/components/responses/BusinessError"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EmailRequest"
+              }
+            }
+          }
+        },
+        "security": []
+      }
+    },
+    "/auth/register": {
+      "post": {
+        "operationId": "registerCustomer",
+        "summary": "registerCustomer",
+        "description": "业务处理及前置条件见 docs/design/02-api-and-permissions.md 与事务 T01",
+        "x-roles": [
+          "public"
+        ],
+        "x-transaction": "T01",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": "成功；不代表外部副作用已完成",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LoginResult"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "401": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "403": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "404": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "409": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "422": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "429": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "503": {
+            "$ref": "#/components/responses/BusinessError"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Register"
+              }
+            }
+          }
+        },
+        "security": []
+      }
+    },
+    "/auth/login": {
+      "post": {
+        "operationId": "login",
+        "summary": "login",
+        "description": "业务处理及前置条件见 docs/design/02-api-and-permissions.md 与事务 T01",
+        "x-roles": [
+          "public"
+        ],
+        "x-transaction": "T01",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "成功；不代表外部副作用已完成",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LoginResult"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "401": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "403": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "404": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "409": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "422": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "429": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "503": {
+            "$ref": "#/components/responses/BusinessError"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LoginRequest"
+              }
+            }
+          }
+        },
+        "security": []
+      }
+    },
+    "/auth/refresh": {
+      "post": {
+        "operationId": "refreshLogin",
+        "summary": "refreshLogin",
+        "description": "Cookie端凭HttpOnly刷新cookie，原生端凭请求体refreshToken；不要求未过期access token。刷新token单次轮换，重放撤销该登录会话族。",
+        "x-roles": [
+          "main",
+          "sub",
+          "admin",
+          "supplier"
+        ],
+        "x-transaction": "T01",
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 16,
+              "maxLength": 128
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "成功；不代表外部副作用已完成",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LoginResult"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "401": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "403": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "404": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "409": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "422": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "429": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "503": {
+            "$ref": "#/components/responses/BusinessError"
+          }
+        },
+        "x-idempotency": "actor+operation+key, hash canonical request; conflict => 409",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Refresh"
+              }
+            }
+          }
+        },
+        "security": []
+      }
+    },
+    "/auth/logout": {
+      "post": {
+        "operationId": "logout",
+        "summary": "logout",
+        "description": "业务处理及前置条件见 docs/design/02-api-and-permissions.md 与事务 T01",
+        "x-roles": [
+          "main",
+          "sub",
+          "admin",
+          "supplier"
+        ],
+        "x-transaction": "T01",
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 16,
+              "maxLength": 128
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "成功；不代表外部副作用已完成",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Account"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "401": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "403": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "404": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "409": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "422": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "429": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "503": {
+            "$ref": "#/components/responses/BusinessError"
+          }
+        },
+        "x-idempotency": "actor+operation+key, hash canonical request; conflict => 409"
+      }
+    },
+    "/auth/password": {
+      "post": {
+        "operationId": "changePassword",
+        "summary": "changePassword",
+        "description": "业务处理及前置条件见 docs/design/02-api-and-permissions.md 与事务 T01",
+        "x-roles": [
+          "main",
+          "sub",
+          "admin",
+          "supplier"
+        ],
+        "x-transaction": "T01",
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 16,
+              "maxLength": 128
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "成功；不代表外部副作用已完成",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Account"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "401": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "403": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "404": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "409": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "422": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "429": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "503": {
+            "$ref": "#/components/responses/BusinessError"
+          }
+        },
+        "x-idempotency": "actor+operation+key, hash canonical request; conflict => 409",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Password"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/auth/native-exchange": {
+      "post": {
+        "operationId": "nativeExchange",
+        "summary": "nativeExchange",
+        "description": "业务处理及前置条件见 docs/design/02-api-and-permissions.md 与事务 T01",
+        "x-roles": [
+          "public"
+        ],
+        "x-transaction": "T01",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "成功；不代表外部副作用已完成",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LoginResult"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "401": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "403": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "404": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "409": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "422": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "429": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "503": {
+            "$ref": "#/components/responses/BusinessError"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/NativeExchange"
+              }
+            }
+          }
+        },
+        "security": []
+      }
+    },
+    "/me": {
+      "get": {
+        "operationId": "getCurrentAccount",
+        "summary": "getCurrentAccount",
+        "description": "业务处理及前置条件见 docs/design/02-api-and-permissions.md 与事务 T01",
+        "x-roles": [
+          "main",
+          "sub",
+          "admin",
+          "supplier"
+        ],
+        "x-transaction": "T01",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "成功；不代表外部副作用已完成",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Account"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "401": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "403": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "404": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "409": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "422": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "429": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "503": {
+            "$ref": "#/components/responses/BusinessError"
+          }
+        }
+      }
+    },
+    "/team/accounts": {
+      "get": {
+        "operationId": "listTeamAccounts",
+        "summary": "listTeamAccounts",
+        "description": "业务处理及前置条件见 docs/design/02-api-and-permissions.md 与事务 T02",
+        "x-roles": [
+          "main"
+        ],
+        "x-transaction": "T02",
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 20
+            }
+          },
+          {
+            "name": "cursor",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "成功；不代表外部副作用已完成",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AccountList"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "401": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "403": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "404": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "409": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "422": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "429": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "503": {
+            "$ref": "#/components/responses/BusinessError"
+          }
+        }
+      },
+      "post": {
+        "operationId": "createSubaccount",
+        "summary": "createSubaccount",
+        "description": "业务处理及前置条件见 docs/design/02-api-and-permissions.md 与事务 T02",
+        "x-roles": [
+          "main"
+        ],
+        "x-transaction": "T02",
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 16,
+              "maxLength": 128
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "成功；不代表外部副作用已完成",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Account"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "401": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "403": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "404": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "409": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "422": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "429": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "503": {
+            "$ref": "#/components/responses/BusinessError"
+          }
+        },
+        "x-idempotency": "actor+operation+key, hash canonical request; conflict => 409",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Subaccount"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/team/accounts/{accountId}/reset-password": {
+      "post": {
+        "operationId": "resetSubaccountPassword",
+        "summary": "resetSubaccountPassword",
+        "description": "业务处理及前置条件见 docs/design/02-api-and-permissions.md 与事务 T02",
+        "x-roles": [
+          "main"
+        ],
+        "x-transaction": "T02",
+        "parameters": [
+          {
+            "name": "accountId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 16,
+              "maxLength": 128
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "成功；不代表外部副作用已完成",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Account"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "401": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "403": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "404": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "409": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "422": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "429": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "503": {
+            "$ref": "#/components/responses/BusinessError"
+          }
+        },
+        "x-idempotency": "actor+operation+key, hash canonical request; conflict => 409",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Password"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/team/accounts/{accountId}/disable": {
+      "post": {
+        "operationId": "disableSubaccount",
+        "summary": "disableSubaccount",
+        "description": "业务处理及前置条件见 docs/design/02-api-and-permissions.md 与事务 T02",
+        "x-roles": [
+          "main"
+        ],
+        "x-transaction": "T02",
+        "parameters": [
+          {
+            "name": "accountId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 16,
+              "maxLength": 128
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "成功；不代表外部副作用已完成",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Account"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "401": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "403": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "404": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "409": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "422": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "429": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "503": {
+            "$ref": "#/components/responses/BusinessError"
+          }
+        },
+        "x-idempotency": "actor+operation+key, hash canonical request; conflict => 409",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Version"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/products": {
+      "get": {
+        "operationId": "listProducts",
+        "summary": "listProducts",
+        "description": "业务处理及前置条件见 docs/design/02-api-and-permissions.md 与事务 T03",
+        "x-roles": [
+          "public"
+        ],
+        "x-transaction": "T03",
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 20
+            }
+          },
+          {
+            "name": "cursor",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "成功；不代表外部副作用已完成",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProductList"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "401": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "403": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "404": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "409": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "422": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "429": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "503": {
+            "$ref": "#/components/responses/BusinessError"
+          }
+        },
+        "security": []
+      }
+    },
+    "/quotes": {
+      "post": {
+        "operationId": "createQuote",
+        "summary": "createQuote",
+        "description": "业务处理及前置条件见 docs/design/02-api-and-permissions.md 与事务 T03",
+        "x-roles": [
+          "main"
+        ],
+        "x-transaction": "T03",
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 16,
+              "maxLength": 128
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "成功；不代表外部副作用已完成",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Quote"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "401": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "403": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "404": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "409": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "422": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "429": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "503": {
+            "$ref": "#/components/responses/BusinessError"
+          }
+        },
+        "x-idempotency": "actor+operation+key, hash canonical request; conflict => 409",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/QuoteRequest"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/orders": {
+      "post": {
+        "operationId": "createOrder",
+        "summary": "createOrder",
+        "description": "业务处理及前置条件见 docs/design/02-api-and-permissions.md 与事务 T03",
+        "x-roles": [
+          "main"
+        ],
+        "x-transaction": "T03",
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 16,
+              "maxLength": 128
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "成功；不代表外部副作用已完成",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Order"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "401": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "403": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "404": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "409": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "422": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "429": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "503": {
+            "$ref": "#/components/responses/BusinessError"
+          }
+        },
+        "x-idempotency": "actor+operation+key, hash canonical request; conflict => 409",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateOrder"
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "operationId": "listOrders",
+        "summary": "listOrders",
+        "description": "业务处理及前置条件见 docs/design/02-api-and-permissions.md 与事务 T03",
+        "x-roles": [
+          "main"
+        ],
+        "x-transaction": "T03",
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 20
+            }
+          },
+          {
+            "name": "cursor",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "成功；不代表外部副作用已完成",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OrderList"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "401": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "403": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "404": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "409": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "422": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "429": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "503": {
+            "$ref": "#/components/responses/BusinessError"
+          }
+        }
+      }
+    },
+    "/orders/{orderId}": {
+      "get": {
+        "operationId": "getOrder",
+        "summary": "getOrder",
+        "description": "业务处理及前置条件见 docs/design/02-api-and-permissions.md 与事务 T03",
+        "x-roles": [
+          "main"
+        ],
+        "x-transaction": "T03",
+        "parameters": [
+          {
+            "name": "orderId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "成功；不代表外部副作用已完成",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Order"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "401": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "403": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "404": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "409": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "422": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "429": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "503": {
+            "$ref": "#/components/responses/BusinessError"
+          }
+        }
+      }
+    },
+    "/orders/{orderId}/payments": {
+      "post": {
+        "operationId": "createPayment",
+        "summary": "createPayment",
+        "description": "业务处理及前置条件见 docs/design/02-api-and-permissions.md 与事务 T04",
+        "x-roles": [
+          "main"
+        ],
+        "x-transaction": "T04",
+        "parameters": [
+          {
+            "name": "orderId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 16,
+              "maxLength": 128
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "成功；不代表外部副作用已完成",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Payment"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "401": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "403": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "404": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "409": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "422": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "429": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "503": {
+            "$ref": "#/components/responses/BusinessError"
+          }
+        },
+        "x-idempotency": "actor+operation+key, hash canonical request; conflict => 409",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PaymentRequest"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/payments/{paymentId}": {
+      "get": {
+        "operationId": "getPayment",
+        "summary": "getPayment",
+        "description": "业务处理及前置条件见 docs/design/02-api-and-permissions.md 与事务 T04",
+        "x-roles": [
+          "main"
+        ],
+        "x-transaction": "T04",
+        "parameters": [
+          {
+            "name": "paymentId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "成功；不代表外部副作用已完成",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Payment"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "401": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "403": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "404": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "409": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "422": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "429": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "503": {
+            "$ref": "#/components/responses/BusinessError"
+          }
+        }
+      }
+    },
+    "/orders/{orderId}/cancel": {
+      "post": {
+        "operationId": "cancelOrder",
+        "summary": "cancelOrder",
+        "description": "业务处理及前置条件见 docs/design/02-api-and-permissions.md 与事务 T04",
+        "x-roles": [
+          "main"
+        ],
+        "x-transaction": "T04",
+        "parameters": [
+          {
+            "name": "orderId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 16,
+              "maxLength": 128
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "成功；不代表外部副作用已完成",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Order"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "401": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "403": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "404": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "409": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "422": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "429": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "503": {
+            "$ref": "#/components/responses/BusinessError"
+          }
+        },
+        "x-idempotency": "actor+operation+key, hash canonical request; conflict => 409",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Cancellation"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/machines": {
+      "get": {
+        "operationId": "listMachines",
+        "summary": "listMachines",
+        "description": "业务处理及前置条件见 docs/design/02-api-and-permissions.md 与事务 T05",
+        "x-roles": [
+          "main",
+          "sub"
+        ],
+        "x-transaction": "T05",
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 20
+            }
+          },
+          {
+            "name": "cursor",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "成功；不代表外部副作用已完成",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MachineList"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "401": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "403": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "404": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "409": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "422": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "429": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "503": {
+            "$ref": "#/components/responses/BusinessError"
+          }
+        }
+      }
+    },
+    "/machines/{machineId}": {
+      "get": {
+        "operationId": "getMachine",
+        "summary": "getMachine",
+        "description": "业务处理及前置条件见 docs/design/02-api-and-permissions.md 与事务 T05",
+        "x-roles": [
+          "main",
+          "sub"
+        ],
+        "x-transaction": "T05",
+        "parameters": [
+          {
+            "name": "machineId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "成功；不代表外部副作用已完成",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Machine"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "401": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "403": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "404": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "409": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "422": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "429": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "503": {
+            "$ref": "#/components/responses/BusinessError"
+          }
+        }
+      }
+    },
+    "/machines/{machineId}/assignment": {
+      "post": {
+        "operationId": "assignMachine",
+        "summary": "assignMachine",
+        "description": "业务处理及前置条件见 docs/design/02-api-and-permissions.md 与事务 T05",
+        "x-roles": [
+          "main"
+        ],
+        "x-transaction": "T05",
+        "parameters": [
+          {
+            "name": "machineId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 16,
+              "maxLength": 128
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "成功；不代表外部副作用已完成",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Machine"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "401": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "403": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "404": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "409": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "422": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "429": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "503": {
+            "$ref": "#/components/responses/BusinessError"
+          }
+        },
+        "x-idempotency": "actor+operation+key, hash canonical request; conflict => 409",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Assign"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/machines/{machineId}/unassign": {
+      "post": {
+        "operationId": "unassignMachine",
+        "summary": "unassignMachine",
+        "description": "业务处理及前置条件见 docs/design/02-api-and-permissions.md 与事务 T05",
+        "x-roles": [
+          "main"
+        ],
+        "x-transaction": "T05",
+        "parameters": [
+          {
+            "name": "machineId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 16,
+              "maxLength": 128
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "成功；不代表外部副作用已完成",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Machine"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "401": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "403": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "404": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "409": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "422": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "429": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "503": {
+            "$ref": "#/components/responses/BusinessError"
+          }
+        },
+        "x-idempotency": "actor+operation+key, hash canonical request; conflict => 409",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Unassign"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/leases/{leaseId}/auto-renew": {
+      "post": {
+        "operationId": "configureAutoRenew",
+        "summary": "configureAutoRenew",
+        "description": "业务处理及前置条件见 docs/design/02-api-and-permissions.md 与事务 T06",
+        "x-roles": [
+          "main"
+        ],
+        "x-transaction": "T06",
+        "parameters": [
+          {
+            "name": "leaseId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 16,
+              "maxLength": 128
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "成功；不代表外部副作用已完成",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Machine"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "401": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "403": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "404": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "409": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "422": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "429": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "503": {
+            "$ref": "#/components/responses/BusinessError"
+          }
+        },
+        "x-idempotency": "actor+operation+key, hash canonical request; conflict => 409",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AutoRenew"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/confirmations": {
+      "post": {
+        "operationId": "createConfirmation",
+        "summary": "createConfirmation",
+        "description": "业务处理及前置条件见 docs/design/02-api-and-permissions.md 与事务 T05",
+        "x-roles": [
+          "main",
+          "sub"
+        ],
+        "x-transaction": "T05",
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 16,
+              "maxLength": 128
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "成功；不代表外部副作用已完成",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Confirmation"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "401": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "403": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "404": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "409": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "422": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "429": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "503": {
+            "$ref": "#/components/responses/BusinessError"
+          }
+        },
+        "x-idempotency": "actor+operation+key, hash canonical request; conflict => 409",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ConfirmationRequest"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/machines/{machineId}/sessions": {
+      "post": {
+        "operationId": "createRemoteSession",
+        "summary": "createRemoteSession",
+        "description": "业务处理及前置条件见 docs/design/02-api-and-permissions.md 与事务 T07",
+        "x-roles": [
+          "main",
+          "sub"
+        ],
+        "x-transaction": "T07",
+        "parameters": [
+          {
+            "name": "machineId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 16,
+              "maxLength": 128
+            }
+          }
+        ],
+        "responses": {
+          "202": {
+            "description": "成功；不代表外部副作用已完成",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Session"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "401": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "403": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "404": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "409": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "422": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "429": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "503": {
+            "$ref": "#/components/responses/BusinessError"
+          }
+        },
+        "x-idempotency": "actor+operation+key, hash canonical request; conflict => 409",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SessionRequest"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/sessions/{sessionId}": {
+      "get": {
+        "operationId": "getRemoteSession",
+        "summary": "getRemoteSession",
+        "description": "业务处理及前置条件见 docs/design/02-api-and-permissions.md 与事务 T07",
+        "x-roles": [
+          "main",
+          "sub"
+        ],
+        "x-transaction": "T07",
+        "parameters": [
+          {
+            "name": "sessionId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "成功；不代表外部副作用已完成",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Session"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "401": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "403": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "404": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "409": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "422": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "429": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "503": {
+            "$ref": "#/components/responses/BusinessError"
+          }
+        }
+      }
+    },
+    "/sessions/{sessionId}/renew": {
+      "post": {
+        "operationId": "renewRemoteSession",
+        "summary": "renewRemoteSession",
+        "description": "业务处理及前置条件见 docs/design/02-api-and-permissions.md 与事务 T07",
+        "x-roles": [
+          "main",
+          "sub"
+        ],
+        "x-transaction": "T07",
+        "parameters": [
+          {
+            "name": "sessionId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 16,
+              "maxLength": 128
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "成功；不代表外部副作用已完成",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Session"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "401": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "403": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "404": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "409": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "422": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "429": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "503": {
+            "$ref": "#/components/responses/BusinessError"
+          }
+        },
+        "x-idempotency": "actor+operation+key, hash canonical request; conflict => 409",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RenewSession"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/sessions/{sessionId}/close": {
+      "post": {
+        "operationId": "closeRemoteSession",
+        "summary": "closeRemoteSession",
+        "description": "业务处理及前置条件见 docs/design/02-api-and-permissions.md 与事务 T07",
+        "x-roles": [
+          "main",
+          "sub"
+        ],
+        "x-transaction": "T07",
+        "parameters": [
+          {
+            "name": "sessionId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 16,
+              "maxLength": 128
+            }
+          }
+        ],
+        "responses": {
+          "202": {
+            "description": "成功；不代表外部副作用已完成",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Session"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "401": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "403": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "404": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "409": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "422": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "429": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "503": {
+            "$ref": "#/components/responses/BusinessError"
+          }
+        },
+        "x-idempotency": "actor+operation+key, hash canonical request; conflict => 409"
+      }
+    },
+    "/machines/{machineId}/operations": {
+      "post": {
+        "operationId": "createMachineOperation",
+        "summary": "createMachineOperation",
+        "description": "业务处理及前置条件见 docs/design/02-api-and-permissions.md 与事务 T08",
+        "x-roles": [
+          "main",
+          "sub"
+        ],
+        "x-transaction": "T08",
+        "parameters": [
+          {
+            "name": "machineId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 16,
+              "maxLength": 128
+            }
+          }
+        ],
+        "responses": {
+          "202": {
+            "description": "成功；不代表外部副作用已完成",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Operation"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "401": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "403": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "404": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "409": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "422": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "429": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "503": {
+            "$ref": "#/components/responses/BusinessError"
+          }
+        },
+        "x-idempotency": "actor+operation+key, hash canonical request; conflict => 409",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/OperationRequest"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/operations/{operationId}": {
+      "get": {
+        "operationId": "getOperation",
+        "summary": "getOperation",
+        "description": "业务处理及前置条件见 docs/design/02-api-and-permissions.md 与事务 T08",
+        "x-roles": [
+          "main",
+          "sub",
+          "admin"
+        ],
+        "x-transaction": "T08",
+        "parameters": [
+          {
+            "name": "operationId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "成功；不代表外部副作用已完成",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Operation"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "401": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "403": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "404": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "409": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "422": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "429": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "503": {
+            "$ref": "#/components/responses/BusinessError"
+          }
+        }
+      }
+    },
+    "/machines/{machineId}/exports": {
+      "post": {
+        "operationId": "createExport",
+        "summary": "createExport",
+        "description": "业务处理及前置条件见 docs/design/02-api-and-permissions.md 与事务 T09",
+        "x-roles": [
+          "main",
+          "sub"
+        ],
+        "x-transaction": "T09",
+        "parameters": [
+          {
+            "name": "machineId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 16,
+              "maxLength": 128
+            }
+          }
+        ],
+        "responses": {
+          "202": {
+            "description": "成功；不代表外部副作用已完成",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Export"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "401": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "403": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "404": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "409": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "422": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "429": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "503": {
+            "$ref": "#/components/responses/BusinessError"
+          }
+        },
+        "x-idempotency": "actor+operation+key, hash canonical request; conflict => 409",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ExportRequest"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/exports/{exportId}": {
+      "get": {
+        "operationId": "getExport",
+        "summary": "getExport",
+        "description": "业务处理及前置条件见 docs/design/02-api-and-permissions.md 与事务 T09",
+        "x-roles": [
+          "main",
+          "sub"
+        ],
+        "x-transaction": "T09",
+        "parameters": [
+          {
+            "name": "exportId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "成功；不代表外部副作用已完成",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Export"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "401": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "403": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "404": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "409": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "422": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "429": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "503": {
+            "$ref": "#/components/responses/BusinessError"
+          }
+        }
+      }
+    },
+    "/tickets": {
+      "post": {
+        "operationId": "createTicket",
+        "summary": "createTicket",
+        "description": "业务处理及前置条件见 docs/design/02-api-and-permissions.md 与事务 T10",
+        "x-roles": [
+          "main",
+          "sub"
+        ],
+        "x-transaction": "T10",
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 16,
+              "maxLength": 128
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "成功；不代表外部副作用已完成",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Ticket"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "401": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "403": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "404": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "409": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "422": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "429": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "503": {
+            "$ref": "#/components/responses/BusinessError"
+          }
+        },
+        "x-idempotency": "actor+operation+key, hash canonical request; conflict => 409",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TicketRequest"
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "operationId": "listTickets",
+        "summary": "listTickets",
+        "description": "业务处理及前置条件见 docs/design/02-api-and-permissions.md 与事务 T10",
+        "x-roles": [
+          "main",
+          "sub"
+        ],
+        "x-transaction": "T10",
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 20
+            }
+          },
+          {
+            "name": "cursor",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "成功；不代表外部副作用已完成",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TicketList"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "401": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "403": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "404": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "409": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "422": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "429": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "503": {
+            "$ref": "#/components/responses/BusinessError"
+          }
+        }
+      }
+    },
+    "/tickets/{ticketId}": {
+      "get": {
+        "operationId": "getTicket",
+        "summary": "getTicket",
+        "description": "业务处理及前置条件见 docs/design/02-api-and-permissions.md 与事务 T10",
+        "x-roles": [
+          "main",
+          "sub"
+        ],
+        "x-transaction": "T10",
+        "parameters": [
+          {
+            "name": "ticketId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "成功；不代表外部副作用已完成",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Ticket"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "401": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "403": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "404": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "409": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "422": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "429": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "503": {
+            "$ref": "#/components/responses/BusinessError"
+          }
+        }
+      }
+    },
+    "/supplier-applications": {
+      "post": {
+        "operationId": "applyAsSupplier",
+        "summary": "applyAsSupplier",
+        "description": "业务处理及前置条件见 docs/design/02-api-and-permissions.md 与事务 T11",
+        "x-roles": [
+          "public"
+        ],
+        "x-transaction": "T11",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": "成功；不代表外部副作用已完成",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Supplier"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "401": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "403": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "404": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "409": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "422": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "429": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "503": {
+            "$ref": "#/components/responses/BusinessError"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SupplierApplication"
+              }
+            }
+          }
+        },
+        "security": []
+      }
+    },
+    "/supplier/resources": {
+      "get": {
+        "operationId": "listSupplierResources",
+        "summary": "listSupplierResources",
+        "description": "业务处理及前置条件见 docs/design/02-api-and-permissions.md 与事务 T11",
+        "x-roles": [
+          "supplier"
+        ],
+        "x-transaction": "T11",
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 20
+            }
+          },
+          {
+            "name": "cursor",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "resourceKind",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "computer",
+                "card_subscription"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "成功；不代表外部副作用已完成",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResourceList"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "401": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "403": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "404": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "409": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "422": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "429": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "503": {
+            "$ref": "#/components/responses/BusinessError"
+          }
+        }
+      },
+      "post": {
+        "operationId": "registerComputer",
+        "summary": "登记电脑或卡／订阅侧资源",
+        "description": "按当前供应商真实已审核能力登记；只能登记自己的资源。报价、容量和有效期均由平台另行验收。不得提交完整卡号、CVV或登录密码。",
+        "x-roles": [
+          "supplier"
+        ],
+        "x-transaction": "T11",
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 16,
+              "maxLength": 128
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "成功；不代表外部副作用已完成",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Resource"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "401": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "403": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "404": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "409": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "422": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "429": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "503": {
+            "$ref": "#/components/responses/BusinessError"
+          }
+        },
+        "x-idempotency": "actor+operation+key, hash canonical request; conflict => 409",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ResourceRegistration"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/supplier/tasks": {
+      "get": {
+        "operationId": "listSupplierTasks",
+        "summary": "listSupplierTasks",
+        "description": "业务处理及前置条件见 docs/design/02-api-and-permissions.md 与事务 T11",
+        "x-roles": [
+          "supplier"
+        ],
+        "x-transaction": "T11",
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 20
+            }
+          },
+          {
+            "name": "cursor",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "成功；不代表外部副作用已完成",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TaskList"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "401": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "403": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "404": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "409": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "422": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "429": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "503": {
+            "$ref": "#/components/responses/BusinessError"
+          }
+        }
+      }
+    },
+    "/supplier/tasks/{taskId}/accept": {
+      "post": {
+        "operationId": "acceptSupplierTask",
+        "summary": "acceptSupplierTask",
+        "description": "业务处理及前置条件见 docs/design/02-api-and-permissions.md 与事务 T11",
+        "x-roles": [
+          "supplier"
+        ],
+        "x-transaction": "T11",
+        "parameters": [
+          {
+            "name": "taskId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 16,
+              "maxLength": 128
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "成功；不代表外部副作用已完成",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SupplierTask"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "401": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "403": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "404": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "409": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "422": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "429": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "503": {
+            "$ref": "#/components/responses/BusinessError"
+          }
+        },
+        "x-idempotency": "actor+operation+key, hash canonical request; conflict => 409",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Version"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/supplier/tasks/{taskId}/report": {
+      "post": {
+        "operationId": "reportSupplierTask",
+        "summary": "reportSupplierTask",
+        "description": "业务处理及前置条件见 docs/design/02-api-and-permissions.md 与事务 T11",
+        "x-roles": [
+          "supplier"
+        ],
+        "x-transaction": "T11",
+        "parameters": [
+          {
+            "name": "taskId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 16,
+              "maxLength": 128
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "成功；不代表外部副作用已完成",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SupplierTask"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "401": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "403": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "404": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "409": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "422": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "429": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "503": {
+            "$ref": "#/components/responses/BusinessError"
+          }
+        },
+        "x-idempotency": "actor+operation+key, hash canonical request; conflict => 409",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TaskReport"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/supplier/ledger": {
+      "get": {
+        "operationId": "listSupplierLedger",
+        "summary": "listSupplierLedger",
+        "description": "业务处理及前置条件见 docs/design/02-api-and-permissions.md 与事务 T11",
+        "x-roles": [
+          "supplier"
+        ],
+        "x-transaction": "T11",
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 20
+            }
+          },
+          {
+            "name": "cursor",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "成功；不代表外部副作用已完成",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LedgerList"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "401": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "403": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "404": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "409": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "422": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "429": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "503": {
+            "$ref": "#/components/responses/BusinessError"
+          }
+        }
+      }
+    },
+    "/admin/suppliers": {
+      "get": {
+        "operationId": "listSuppliers",
+        "summary": "listSuppliers",
+        "description": "业务处理及前置条件见 docs/design/02-api-and-permissions.md 与事务 T11",
+        "x-roles": [
+          "admin"
+        ],
+        "x-transaction": "T11",
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 20
+            }
+          },
+          {
+            "name": "cursor",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "成功；不代表外部副作用已完成",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SupplierList"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "401": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "403": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "404": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "409": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "422": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "429": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "503": {
+            "$ref": "#/components/responses/BusinessError"
+          }
+        }
+      },
+      "post": {
+        "operationId": "createSupplier",
+        "summary": "createSupplier",
+        "description": "业务处理及前置条件见 docs/design/02-api-and-permissions.md 与事务 T11",
+        "x-roles": [
+          "admin"
+        ],
+        "x-transaction": "T11",
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 16,
+              "maxLength": 128
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "成功；不代表外部副作用已完成",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Supplier"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "401": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "403": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "404": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "409": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "422": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "429": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "503": {
+            "$ref": "#/components/responses/BusinessError"
+          }
+        },
+        "x-idempotency": "actor+operation+key, hash canonical request; conflict => 409",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SupplierApplication"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/suppliers/{supplierId}/review": {
+      "post": {
+        "operationId": "reviewSupplier",
+        "summary": "reviewSupplier",
+        "description": "业务处理及前置条件见 docs/design/02-api-and-permissions.md 与事务 T11",
+        "x-roles": [
+          "admin"
+        ],
+        "x-transaction": "T11",
+        "parameters": [
+          {
+            "name": "supplierId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 16,
+              "maxLength": 128
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "成功；不代表外部副作用已完成",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Supplier"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "401": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "403": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "404": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "409": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "422": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "429": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "503": {
+            "$ref": "#/components/responses/BusinessError"
+          }
+        },
+        "x-idempotency": "actor+operation+key, hash canonical request; conflict => 409",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SupplierReview"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/resources": {
+      "get": {
+        "operationId": "listAllResources",
+        "summary": "listAllResources",
+        "description": "业务处理及前置条件见 docs/design/02-api-and-permissions.md 与事务 T11",
+        "x-roles": [
+          "admin"
+        ],
+        "x-transaction": "T11",
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 20
+            }
+          },
+          {
+            "name": "cursor",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "resourceKind",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "computer",
+                "card_subscription"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "成功；不代表外部副作用已完成",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResourceList"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "401": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "403": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "404": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "409": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "422": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "429": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "503": {
+            "$ref": "#/components/responses/BusinessError"
+          }
+        }
+      }
+    },
+    "/admin/products": {
+      "post": {
+        "operationId": "createProduct",
+        "summary": "createProduct",
+        "description": "业务处理及前置条件见 docs/design/02-api-and-permissions.md 与事务 T03",
+        "x-roles": [
+          "admin"
+        ],
+        "x-transaction": "T03",
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 16,
+              "maxLength": 128
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "成功；不代表外部副作用已完成",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Product"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "401": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "403": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "404": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "409": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "422": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "429": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "503": {
+            "$ref": "#/components/responses/BusinessError"
+          }
+        },
+        "x-idempotency": "actor+operation+key, hash canonical request; conflict => 409",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Product"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/products/{productId}": {
+      "post": {
+        "operationId": "updateProduct",
+        "summary": "updateProduct",
+        "description": "业务处理及前置条件见 docs/design/02-api-and-permissions.md 与事务 T03",
+        "x-roles": [
+          "admin"
+        ],
+        "x-transaction": "T03",
+        "parameters": [
+          {
+            "name": "productId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 16,
+              "maxLength": 128
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "成功；不代表外部副作用已完成",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Product"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "401": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "403": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "404": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "409": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "422": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "429": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "503": {
+            "$ref": "#/components/responses/BusinessError"
+          }
+        },
+        "x-idempotency": "actor+operation+key, hash canonical request; conflict => 409",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Product"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/supplier-tasks": {
+      "post": {
+        "operationId": "dispatchSupplierTask",
+        "summary": "dispatchSupplierTask",
+        "description": "业务处理及前置条件见 docs/design/02-api-and-permissions.md 与事务 T11",
+        "x-roles": [
+          "admin"
+        ],
+        "x-transaction": "T11",
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 16,
+              "maxLength": 128
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "成功；不代表外部副作用已完成",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SupplierTask"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "401": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "403": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "404": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "409": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "422": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "429": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "503": {
+            "$ref": "#/components/responses/BusinessError"
+          }
+        },
+        "x-idempotency": "actor+operation+key, hash canonical request; conflict => 409",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TaskDispatch"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/supplier-tasks/{taskId}/verify": {
+      "post": {
+        "operationId": "verifySupplierTask",
+        "summary": "verifySupplierTask",
+        "description": "业务处理及前置条件见 docs/design/02-api-and-permissions.md 与事务 T11",
+        "x-roles": [
+          "admin"
+        ],
+        "x-transaction": "T11",
+        "parameters": [
+          {
+            "name": "taskId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 16,
+              "maxLength": 128
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "成功；不代表外部副作用已完成",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SupplierTask"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "401": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "403": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "404": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "409": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "422": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "429": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "503": {
+            "$ref": "#/components/responses/BusinessError"
+          }
+        },
+        "x-idempotency": "actor+operation+key, hash canonical request; conflict => 409",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ResourceReview"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/units/{unitId}/deliver": {
+      "post": {
+        "operationId": "deliverUnit",
+        "summary": "deliverUnit",
+        "description": "业务处理及前置条件见 docs/design/02-api-and-permissions.md 与事务 T12",
+        "x-roles": [
+          "admin"
+        ],
+        "x-transaction": "T12",
+        "parameters": [
+          {
+            "name": "unitId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 16,
+              "maxLength": 128
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "成功；不代表外部副作用已完成",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Order"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "401": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "403": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "404": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "409": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "422": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "429": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "503": {
+            "$ref": "#/components/responses/BusinessError"
+          }
+        },
+        "x-idempotency": "actor+operation+key, hash canonical request; conflict => 409",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DeliveryDecision"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/tickets": {
+      "get": {
+        "operationId": "listAllTickets",
+        "summary": "listAllTickets",
+        "description": "业务处理及前置条件见 docs/design/02-api-and-permissions.md 与事务 T10",
+        "x-roles": [
+          "admin"
+        ],
+        "x-transaction": "T10",
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 20
+            }
+          },
+          {
+            "name": "cursor",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "成功；不代表外部副作用已完成",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TicketList"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "401": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "403": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "404": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "409": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "422": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "429": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "503": {
+            "$ref": "#/components/responses/BusinessError"
+          }
+        }
+      }
+    },
+    "/admin/tickets/{ticketId}/decision": {
+      "post": {
+        "operationId": "decideTicket",
+        "summary": "decideTicket",
+        "description": "业务处理及前置条件见 docs/design/02-api-and-permissions.md 与事务 T10",
+        "x-roles": [
+          "admin"
+        ],
+        "x-transaction": "T10",
+        "parameters": [
+          {
+            "name": "ticketId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 16,
+              "maxLength": 128
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "成功；不代表外部副作用已完成",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Ticket"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "401": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "403": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "404": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "409": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "422": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "429": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "503": {
+            "$ref": "#/components/responses/BusinessError"
+          }
+        },
+        "x-idempotency": "actor+operation+key, hash canonical request; conflict => 409",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TicketDecision"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/refunds": {
+      "get": {
+        "operationId": "listRefunds",
+        "summary": "listRefunds",
+        "description": "业务处理及前置条件见 docs/design/02-api-and-permissions.md 与事务 T04",
+        "x-roles": [
+          "admin"
+        ],
+        "x-transaction": "T04",
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 20
+            }
+          },
+          {
+            "name": "cursor",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "成功；不代表外部副作用已完成",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RefundList"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "401": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "403": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "404": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "409": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "422": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "429": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "503": {
+            "$ref": "#/components/responses/BusinessError"
+          }
+        }
+      }
+    },
+    "/admin/machines/{machineId}/operations": {
+      "post": {
+        "operationId": "createInternalOperation",
+        "summary": "createInternalOperation",
+        "description": "业务处理及前置条件见 docs/design/02-api-and-permissions.md 与事务 T08",
+        "x-roles": [
+          "admin"
+        ],
+        "x-transaction": "T08",
+        "parameters": [
+          {
+            "name": "machineId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 16,
+              "maxLength": 128
+            }
+          }
+        ],
+        "responses": {
+          "202": {
+            "description": "成功；不代表外部副作用已完成",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Operation"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "401": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "403": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "404": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "409": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "422": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "429": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "503": {
+            "$ref": "#/components/responses/BusinessError"
+          }
+        },
+        "x-idempotency": "actor+operation+key, hash canonical request; conflict => 409",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/OperationRequest"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/agent/heartbeat": {
+      "post": {
+        "operationId": "agentHeartbeat",
+        "summary": "agentHeartbeat",
+        "description": "业务处理及前置条件见 docs/design/02-api-and-permissions.md 与事务 T13",
+        "x-roles": [
+          "device"
+        ],
+        "x-transaction": "T13",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "成功；不代表外部副作用已完成",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AgentPollResult"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "401": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "403": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "404": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "409": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "422": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "429": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "503": {
+            "$ref": "#/components/responses/BusinessError"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AgentHeartbeat"
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "deviceMTLS": []
+          }
+        ]
+      }
+    },
+    "/agent/poll": {
+      "post": {
+        "operationId": "pollAgentCommand",
+        "summary": "pollAgentCommand",
+        "description": "业务处理及前置条件见 docs/design/02-api-and-permissions.md 与事务 T13",
+        "x-roles": [
+          "device"
+        ],
+        "x-transaction": "T13",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "成功；不代表外部副作用已完成",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AgentPollResult"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "401": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "403": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "404": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "409": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "422": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "429": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "503": {
+            "$ref": "#/components/responses/BusinessError"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AgentPoll"
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "deviceMTLS": []
+          }
+        ]
+      }
+    },
+    "/agent/results": {
+      "post": {
+        "operationId": "reportAgentResult",
+        "summary": "reportAgentResult",
+        "description": "业务处理及前置条件见 docs/design/02-api-and-permissions.md 与事务 T13",
+        "x-roles": [
+          "device"
+        ],
+        "x-transaction": "T13",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "成功；不代表外部副作用已完成",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AgentPollResult"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "401": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "403": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "404": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "409": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "422": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "429": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "503": {
+            "$ref": "#/components/responses/BusinessError"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AgentResult"
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "deviceMTLS": []
+          }
+        ]
+      }
+    },
+    "/auth/password-reset": {
+      "post": {
+        "operationId": "resetOwnPassword",
+        "summary": "通过邮箱凭据重设本人平台密码",
+        "security": [],
+        "x-roles": [
+          "public"
+        ],
+        "x-transaction": "T01",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PasswordReset"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "已重设，撤销旧登录和远控会话",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Account"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BusinessError"
+          }
+        },
+        "description": "challengeId、code、newPassword全部必填（附加条件见02）；不接受currentPassword代替邮箱重设验证。"
+      }
+    },
+    "/admin/resources/{resourceId}/inspect": {
+      "post": {
+        "operationId": "inspectResource",
+        "summary": "inspectResource",
+        "description": "业务处理及前置条件见 docs/design/02-api-and-permissions.md 与事务 T11",
+        "x-roles": [
+          "admin"
+        ],
+        "x-transaction": "T11",
+        "parameters": [
+          {
+            "name": "resourceId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 16,
+              "maxLength": 128
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "成功；不代表外部副作用已完成",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Resource"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "401": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "403": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "404": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "409": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "422": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "429": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "503": {
+            "$ref": "#/components/responses/BusinessError"
+          }
+        },
+        "x-idempotency": "actor+operation+key, hash canonical request; conflict => 409",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ResourceReview"
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "cookieAuth": {
+        "type": "apiKey",
+        "in": "cookie",
+        "name": "tp_session"
+      },
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer"
+      },
+      "deviceMTLS": {
+        "type": "mutualTLS"
+      }
+    },
+    "schemas": {
+      "Error": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "message": {
+            "type": "string"
+          },
+          "traceId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "retryable": {
+            "type": "boolean"
+          },
+          "details": {
+            "type": "object",
+            "properties": {
+              "sessionId": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "currentVersion": {
+                "type": "integer",
+                "minimum": 1
+              }
+            },
+            "additionalProperties": false
+          }
+        },
+        "required": [
+          "code",
+          "message",
+          "traceId",
+          "retryable"
+        ],
+        "additionalProperties": false
+      },
+      "Ack": {
+        "type": "object",
+        "properties": {
+          "accepted": {
+            "type": "boolean"
+          },
+          "operationId": {
+            "type": "string",
+            "format": "uuid"
+          }
+        },
+        "required": [
+          "accepted",
+          "operationId"
+        ],
+        "additionalProperties": false
+      },
+      "Account": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "role": {
+            "type": "string",
+            "enum": [
+              "main",
+              "sub",
+              "supplier",
+              "admin"
+            ]
+          },
+          "email": {
+            "type": "string",
+            "format": "email"
+          },
+          "enabled": {
+            "type": "boolean"
+          },
+          "mustChangePassword": {
+            "type": "boolean"
+          },
+          "authVersion": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9007199254740991
+          }
+        },
+        "required": [
+          "id",
+          "role",
+          "email",
+          "enabled",
+          "mustChangePassword",
+          "authVersion"
+        ],
+        "additionalProperties": false
+      },
+      "AccountList": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Account"
+            }
+          },
+          "nextCursor": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "items",
+          "nextCursor"
+        ],
+        "additionalProperties": false
+      },
+      "EmailRequest": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string",
+            "format": "email"
+          },
+          "purpose": {
+            "type": "string",
+            "enum": [
+              "login",
+              "register",
+              "reset"
+            ]
+          }
+        },
+        "required": [
+          "email",
+          "purpose"
+        ],
+        "additionalProperties": false
+      },
+      "Challenge": {
+        "type": "object",
+        "properties": {
+          "challengeId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "expiresAt": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9007199254740991
+          }
+        },
+        "required": [
+          "challengeId",
+          "expiresAt"
+        ],
+        "additionalProperties": false
+      },
+      "LoginRequest": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string",
+            "format": "email"
+          },
+          "password": {
+            "type": "string",
+            "minLength": 1
+          },
+          "challengeId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "code": {
+            "type": "string"
+          },
+          "client": {
+            "type": "string",
+            "enum": [
+              "web",
+              "native"
+            ]
+          }
+        },
+        "required": [
+          "email",
+          "client"
+        ],
+        "additionalProperties": false,
+        "oneOf": [
+          {
+            "required": [
+              "email",
+              "password",
+              "client"
+            ],
+            "not": {
+              "anyOf": [
+                {
+                  "required": [
+                    "challengeId"
+                  ]
+                },
+                {
+                  "required": [
+                    "code"
+                  ]
+                }
+              ]
+            }
+          },
+          {
+            "required": [
+              "email",
+              "challengeId",
+              "code",
+              "client"
+            ],
+            "not": {
+              "required": [
+                "password"
+              ]
+            }
+          }
+        ]
+      },
+      "LoginResult": {
+        "type": "object",
+        "properties": {
+          "account": {
+            "$ref": "#/components/schemas/Account"
+          },
+          "accessToken": {
+            "type": "string"
+          },
+          "refreshToken": {
+            "type": "string"
+          },
+          "expiresAt": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9007199254740991
+          }
+        },
+        "required": [
+          "account",
+          "expiresAt"
+        ],
+        "additionalProperties": false
+      },
+      "Register": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string",
+            "format": "email"
+          },
+          "password": {
+            "type": "string",
+            "minLength": 12,
+            "maxLength": 128
+          },
+          "challengeId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "code": {
+            "type": "string",
+            "minLength": 6,
+            "maxLength": 6
+          }
+        },
+        "required": [
+          "email",
+          "password",
+          "challengeId",
+          "code"
+        ],
+        "additionalProperties": false
+      },
+      "Refresh": {
+        "type": "object",
+        "properties": {
+          "refreshToken": {
+            "type": "string"
+          }
+        },
+        "required": [],
+        "additionalProperties": false
+      },
+      "Password": {
+        "type": "object",
+        "properties": {
+          "newPassword": {
+            "type": "string",
+            "minLength": 12,
+            "maxLength": 128
+          },
+          "currentPassword": {
+            "type": "string"
+          },
+          "challengeId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "code": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "newPassword"
+        ],
+        "additionalProperties": false
+      },
+      "Subaccount": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string",
+            "format": "email"
+          },
+          "initialPassword": {
+            "type": "string",
+            "minLength": 12,
+            "maxLength": 128
+          }
+        },
+        "required": [
+          "email",
+          "initialPassword"
+        ],
+        "additionalProperties": false
+      },
+      "Version": {
+        "type": "object",
+        "properties": {
+          "expectedVersion": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9007199254740991
+          }
+        },
+        "required": [
+          "expectedVersion"
+        ],
+        "additionalProperties": false
+      },
+      "Product": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string"
+          },
+          "os": {
+            "type": "string",
+            "enum": [
+              "windows",
+              "macos"
+            ]
+          },
+          "country": {
+            "type": "string",
+            "minLength": 2,
+            "maxLength": 2
+          },
+          "cpu": {
+            "type": "string"
+          },
+          "memoryGb": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9007199254740991
+          },
+          "diskGb": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9007199254740991
+          },
+          "periodMs": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9007199254740991
+          },
+          "currency": {
+            "type": "string",
+            "pattern": "^[A-Z]{3}$"
+          },
+          "computerPriceMinor": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9007199254740991
+          },
+          "claudePriceMinor": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9007199254740991
+          },
+          "codexPriceMinor": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9007199254740991
+          },
+          "available": {
+            "type": "boolean"
+          },
+          "version": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9007199254740991
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "os",
+          "country",
+          "cpu",
+          "memoryGb",
+          "diskGb",
+          "periodMs",
+          "currency",
+          "computerPriceMinor",
+          "available",
+          "version"
+        ],
+        "additionalProperties": false
+      },
+      "ProductList": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Product"
+            }
+          },
+          "nextCursor": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "items",
+          "nextCursor"
+        ],
+        "additionalProperties": false
+      },
+      "AiSelection": {
+        "type": "array",
+        "items": {
+          "type": "string",
+          "enum": [
+            "claude",
+            "codex"
+          ]
+        },
+        "uniqueItems": true,
+        "maxItems": 2
+      },
+      "QuoteRequest": {
+        "type": "object",
+        "properties": {
+          "kind": {
+            "type": "string",
+            "enum": [
+              "new",
+              "renewal",
+              "ai_addon"
+            ]
+          },
+          "productId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "leaseId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "quantity": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9007199254740991
+          },
+          "ai": {
+            "$ref": "#/components/schemas/AiSelection"
+          },
+          "aiAccounts": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "provider": {
+                  "type": "string",
+                  "enum": [
+                    "claude",
+                    "codex"
+                  ]
+                },
+                "source": {
+                  "type": "string",
+                  "enum": [
+                    "platform",
+                    "customer"
+                  ]
+                },
+                "email": {
+                  "type": "string",
+                  "format": "email"
+                },
+                "unitOrdinal": {
+                  "type": "integer",
+                  "minimum": 1
+                }
+              },
+              "required": [
+                "provider",
+                "source"
+              ],
+              "additionalProperties": false,
+              "allOf": [
+                {
+                  "if": {
+                    "properties": {
+                      "source": {
+                        "const": "customer"
+                      }
+                    },
+                    "required": [
+                      "source"
+                    ]
+                  },
+                  "then": {
+                    "required": [
+                      "email"
+                    ]
+                  }
+                }
+              ]
+            }
+          }
+        },
+        "required": [
+          "kind",
+          "ai"
+        ],
+        "additionalProperties": false,
+        "allOf": [
+          {
+            "if": {
+              "properties": {
+                "kind": {
+                  "const": "new"
+                }
+              },
+              "required": [
+                "kind"
+              ]
+            },
+            "then": {
+              "required": [
+                "productId",
+                "quantity"
+              ],
+              "not": {
+                "required": [
+                  "leaseId"
+                ]
+              }
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "kind": {
+                  "enum": [
+                    "renewal",
+                    "ai_addon"
+                  ]
+                }
+              },
+              "required": [
+                "kind"
+              ]
+            },
+            "then": {
+              "required": [
+                "leaseId"
+              ],
+              "not": {
+                "anyOf": [
+                  {
+                    "required": [
+                      "quantity"
+                    ]
+                  },
+                  {
+                    "required": [
+                      "productId"
+                    ]
+                  }
+                ]
+              }
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "kind": {
+                  "const": "ai_addon"
+                }
+              },
+              "required": [
+                "kind"
+              ]
+            },
+            "then": {
+              "properties": {
+                "ai": {
+                  "minItems": 1
+                }
+              }
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "kind": {
+                  "const": "new"
+                },
+                "quantity": {
+                  "minimum": 2
+                }
+              },
+              "required": [
+                "kind",
+                "quantity"
+              ]
+            },
+            "then": {
+              "properties": {
+                "aiAccounts": {
+                  "items": {
+                    "required": [
+                      "unitOrdinal"
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        ]
+      },
+      "Quote": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "amountMinor": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9007199254740991
+          },
+          "currency": {
+            "type": "string",
+            "pattern": "^[A-Z]{3}$"
+          },
+          "expiresAt": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9007199254740991
+          },
+          "periodMs": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9007199254740991
+          },
+          "actualAiUntil": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9007199254740991
+          },
+          "disclosures": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "id",
+          "amountMinor",
+          "currency",
+          "expiresAt",
+          "disclosures"
+        ],
+        "additionalProperties": false
+      },
+      "CreateOrder": {
+        "type": "object",
+        "properties": {
+          "quoteId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "acceptedDisclosureHash": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{64}$"
+          }
+        },
+        "required": [
+          "quoteId",
+          "acceptedDisclosureHash"
+        ],
+        "additionalProperties": false
+      },
+      "Order": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "new",
+              "renewal",
+              "ai_addon"
+            ]
+          },
+          "state": {
+            "type": "string",
+            "enum": [
+              "awaiting_payment",
+              "paid",
+              "fulfilling",
+              "fulfilled",
+              "cancel_pending",
+              "cancelled",
+              "exception"
+            ]
+          },
+          "amountMinor": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9007199254740991
+          },
+          "currency": {
+            "type": "string"
+          },
+          "version": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9007199254740991
+          },
+          "units": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "state": {
+                  "type": "string",
+                  "enum": [
+                    "preparing",
+                    "ready",
+                    "delivered",
+                    "cancelled",
+                    "exception"
+                  ]
+                },
+                "leaseId": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "deliveredAt": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "maximum": 9007199254740991
+                }
+              },
+              "required": [
+                "id",
+                "state"
+              ],
+              "additionalProperties": false
+            }
+          }
+        },
+        "required": [
+          "id",
+          "kind",
+          "state",
+          "amountMinor",
+          "currency",
+          "version",
+          "units"
+        ],
+        "additionalProperties": false
+      },
+      "OrderList": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Order"
+            }
+          },
+          "nextCursor": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "items",
+          "nextCursor"
+        ],
+        "additionalProperties": false
+      },
+      "PaymentRequest": {
+        "type": "object",
+        "properties": {
+          "provider": {
+            "type": "string",
+            "enum": [
+              "alipay",
+              "wechat",
+              "card",
+              "paypal"
+            ]
+          },
+          "returnState": {
+            "type": "string",
+            "minLength": 32
+          }
+        },
+        "required": [
+          "provider",
+          "returnState"
+        ],
+        "additionalProperties": false
+      },
+      "Payment": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "state": {
+            "type": "string",
+            "enum": [
+              "pending",
+              "confirmed",
+              "failed",
+              "unknown",
+              "closed"
+            ]
+          },
+          "checkoutUrl": {
+            "type": "string",
+            "format": "uri"
+          },
+          "expiresAt": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9007199254740991
+          }
+        },
+        "required": [
+          "id",
+          "state"
+        ],
+        "additionalProperties": false
+      },
+      "Cancellation": {
+        "type": "object",
+        "properties": {
+          "expectedVersion": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9007199254740991
+          },
+          "confirmationId": {
+            "type": "string",
+            "format": "uuid"
+          }
+        },
+        "required": [
+          "expectedVersion"
+        ],
+        "additionalProperties": false
+      },
+      "Machine": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "leaseId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "os": {
+            "type": "string",
+            "enum": [
+              "windows",
+              "macos"
+            ]
+          },
+          "country": {
+            "type": "string"
+          },
+          "expiresAt": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9007199254740991
+          },
+          "retentionEndsAt": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9007199254740991
+          },
+          "access": {
+            "type": "string",
+            "enum": [
+              "desktop",
+              "export_only",
+              "none"
+            ]
+          },
+          "assignedAccountId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "version": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9007199254740991
+          },
+          "ai": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "provider": {
+                  "type": "string",
+                  "enum": [
+                    "claude",
+                    "codex"
+                  ]
+                },
+                "state": {
+                  "type": "string",
+                  "enum": [
+                    "preparing",
+                    "available",
+                    "interrupted",
+                    "expired",
+                    "terminated"
+                  ]
+                },
+                "promisedUntil": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "maximum": 9007199254740991
+                }
+              },
+              "required": [
+                "id",
+                "provider",
+                "state"
+              ],
+              "additionalProperties": false
+            }
+          }
+        },
+        "required": [
+          "id",
+          "leaseId",
+          "os",
+          "country",
+          "expiresAt",
+          "retentionEndsAt",
+          "access",
+          "version",
+          "ai"
+        ],
+        "additionalProperties": false
+      },
+      "MachineList": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Machine"
+            }
+          },
+          "nextCursor": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "items",
+          "nextCursor"
+        ],
+        "additionalProperties": false
+      },
+      "Assign": {
+        "type": "object",
+        "properties": {
+          "accountId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "expectedVersion": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9007199254740991
+          },
+          "confirmationId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "environmentMode": {
+            "type": "string",
+            "enum": [
+              "preserve_files",
+              "reset"
+            ]
+          }
+        },
+        "required": [
+          "accountId",
+          "expectedVersion"
+        ],
+        "additionalProperties": false
+      },
+      "AutoRenew": {
+        "type": "object",
+        "properties": {
+          "enabled": {
+            "type": "boolean"
+          },
+          "expectedVersion": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9007199254740991
+          }
+        },
+        "required": [
+          "enabled",
+          "expectedVersion"
+        ],
+        "additionalProperties": false
+      },
+      "SessionRequest": {
+        "type": "object",
+        "properties": {
+          "clientKeyJwk": {
+            "type": "object",
+            "properties": {
+              "kty": {
+                "type": "string",
+                "enum": [
+                  "OKP"
+                ]
+              },
+              "crv": {
+                "type": "string",
+                "enum": [
+                  "Ed25519"
+                ]
+              },
+              "x": {
+                "type": "string",
+                "pattern": "^[A-Za-z0-9_-]{43}$"
+              }
+            },
+            "required": [
+              "kty",
+              "crv",
+              "x"
+            ],
+            "additionalProperties": false
+          },
+          "client": {
+            "type": "string",
+            "enum": [
+              "web",
+              "windows",
+              "macos"
+            ]
+          },
+          "takeoverSessionId": {
+            "type": "string",
+            "format": "uuid"
+          }
+        },
+        "required": [
+          "clientKeyJwk",
+          "client"
+        ],
+        "additionalProperties": false
+      },
+      "Session": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "state": {
+            "type": "string",
+            "enum": [
+              "pending",
+              "active",
+              "closing",
+              "closed",
+              "revoked",
+              "failed"
+            ]
+          },
+          "epoch": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9007199254740991
+          },
+          "expiresAt": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9007199254740991
+          },
+          "grant": {
+            "type": "string"
+          },
+          "signalingUrl": {
+            "type": "string",
+            "format": "uri"
+          },
+          "challengeId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "challenge": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "state",
+          "epoch",
+          "expiresAt"
+        ],
+        "additionalProperties": false
+      },
+      "RenewSession": {
+        "type": "object",
+        "properties": {
+          "clientProof": {
+            "type": "string"
+          },
+          "challengeId": {
+            "type": "string",
+            "format": "uuid"
+          }
+        },
+        "required": [
+          "clientProof",
+          "challengeId"
+        ],
+        "additionalProperties": false
+      },
+      "ConfirmationRequest": {
+        "type": "object",
+        "properties": {
+          "action": {
+            "type": "string",
+            "enum": [
+              "takeover",
+              "reinstall",
+              "reassign",
+              "cancel",
+              "refund_accept"
+            ]
+          },
+          "targetId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "expectedVersion": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9007199254740991
+          }
+        },
+        "required": [
+          "action",
+          "targetId",
+          "expectedVersion"
+        ],
+        "additionalProperties": false
+      },
+      "Confirmation": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "token": {
+            "type": "string"
+          },
+          "expiresAt": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9007199254740991
+          }
+        },
+        "required": [
+          "id",
+          "token",
+          "expiresAt"
+        ],
+        "additionalProperties": false
+      },
+      "OperationRequest": {
+        "type": "object",
+        "properties": {
+          "kind": {
+            "type": "string",
+            "enum": [
+              "restart_remote",
+              "reboot_os",
+              "reset_machine"
+            ]
+          },
+          "expectedVersion": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9007199254740991
+          },
+          "confirmationId": {
+            "type": "string",
+            "format": "uuid"
+          }
+        },
+        "required": [
+          "kind",
+          "expectedVersion"
+        ],
+        "additionalProperties": false
+      },
+      "Operation": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "kind": {
+            "type": "string"
+          },
+          "state": {
+            "type": "string",
+            "enum": [
+              "queued",
+              "delivered",
+              "accepted",
+              "effect_reported",
+              "verified",
+              "failed",
+              "unknown",
+              "not_configured",
+              "rejected",
+              "expired"
+            ]
+          },
+          "version": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9007199254740991
+          },
+          "reasonCode": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "kind",
+          "state",
+          "version"
+        ],
+        "additionalProperties": false
+      },
+      "ExportRequest": {
+        "type": "object",
+        "properties": {
+          "paths": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 1024
+            }
+          },
+          "expectedVersion": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9007199254740991
+          }
+        },
+        "required": [
+          "paths",
+          "expectedVersion"
+        ],
+        "additionalProperties": false
+      },
+      "Export": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "state": {
+            "type": "string",
+            "enum": [
+              "queued",
+              "running",
+              "ready",
+              "failed",
+              "cancelled",
+              "expired"
+            ]
+          },
+          "expiresAt": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9007199254740991
+          },
+          "manifestUrl": {
+            "type": "string",
+            "format": "uri"
+          }
+        },
+        "required": [
+          "id",
+          "state",
+          "expiresAt"
+        ],
+        "additionalProperties": false
+      },
+      "TicketRequest": {
+        "type": "object",
+        "properties": {
+          "leaseId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "computer_fault",
+              "ai_fault"
+            ]
+          },
+          "aiEntitlementId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "description": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 10000
+          }
+        },
+        "required": [
+          "leaseId",
+          "kind",
+          "description"
+        ],
+        "additionalProperties": false,
+        "allOf": [
+          {
+            "if": {
+              "properties": {
+                "kind": {
+                  "const": "ai_fault"
+                }
+              },
+              "required": [
+                "kind"
+              ]
+            },
+            "then": {
+              "required": [
+                "aiEntitlementId"
+              ]
+            }
+          }
+        ]
+      },
+      "Ticket": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "state": {
+            "type": "string",
+            "enum": [
+              "open",
+              "investigating",
+              "repairing",
+              "decision_pending",
+              "resolved",
+              "closed"
+            ]
+          },
+          "reportedAt": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9007199254740991
+          },
+          "repairDeadlineAt": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9007199254740991
+          },
+          "decision": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "state",
+          "reportedAt"
+        ],
+        "additionalProperties": false
+      },
+      "TicketList": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Ticket"
+            }
+          },
+          "nextCursor": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "items",
+          "nextCursor"
+        ],
+        "additionalProperties": false
+      },
+      "TicketDecision": {
+        "type": "object",
+        "properties": {
+          "outcome": {
+            "type": "string",
+            "enum": [
+              "repair",
+              "computer_compensation",
+              "ai_terminate_refund",
+              "fault_replace",
+              "terminate_unit_refund",
+              "reject"
+            ]
+          },
+          "verifiedFrom": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9007199254740991
+          },
+          "verifiedUntil": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9007199254740991
+          },
+          "reason": {
+            "type": "string",
+            "minLength": 1
+          },
+          "expectedVersion": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9007199254740991
+          }
+        },
+        "required": [
+          "outcome",
+          "reason",
+          "expectedVersion"
+        ],
+        "additionalProperties": false
+      },
+      "SupplierApplication": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1
+          },
+          "email": {
+            "type": "string",
+            "format": "email"
+          },
+          "computerSupply": {
+            "type": "boolean"
+          },
+          "subscriptionSupply": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "name",
+          "email",
+          "computerSupply",
+          "subscriptionSupply"
+        ],
+        "additionalProperties": false
+      },
+      "Supplier": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string"
+          },
+          "state": {
+            "type": "string",
+            "enum": [
+              "applied",
+              "approved",
+              "suspended",
+              "rejected"
+            ]
+          },
+          "computerSupply": {
+            "type": "boolean"
+          },
+          "subscriptionSupply": {
+            "type": "boolean"
+          },
+          "version": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9007199254740991
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "state",
+          "computerSupply",
+          "subscriptionSupply",
+          "version"
+        ],
+        "additionalProperties": false
+      },
+      "SupplierList": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Supplier"
+            }
+          },
+          "nextCursor": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "items",
+          "nextCursor"
+        ],
+        "additionalProperties": false
+      },
+      "SupplierReview": {
+        "type": "object",
+        "properties": {
+          "state": {
+            "type": "string",
+            "enum": [
+              "approved",
+              "rejected",
+              "suspended"
+            ]
+          },
+          "reason": {
+            "type": "string",
+            "minLength": 1
+          },
+          "expectedVersion": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9007199254740991
+          }
+        },
+        "required": [
+          "state",
+          "reason",
+          "expectedVersion"
+        ],
+        "additionalProperties": false
+      },
+      "ComputerRegistration": {
+        "type": "object",
+        "properties": {
+          "supplierMachineRef": {
+            "type": "string",
+            "minLength": 1
+          },
+          "os": {
+            "type": "string",
+            "enum": [
+              "windows",
+              "macos"
+            ]
+          },
+          "country": {
+            "type": "string",
+            "pattern": "^[A-Z]{2}$"
+          },
+          "cpu": {
+            "type": "string"
+          },
+          "memoryGb": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9007199254740991
+          },
+          "diskGb": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9007199254740991
+          },
+          "templateVersion": {
+            "type": "string"
+          },
+          "resourceKind": {
+            "type": "string",
+            "const": "computer"
+          },
+          "quoteCurrency": {
+            "type": "string",
+            "pattern": "^[A-Z]{3}$"
+          },
+          "costMinor": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9007199254740991
+          },
+          "leadTimeMs": {
+            "type": "integer",
+            "minimum": 1
+          }
+        },
+        "required": [
+          "supplierMachineRef",
+          "os",
+          "country",
+          "cpu",
+          "memoryGb",
+          "diskGb"
+        ],
+        "additionalProperties": false
+      },
+      "Resource": {
+        "oneOf": [
+          {
+            "$ref": "#/components/schemas/ComputerResource"
+          },
+          {
+            "$ref": "#/components/schemas/SubscriptionResource"
+          }
+        ]
+      },
+      "ResourceList": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Resource"
+            }
+          },
+          "nextCursor": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "items",
+          "nextCursor"
+        ],
+        "additionalProperties": false
+      },
+      "ResourceReview": {
+        "type": "object",
+        "properties": {
+          "expectedVersion": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9007199254740991
+          },
+          "evidenceRef": {
+            "type": "string"
+          },
+          "accepted": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "expectedVersion",
+          "evidenceRef",
+          "accepted"
+        ],
+        "additionalProperties": false
+      },
+      "SupplierTask": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "computer_prepare",
+              "ai_activate",
+              "ai_renew"
+            ]
+          },
+          "unitId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "state": {
+            "type": "string",
+            "enum": [
+              "offered",
+              "accepted",
+              "working",
+              "reported",
+              "verified",
+              "failed",
+              "unknown",
+              "cancelled"
+            ]
+          },
+          "targetEmail": {
+            "type": "string",
+            "format": "email"
+          },
+          "deadlineAt": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9007199254740991
+          },
+          "version": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9007199254740991
+          }
+        },
+        "required": [
+          "id",
+          "kind",
+          "unitId",
+          "state",
+          "deadlineAt",
+          "version"
+        ],
+        "additionalProperties": false
+      },
+      "TaskList": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SupplierTask"
+            }
+          },
+          "nextCursor": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "items",
+          "nextCursor"
+        ],
+        "additionalProperties": false
+      },
+      "TaskReport": {
+        "type": "object",
+        "properties": {
+          "expectedVersion": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9007199254740991
+          },
+          "outcome": {
+            "type": "string",
+            "enum": [
+              "reported",
+              "failed",
+              "unknown"
+            ]
+          },
+          "evidenceRef": {
+            "type": "string"
+          },
+          "upstreamUntil": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9007199254740991
+          },
+          "externalRef": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "expectedVersion",
+          "outcome"
+        ],
+        "additionalProperties": false,
+        "allOf": [
+          {
+            "if": {
+              "properties": {
+                "outcome": {
+                  "const": "reported"
+                }
+              },
+              "required": [
+                "outcome"
+              ]
+            },
+            "then": {
+              "required": [
+                "evidenceRef",
+                "externalRef"
+              ]
+            }
+          }
+        ]
+      },
+      "TaskDispatch": {
+        "type": "object",
+        "properties": {
+          "supplierId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "unitId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "computer_prepare",
+              "ai_activate",
+              "ai_renew"
+            ]
+          },
+          "aiEntitlementId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "deadlineAt": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9007199254740991
+          }
+        },
+        "required": [
+          "supplierId",
+          "unitId",
+          "kind",
+          "deadlineAt"
+        ],
+        "additionalProperties": false
+      },
+      "DeliveryDecision": {
+        "type": "object",
+        "properties": {
+          "expectedVersion": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9007199254740991
+          },
+          "computerEvidenceRef": {
+            "type": "string"
+          },
+          "aiEvidenceRefs": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "expectedVersion",
+          "computerEvidenceRef",
+          "aiEvidenceRefs"
+        ],
+        "additionalProperties": false
+      },
+      "Refund": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "state": {
+            "type": "string",
+            "enum": [
+              "reserved",
+              "submitted",
+              "succeeded",
+              "failed",
+              "unknown"
+            ]
+          },
+          "amountMinor": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9007199254740991
+          },
+          "currency": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "state",
+          "amountMinor",
+          "currency"
+        ],
+        "additionalProperties": false
+      },
+      "RefundList": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Refund"
+            }
+          },
+          "nextCursor": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "items",
+          "nextCursor"
+        ],
+        "additionalProperties": false
+      },
+      "Ledger": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "taskId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "cost",
+              "payment",
+              "adjustment"
+            ]
+          },
+          "amountMinor": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991
+          },
+          "currency": {
+            "type": "string"
+          },
+          "createdAt": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9007199254740991
+          }
+        },
+        "required": [
+          "id",
+          "taskId",
+          "kind",
+          "amountMinor",
+          "currency",
+          "createdAt"
+        ],
+        "additionalProperties": false
+      },
+      "LedgerList": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Ledger"
+            }
+          },
+          "nextCursor": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "items",
+          "nextCursor"
+        ],
+        "additionalProperties": false
+      },
+      "AgentPoll": {
+        "type": "object",
+        "properties": {
+          "bootId": {
+            "type": "string"
+          },
+          "agentInstanceId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "sequence": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9007199254740991
+          }
+        },
+        "required": [
+          "bootId",
+          "agentInstanceId",
+          "sequence"
+        ],
+        "additionalProperties": false
+      },
+      "AgentHeartbeat": {
+        "type": "object",
+        "properties": {
+          "bootId": {
+            "type": "string"
+          },
+          "agentInstanceId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "sequence": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9007199254740991
+          },
+          "remoteProcessId": {
+            "type": "string"
+          },
+          "desktopProbe": {
+            "type": "string",
+            "enum": [
+              "pass",
+              "fail",
+              "unknown"
+            ]
+          },
+          "credentialVersion": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9007199254740991
+          }
+        },
+        "required": [
+          "bootId",
+          "agentInstanceId",
+          "sequence",
+          "desktopProbe"
+        ],
+        "additionalProperties": false
+      },
+      "AgentCommand": {
+        "type": "object",
+        "properties": {
+          "commandId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "restart_remote",
+              "reboot_os",
+              "rotate_credential",
+              "close_session",
+              "reset_machine",
+              "verify_machine"
+            ]
+          },
+          "expiresAt": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9007199254740991
+          },
+          "envelope": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "commandId",
+          "kind",
+          "expiresAt",
+          "envelope"
+        ],
+        "additionalProperties": false
+      },
+      "AgentPollResult": {
+        "type": "object",
+        "properties": {
+          "command": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/AgentCommand"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "serverTime": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9007199254740991
+          }
+        },
+        "required": [
+          "command",
+          "serverTime"
+        ],
+        "additionalProperties": false
+      },
+      "AgentResult": {
+        "type": "object",
+        "properties": {
+          "commandId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "state": {
+            "type": "string",
+            "enum": [
+              "accepted",
+              "effect_reported",
+              "failed",
+              "unknown",
+              "not_configured",
+              "rejected"
+            ]
+          },
+          "observedVersion": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9007199254740991
+          },
+          "evidenceRef": {
+            "type": "string"
+          },
+          "reasonCode": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "commandId",
+          "state"
+        ],
+        "additionalProperties": false
+      },
+      "NativeExchange": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string",
+            "minLength": 32
+          },
+          "state": {
+            "type": "string",
+            "minLength": 32
+          },
+          "verifier": {
+            "type": "string",
+            "minLength": 43,
+            "maxLength": 128
+          }
+        },
+        "required": [
+          "code",
+          "state",
+          "verifier"
+        ],
+        "additionalProperties": false
+      },
+      "PasswordReset": {
+        "type": "object",
+        "properties": {
+          "newPassword": {
+            "type": "string",
+            "minLength": 12,
+            "maxLength": 128
+          },
+          "currentPassword": {
+            "type": "string"
+          },
+          "challengeId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "code": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "newPassword",
+          "challengeId",
+          "code"
+        ],
+        "additionalProperties": false
+      },
+      "Unassign": {
+        "type": "object",
+        "properties": {
+          "expectedVersion": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "environmentMode": {
+            "type": "string",
+            "enum": [
+              "preserve_files",
+              "reset"
+            ]
+          },
+          "confirmationId": {
+            "type": "string",
+            "format": "uuid"
+          }
+        },
+        "required": [
+          "expectedVersion",
+          "environmentMode",
+          "confirmationId"
+        ],
+        "additionalProperties": false
+      },
+      "ComputerResource": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "supplierMachineRef": {
+            "type": "string"
+          },
+          "os": {
+            "type": "string",
+            "enum": [
+              "windows",
+              "macos"
+            ]
+          },
+          "state": {
+            "type": "string",
+            "enum": [
+              "inspection",
+              "available",
+              "reserved",
+              "preparing",
+              "rented",
+              "retained",
+              "resetting",
+              "quarantined"
+            ]
+          },
+          "version": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9007199254740991
+          },
+          "resourceKind": {
+            "type": "string",
+            "const": "computer"
+          }
+        },
+        "required": [
+          "id",
+          "supplierMachineRef",
+          "os",
+          "state",
+          "version",
+          "resourceKind"
+        ],
+        "additionalProperties": false
+      },
+      "SubscriptionResourceRegistration": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "resourceKind": {
+            "type": "string",
+            "const": "card_subscription"
+          },
+          "externalRef": {
+            "type": "string",
+            "minLength": 3,
+            "maxLength": 100,
+            "not": {
+              "pattern": "^[0-9]{12,19}$"
+            }
+          },
+          "providers": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "claude",
+                "codex"
+              ]
+            },
+            "uniqueItems": true,
+            "maxItems": 2,
+            "minItems": 1
+          },
+          "quoteCurrency": {
+            "type": "string",
+            "pattern": "^[A-Z]{3}$"
+          },
+          "costMinor": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9007199254740991
+          },
+          "capacity": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "validUntil": {
+            "type": "integer",
+            "minimum": 1
+          }
+        },
+        "required": [
+          "resourceKind",
+          "externalRef",
+          "providers",
+          "quoteCurrency",
+          "costMinor",
+          "capacity",
+          "validUntil"
+        ]
+      },
+      "SubscriptionResource": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "resourceKind": {
+            "type": "string",
+            "const": "card_subscription"
+          },
+          "externalRef": {
+            "type": "string",
+            "minLength": 3,
+            "maxLength": 100,
+            "not": {
+              "pattern": "^[0-9]{12,19}$"
+            }
+          },
+          "providers": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "claude",
+                "codex"
+              ]
+            },
+            "uniqueItems": true,
+            "maxItems": 2,
+            "minItems": 1
+          },
+          "quoteCurrency": {
+            "type": "string",
+            "pattern": "^[A-Z]{3}$"
+          },
+          "costMinor": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9007199254740991
+          },
+          "capacity": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "validUntil": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "supplierId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "state": {
+            "type": "string",
+            "enum": [
+              "inspection",
+              "verified",
+              "suspended"
+            ]
+          },
+          "version": {
+            "type": "integer",
+            "minimum": 1
+          }
+        },
+        "required": [
+          "resourceKind",
+          "externalRef",
+          "providers",
+          "quoteCurrency",
+          "costMinor",
+          "capacity",
+          "validUntil",
+          "id",
+          "supplierId",
+          "state",
+          "version"
+        ]
+      },
+      "ResourceRegistration": {
+        "oneOf": [
+          {
+            "$ref": "#/components/schemas/ComputerRegistration"
+          },
+          {
+            "$ref": "#/components/schemas/SubscriptionResourceRegistration"
+          }
+        ]
+      }
+    },
+    "responses": {
+      "BusinessError": {
+        "description": "统一错误，具体错误码和HTTP映射见02详细设计",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            }
+          }
+        }
+      }
+    }
+  }
+}

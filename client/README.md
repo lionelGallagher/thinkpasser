@@ -13,6 +13,8 @@ Windows／Mac 客户端及被控端集成目录。复用固定版本 RustDesk �
 
 ## 现有内容
 
+[preview/](preview/README.md)提供桌面界面的网页交互预览：账号切换、当前账号电脑、工作区、工具栏和设置。根目录运行`npm run dev`，打开<http://127.0.0.1:5180/client/preview/>。它不连接真实主机，也不是Windows／Mac可安装包；手机App不在范围内。
+
 [rustdesk/](rustdesk/README.md) 包含能力裁剪、固定版本校验、构建和打包准备、权限输入以及登录／收银回跳模板。它不是完整上游源码，尚未编译出可发布的 Windows／Mac 产品。
 
 被排除的摄像头、麦克风转发、语音、打印、通用隧道、录像、聊天及任意设备 ID 连接，不能仅靠隐藏按钮恢复。具体白名单见 [RustDesk 说明](rustdesk/README.md)。

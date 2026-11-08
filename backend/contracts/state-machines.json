@@ -1,0 +1,311 @@
+{
+  "version": 1,
+  "note": "设计模型，不是已接入真实设备的工作流引擎；所有无列出的转换拒绝。",
+  "machines": {
+    "unit": {
+      "initial": "preparing",
+      "terminal": [
+        "delivered",
+        "cancelled"
+      ],
+      "transitions": {
+        "preparing": [
+          "ready",
+          "exception",
+          "cancelled"
+        ],
+        "exception": [
+          "preparing",
+          "cancelled"
+        ],
+        "ready": [
+          "delivered",
+          "exception",
+          "cancelled"
+        ],
+        "delivered": [],
+        "cancelled": []
+      }
+    },
+    "credential": {
+      "initial": "pending",
+      "terminal": [
+        "retired"
+      ],
+      "transitions": {
+        "pending": [
+          "active",
+          "unknown",
+          "retired"
+        ],
+        "active": [
+          "retired",
+          "unknown"
+        ],
+        "unknown": [
+          "active",
+          "retired"
+        ],
+        "retired": []
+      }
+    },
+    "session": {
+      "initial": "pending",
+      "terminal": [
+        "closed",
+        "revoked",
+        "failed"
+      ],
+      "transitions": {
+        "pending": [
+          "active",
+          "closing",
+          "failed",
+          "revoked"
+        ],
+        "active": [
+          "closing",
+          "revoked"
+        ],
+        "closing": [
+          "closed",
+          "revoked"
+        ],
+        "closed": [],
+        "revoked": [],
+        "failed": []
+      }
+    },
+    "operation": {
+      "initial": "queued",
+      "terminal": [
+        "verified",
+        "failed",
+        "not_configured",
+        "rejected",
+        "expired"
+      ],
+      "transitions": {
+        "queued": [
+          "delivered",
+          "expired",
+          "rejected"
+        ],
+        "delivered": [
+          "accepted",
+          "rejected",
+          "unknown"
+        ],
+        "accepted": [
+          "effect_reported",
+          "failed",
+          "unknown",
+          "not_configured"
+        ],
+        "effect_reported": [
+          "verified",
+          "unknown",
+          "failed"
+        ],
+        "unknown": [
+          "effect_reported",
+          "failed",
+          "not_configured"
+        ],
+        "verified": [],
+        "failed": [],
+        "not_configured": [],
+        "rejected": [],
+        "expired": []
+      }
+    },
+    "supplierTask": {
+      "initial": "offered",
+      "terminal": [
+        "verified",
+        "cancelled"
+      ],
+      "transitions": {
+        "offered": [
+          "accepted",
+          "cancelled"
+        ],
+        "accepted": [
+          "working",
+          "reported",
+          "failed",
+          "unknown",
+          "cancelled"
+        ],
+        "working": [
+          "reported",
+          "failed",
+          "unknown"
+        ],
+        "reported": [
+          "verified",
+          "failed",
+          "unknown"
+        ],
+        "failed": [
+          "offered",
+          "cancelled"
+        ],
+        "unknown": [
+          "reported",
+          "failed",
+          "cancelled"
+        ],
+        "verified": [],
+        "cancelled": []
+      }
+    },
+    "refund": {
+      "initial": "reserved",
+      "terminal": [
+        "succeeded"
+      ],
+      "transitions": {
+        "reserved": [
+          "submitted",
+          "failed"
+        ],
+        "submitted": [
+          "succeeded",
+          "failed",
+          "unknown"
+        ],
+        "unknown": [
+          "succeeded",
+          "failed"
+        ],
+        "failed": [
+          "reserved"
+        ],
+        "succeeded": []
+      }
+    }
+  },
+  "transactions": {
+    "T01": {
+      "owner": "identity",
+      "locks": [
+        "account",
+        "login_session/challenge"
+      ],
+      "doc": "02-api-and-permissions.md#t01-身份"
+    },
+    "T02": {
+      "owner": "identity",
+      "locks": [
+        "main_account",
+        "target_subaccount"
+      ],
+      "doc": "02-api-and-permissions.md#t02-子账号"
+    },
+    "T03": {
+      "owner": "commerce",
+      "locks": [
+        "quote",
+        "product",
+        "computer_inventory"
+      ],
+      "doc": "01-data-and-transactions.md#t03-报价与下单"
+    },
+    "T04": {
+      "owner": "payments",
+      "locks": [
+        "payment",
+        "order",
+        "lease-if-renewal",
+        "refund"
+      ],
+      "doc": "01-data-and-transactions.md#t04-收款与退款"
+    },
+    "T05": {
+      "owner": "lease",
+      "locks": [
+        "lease",
+        "allocation",
+        "accounts-sorted",
+        "assignment"
+      ],
+      "doc": "01-data-and-transactions.md#t05-分配与换人"
+    },
+    "T06": {
+      "owner": "lease",
+      "locks": [
+        "lease",
+        "allocation",
+        "computer",
+        "ai-items"
+      ],
+      "doc": "01-data-and-transactions.md#t06-续费补时和清理竞争"
+    },
+    "T07": {
+      "owner": "remote",
+      "locks": [
+        "lease",
+        "allocation",
+        "assignment",
+        "remote_session"
+      ],
+      "doc": "03-remote-and-device.md#t07-连接与接管"
+    },
+    "T08": {
+      "owner": "device",
+      "locks": [
+        "lease",
+        "allocation",
+        "computer",
+        "operation"
+      ],
+      "doc": "03-remote-and-device.md#t08-设备命令"
+    },
+    "T09": {
+      "owner": "exports",
+      "locks": [
+        "lease",
+        "allocation",
+        "export_job"
+      ],
+      "doc": "03-remote-and-device.md#t09-仅导出"
+    },
+    "T10": {
+      "owner": "aftersale",
+      "locks": [
+        "lease",
+        "ticket",
+        "ai-items",
+        "payment"
+      ],
+      "doc": "04-supplier-payments-aftersale.md#t10-工单与赔付"
+    },
+    "T11": {
+      "owner": "supply",
+      "locks": [
+        "supplier",
+        "resource/task"
+      ],
+      "doc": "04-supplier-payments-aftersale.md#t11-供货"
+    },
+    "T12": {
+      "owner": "delivery",
+      "locks": [
+        "order",
+        "unit",
+        "computer",
+        "ai-items"
+      ],
+      "doc": "01-data-and-transactions.md#t12-首次交付"
+    },
+    "T13": {
+      "owner": "device",
+      "locks": [
+        "device_identity",
+        "operation"
+      ],
+      "doc": "03-remote-and-device.md#t13-设备上报"
+    }
+  }
+}

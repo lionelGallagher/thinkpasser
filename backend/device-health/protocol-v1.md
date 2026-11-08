@@ -1,6 +1,6 @@
 # 设备管理协议 v1 与本地参考实现
 
-这是与实现语言无关的消息/状态约定，以及验证它的 Node 参考代码。最终服务端、客户端和 Agent 的技术栈尚未确定。参考代码在 Node 22.22.2 上验证，使用内置 `node:sqlite`；该 Node 版本会显示 SQLite 实验性 API 提示。没有引入第三方包。
+这是与实现语言无关的消息/状态约定，以及验证它的 Node 参考代码。业务后端设计采用 Java／Spring Boot＋MySQL；原生与 Agent 按系统集成需要选择技术，详见[开发交接](../../docs/design/README.md)。参考代码在 Node 22.22.2 上验证，使用内置 `node:sqlite`；该 Node 版本会显示 SQLite 实验性 API 提示。没有引入第三方包。
 
 ## 运行与覆盖范围
 

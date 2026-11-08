@@ -224,6 +224,10 @@
         [
           "C47",
           "平台管理供货任务、资源关联、验收、实际期限、成本、售后和结算；卡供应方管理其卡资源本身。平台直接发起开卡、充值、冻结、销卡不作为已确认的必需功能；旧G03问题撤回，未记为用户选择A或B。"
+        ],
+        [
+          "C48",
+          "用户提出将每台被控电脑的RustDesk连接密码关联客户购后对应的电脑，明确不是平台账号登录密码。此项作为设备连接凭据的实施想法记录；密码与平台账号、OS登录和AI登录分开，凭据不能代替租约授权。设置、轮换和到期撤权仍待原生接入验证。"
         ]
       ]
     }
@@ -689,7 +693,7 @@
       "平台只需接收任务结果、可用性及售后记录，无须强制取得对方完整卡信息。没有正式接口的步骤由供应商端人工接单、回填，订单进度仍统一跟踪。"
     ]
   ],
-  "revision": 10,
+  "revision": 11,
   "readabilityReview": {
     "scope": "全部13道待答题",
     "format": "具体场景、需要决定的事、可直接选择的结果、必要说明",
@@ -1123,5 +1127,89 @@
       "Windows／Mac真实主机远控、网页连接、长期运行、到期撤权、清理和整套交付的端到端验收"
     ],
     "notClaimed": "不表示供应已接通、支付已可用、远控已达到生产验收，或所有未来外部变化都已知。"
+  },
+  "machineConnectionCredentialIdea": {
+    "userIdea": "RustDesk可为被控电脑设置连接密码，将该密码与客户购买后获得的电脑对应；不是平台账号登录密码。",
+    "userIntentConfirmed": true,
+    "designStatus": "已记录并给出实施方案，未接通真实设备设置／轮换及原生强制授权",
+    "credentialType": "RustDesk被控端连接凭据",
+    "separateFrom": [
+      "平台主子账号密码",
+      "Windows／macOS登录密码",
+      "Claude／Codex登录凭据"
+    ],
+    "association": [
+      "机器稳定ID",
+      "订单电脑交付单元",
+      "当前租约",
+      "当前使用账号及分配版本",
+      "设备连接凭据版本与安全引用"
+    ],
+    "role": "底层远控认证；凭据不代替电脑ID、平台账号或租期授权",
+    "currentCredentialPerDevice": "同一机器当前启用一版受控凭据，租约／分配变化有版本与撤销记录，不按用户账号共用一个密码",
+    "proposedDefaultInteraction": "从平台已分配电脑列表一键连接；不默认在普通界面展示或复制长期密码。这是实施建议，不冒充用户已选择的密码展示规则。",
+    "lifecycle": {
+      "preparation": "备机阶段生成／接管每机独立凭据，关联交付单元；凭据写入回执和受控认证验证通过后才标记此环节就绪",
+      "delivery": "不因付款或设置密码就起租，仍按电脑和所购AI整套验收开放时起租；桌面授权依当前实际分配",
+      "connection": "校验平台账号、租约、分配和会话后，由受控适配层结合设备凭据完成认证；网页和原生均不得仅凭ID+永久密码绕过平台",
+      "renewalOrCompensation": "更新同一租约授权与到期任务；不强制清环境或改平台登录密码，过期的撤权任务不得误执行",
+      "expiry": "拒绝新会话并撤销和关闭已有会话；凭据失效／轮换需设备确认，不能仅凭改密成功就认定旧连接已断",
+      "retention": "三天仅提供受限导出，不为导出而发放完整远控密码",
+      "reassignment": "撤销原使用账号授权、更新分配及凭据版本；不让原账号凭旧凭据访问后续使用者电脑",
+      "resetAndRestock": "清理旧客户文件、系统及第三方登录状态和旧连接凭据后重新准备；下一租约使用新凭据并验证后入库交付"
+    },
+    "engineering": {
+      "secretStorage": "后台保存凭据安全引用与版本，秘密材料受控加密保存／由设备安全管理；不得把各类密码混用，也不写入URL、日志、共享镜像或公共安装包",
+      "protocolBoundary": "平台短时grant不是RustDesk密码字符串，需要固定fork的受控本机接口或认证钩子；现有参考模块尚未完成这些接口",
+      "acknowledgement": "设置、轮换、撤权和关闭会话分别验证真实结果，失败／状态不明不显示成功或直接复用机器",
+      "ownershipBoundary": "完整OS权限下，机内密码或Agent不能单独保证不可绕过；平台入口及供应商独立控制能力仍按既有远控和生命周期契约验收"
+    },
+    "sources": [
+      {
+        "title": "RustDesk Client",
+        "url": "https://rustdesk.com/docs/en/client/",
+        "evidence": "官方说明--password设置永久密码；不等于平台已有远程改密API"
+      },
+      {
+        "title": "RustDesk无人值守说明",
+        "url": "https://www.rustdesk.com/blog/rustdesk-unattended-access-setup/",
+        "evidence": "被控端独立永久密码与系统服务支持无人值守"
+      },
+      {
+        "title": "Advanced Settings",
+        "url": "https://rustdesk.com/docs/en/self-host/client-configuration/advanced-settings/",
+        "evidence": "approve-mode和verification-method区分接受方式与密码类型；具体固定版本仍待实测"
+      }
+    ]
+  },
+  "architectureDocument": {
+    "path": "docs/architecture.md",
+    "status": "统一技术设计基线；业务确认、推荐实现和未接入能力分别标明",
+    "scope": [
+      "四端及后端",
+      "领域对象与数据约束",
+      "两类供应商和指定账号开通",
+      "订单交付及收退款",
+      "机器连接凭据与租约授权",
+      "原生和浏览器远控",
+      "设备健康与恢复",
+      "到期导出和清理",
+      "实施顺序与验收"
+    ],
+    "implementationBoundary": "整理文档不等于已完成真实改密、原生租约强制、生产支付或供应对接"
+  },
+  "technicalImplementationPreferences": {
+    "businessBackend": "Java／Spring Boot＋MySQL，使用Maven；按适合的模块使用Java，不强制整个项目均为Java",
+    "webFrontend": "Vue 3＋TypeScript，三个网页端及桌面界面预览共享类型、组件和演示数据",
+    "nativeDesktop": "保留Windows／Mac桌面客户端，基于固定RustDesk原生核心集成；手机App不在范围内",
+    "mavenPath": "D:\\workSoftware\\apache-maven-3.9.14",
+    "verifiedLocalVersions": {
+      "java": "17.0.21.0.2",
+      "maven": "3.9.14",
+      "mysql": "8.0.44"
+    },
+    "currentWork": "业务及难点详细设计已整理，先完成可交互前端；生产Java应用与真实外部接入后续实现",
+    "handoff": "docs/design/README.md",
+    "frontendHandoff": "docs/design/07-frontend-handoff.md"
   }
 }
