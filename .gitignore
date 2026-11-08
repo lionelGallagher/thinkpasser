@@ -1,4 +1,12 @@
 node_modules/
+.idea/
+.playwright-mcp/
 .preview/
 __pycache__/
+*.py[cod]
 *.log
+.env
+.env.*
+!.env.example
+.DS_Store
+Thumbs.db

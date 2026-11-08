@@ -1,0 +1,45 @@
+"""Build integration for the opt-in native product, shared with build.py."""
+
+import base64
+import os
+from pathlib import Path
+import shlex
+
+
+REQUIRED_ENVIRONMENT = (
+    'THINKPASSER_RENDEZVOUS_SERVER', 'THINKPASSER_RELAY_SERVER', 'THINKPASSER_SERVER_KEY',
+)
+
+
+def validate_environment(args):
+    if args.skip_cargo:
+        raise ValueError('Product builds must compile their policy; --skip-cargo is not allowed')
+    missing = [key for key in REQUIRED_ENVIRONMENT if not os.environ.get(key, '').strip()]
+    if missing:
+        raise ValueError('Set deployment build variables: ' + ', '.join(missing))
+    for key in REQUIRED_ENVIRONMENT[:2]:
+        value = os.environ[key]
+        if value != value.strip() or any(c.isspace() for c in value) or '://' in value:
+            raise ValueError(key + ' must be a RustDesk host[:port] endpoint without a URL scheme or whitespace')
+    try:
+        key = base64.b64decode(os.environ['THINKPASSER_SERVER_KEY'], validate=True)
+    except ValueError as error:
+        raise ValueError('THINKPASSER_SERVER_KEY must be a base64 Ed25519 public key') from error
+    if len(key) != 32:
+        raise ValueError('THINKPASSER_SERVER_KEY must decode to 32 bytes')
+
+
+def macos_xcode_settings(repo_root):
+    profile = Path(repo_root) / 'res' / 'thinkpasser' / 'macos-profile'
+    return ' '.join(name + '=' + shlex.quote(str(profile / file)) for name, file in (
+        ('FLUTTER_XCODE_INFOPLIST_FILE', 'Info.plist'),
+        ('FLUTTER_XCODE_CODE_SIGN_ENTITLEMENTS', 'Release.entitlements'),
+    ))
+
+
+def assert_bundle_no_printer(bundle):
+    bundle = Path(bundle)
+    for path in bundle.rglob('*'):
+        parts = [part.lower() for part in path.relative_to(bundle).parts]
+        if 'rustdeskprinterdriver' in parts or path.name.lower() == 'printer_driver_adapter.dll':
+            raise ValueError('Product bundle contains an excluded printer asset: ' + str(path.relative_to(bundle)))

@@ -1,0 +1,94 @@
+"""Prepare product MSI source only after checking the compiled payload policy.
+
+Run in a fresh packaging worktree; upstream preprocess rewrites MSI files in place.
+Never operates on the Windows registry or installs/uninstalls a driver.
+"""
+
+import json
+from pathlib import Path
+import subprocess
+import xml.etree.ElementTree as ET
+
+
+EXPECTED_POLICY_SHA256 = '@POLICY_DIGEST@'
+RETURN_SCHEME = '@RETURN_SCHEME@'
+WIX = 'http://wixtoolset.org/schemas/v4/wxs'
+ET.register_namespace('', WIX)
+ET.register_namespace('util', WIX + '/util')
+ET.register_namespace('fire', WIX + '/firewall')
+
+REMOVED_COMPONENTS = {
+    'Product.Registry.CommandPlay', 'Product.Registry.URLProtocol', 'Product.Registry.Command',
+    'Product.Registry.PersistedPrinterProperties1', 'Product.Registry.PersistedPrinterProperties0',
+}
+REMOVED_ACTIONS = {
+    'InstallPrinter', 'InstallPrinter.SetParam', 'SetPrinterInstallDefault',
+    'RestoreSavedPrinterValue', 'SetPrinterValueEnabled', 'SetPrinterValueDisabled',
+}
+REMOVED_PROPERTIES = {'PRINTER', 'INSTALLPRINTER', 'SavedPrinterCmdLineValue'}
+FILES = (
+    'Package.wxs', 'Components/Regs.wxs', 'Components/RustDesk.wxs',
+    'Fragments/CustomActions.wxs', 'Fragments/ShortcutProperties.wxs', 'UI/MyInstallDirDlg.wxs',
+)
+
+
+def transformed_sources(msi_root):
+    results = {}
+    removed = set()
+    for relative in FILES:
+        path = Path(msi_root) / 'Package' / relative
+        parser = ET.XMLParser(target=ET.TreeBuilder(insert_comments=True, insert_pis=True))
+        root = ET.fromstring(path.read_text(encoding='utf-8'), parser=parser)
+        for parent in root.iter():
+            for node in list(parent):
+                if not isinstance(node.tag, str):
+                    continue
+                kind = node.tag.rsplit('}', 1)[-1]
+                identity = node.get('Id', '')
+                action = node.get('Action', '')
+                if ((kind in {'Component', 'ComponentRef'} and identity in REMOVED_COMPONENTS)
+                        or (kind == 'CustomAction' and identity in REMOVED_ACTIONS)
+                        or (kind == 'Custom' and action in REMOVED_ACTIONS)
+                        or (kind == 'Property' and identity in REMOVED_PROPERTIES)
+                        or (kind == 'SetProperty' and (identity in REMOVED_PROPERTIES or action in REMOVED_ACTIONS))
+                        or (kind == 'Control' and node.get('Property') in REMOVED_PROPERTIES)):
+                    parent.remove(node)
+                    removed.add(identity or action)
+        if relative == 'Components/Regs.wxs':
+            directory = root.find('.//{' + WIX + '}DirectoryRef[@Id="INSTALLFOLDER_INNER"]')
+            component = ET.SubElement(directory, '{' + WIX + '}Component',
+                                      {'Id': 'Product.Registry.ProductReturn', 'Guid': '*'})
+            key = ET.SubElement(component, '{' + WIX + '}RegistryKey', {'Root': 'HKCR', 'Key': RETURN_SCHEME})
+            ET.SubElement(key, '{' + WIX + '}RegistryValue',
+                          {'Type': 'string', 'Name': 'URL Protocol', 'Value': '', 'KeyPath': 'yes'})
+            command = ET.SubElement(component, '{' + WIX + '}RegistryKey',
+                                    {'Root': 'HKCR', 'Key': RETURN_SCHEME + r'\shell\open\command'})
+            ET.SubElement(command, '{' + WIX + '}RegistryValue',
+                          {'Type': 'string', 'Value': '\"[INSTALLFOLDER_INNER]$(var.Product).exe\" \"%1\"'})
+        if relative == 'Package.wxs':
+            feature = root.find('.//{' + WIX + '}Feature[@Id="App"]')
+            ET.SubElement(feature, '{' + WIX + '}ComponentRef', {'Id': 'Product.Registry.ProductReturn'})
+        # Preserve preprocessor PIs and tag comments used by preprocess.py.
+        results[path] = ET.tostring(root, encoding='unicode') + '\n'
+    required = REMOVED_COMPONENTS | {'InstallPrinter', 'SetPrinterInstallDefault', 'ChkBoxInstallPrinter'}
+    if not required <= removed:
+        raise ValueError('Product MSI anchors differ or source was already preprocessed: ' + ', '.join(sorted(required - removed)))
+    return results
+
+
+def prepare(msi_root, dist, app_name):
+    dist = Path(dist).resolve()
+    for path in dist.rglob('*'):
+        relative = path.relative_to(dist)
+        if ('rustdeskprinterdriver' in [p.lower() for p in relative.parts]
+                or path.name.lower() == 'printer_driver_adapter.dll'):
+            raise ValueError('Remove excluded printer assets before preparing a product MSI: ' + str(relative))
+    executable = dist / (app_name + '.exe')
+    result = subprocess.run([str(executable), '--product-policy'], capture_output=True, text=True,
+                            check=True, timeout=15, cwd=dist)
+    profile = json.loads(result.stdout.strip())
+    if profile.get('product') != 'thinkpasser' or profile.get('policySha256') != EXPECTED_POLICY_SHA256:
+        raise ValueError('MSI payload is not compiled with this exact product policy')
+    replacements = transformed_sources(msi_root)
+    for path, text in replacements.items():
+        path.write_text(text, encoding='utf-8', newline='\n')

@@ -1,0 +1,122 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+// Product capability boundary for the pinned RustDesk fork.
+
+#[cfg(not(feature = "flutter"))]
+compile_error!("The product client requires the audited Flutter entry points");
+#[cfg(not(any(target_os = "windows", target_os = "macos")))]
+compile_error!("The product client supports Windows and macOS targets only; Server OSS is separate");
+
+use base::message_proto::{
+    file_action, file_transfer_send_request, login_request, message, misc,
+    option_message::BoolOption, LoginRequest, Message, OptionMessage,
+};
+
+const ALLOWED_PERMISSION_OPTIONS: &[&str] = &[
+@ALLOWED_PERMISSION_OPTIONS@
+];
+
+pub fn allows_permission(option: &str) -> bool {
+    ALLOWED_PERMISSION_OPTIONS.contains(&option)
+}
+
+pub fn allows_permission_change(name: &str) -> bool {
+    matches!(name, "keyboard" | "clipboard" | "audio" | "file" | "restart")
+}
+
+pub fn allows_chat() -> bool {
+    false
+}
+
+pub fn allows_voice_call() -> bool {
+    false
+}
+
+pub fn allows_recording() -> bool {
+    false
+}
+
+pub fn allows_switch_sides() -> bool {
+    false
+}
+
+pub fn allows_printer() -> bool {
+    false
+}
+
+pub fn allows_privacy_mode() -> bool {
+    false
+}
+
+// All public connection launchers stay closed until the platform supplies a
+// device-bound grant flow. Service, installation and tray commands remain usable.
+pub fn blocks_cli_argument(argument: &str) -> bool {
+    matches!(argument.split('=').next().unwrap_or(argument),
+        "--connect" | "--play" | "--file-transfer" | "--view-camera"
+        | "--port-forward" | "--terminal" | "--terminal-admin" | "--rdp"
+        | "--terminal-helper" | "--whiteboard" | "--install-remote-printer"
+        | "--config" | "--import-config" | "--option" | "--assign" | "--deploy")
+}
+
+pub fn accepts_options(option: &OptionMessage) -> bool {
+    // Include the old OptionMessage path, not only TogglePrivacyMode.
+    // Explicit No remains accepted for compatible cleanup; unknown enum values
+    // cannot enable an excluded feature.
+    matches!(option.privacy_mode.enum_value(), Ok(BoolOption::NotSet) | Ok(BoolOption::No))
+        && matches!(option.block_input.enum_value(), Ok(BoolOption::NotSet) | Ok(BoolOption::No))
+        && matches!(option.terminal_persistent.enum_value(), Ok(BoolOption::NotSet) | Ok(BoolOption::No))
+}
+
+pub fn accepts_login(login: &LoginRequest) -> bool {
+    matches!(login.union.as_ref(), None | Some(login_request::Union::FileTransfer(_)))
+        && login.option.as_ref().map(accepts_options).unwrap_or(true)
+}
+
+pub fn accepts_controller_message(msg: &Message) -> bool {
+    match msg.union.as_ref() {
+        Some(message::Union::VoiceCallRequest(value)) => !value.is_connect,
+        Some(message::Union::VoiceCallResponse(value)) => !value.accepted,
+        Some(message::Union::AudioFrame(_))
+        | Some(message::Union::TerminalAction(_))
+        | Some(message::Union::PortForwardChannel(_)) => false,
+        Some(message::Union::Misc(value)) => match value.union.as_ref() {
+            Some(misc::Union::Option(option)) => accepts_options(option),
+            Some(misc::Union::ChatMessage(_))
+            | Some(misc::Union::AudioFormat(_))
+            | Some(misc::Union::SwitchSidesRequest(_))
+            | Some(misc::Union::SwitchBack(_)) => false,
+            Some(misc::Union::TogglePrivacyMode(value)) => !value.on,
+            Some(misc::Union::ClientRecordStatus(recording)) => !*recording,
+            Some(misc::Union::StopService(stop)) => !*stop,
+            _ => true,
+        },
+        Some(message::Union::FileAction(action)) => match action.union.as_ref() {
+            Some(file_action::Union::Send(request)) => {
+                matches!(request.file_type.enum_value(),
+                    Ok(file_transfer_send_request::FileType::Generic))
+            }
+            _ => true,
+        },
+        _ => true,
+    }
+}
+
+// The reverse direction has different legitimate messages: AudioFrame and
+// AudioFormat carry the retained remote system output and must remain allowed.
+pub fn accepts_host_message(msg: &Message) -> bool {
+    match msg.union.as_ref() {
+        Some(message::Union::VoiceCallRequest(value)) => !value.is_connect,
+        Some(message::Union::VoiceCallResponse(value)) => !value.accepted,
+        Some(message::Union::TerminalResponse(_))
+        | Some(message::Union::PortForwardChannel(_)) => false,
+        Some(message::Union::FileAction(action)) => match action.union.as_ref() {
+            Some(file_action::Union::Send(request)) => matches!(request.file_type.enum_value(),
+                Ok(file_transfer_send_request::FileType::Generic)),
+            _ => true,
+        },
+        Some(message::Union::Misc(value)) => !matches!(value.union.as_ref(),
+            Some(misc::Union::ChatMessage(_)) | Some(misc::Union::SwitchBack(_))),
+        _ => true,
+    }
+}
+
+@COMPILED_PROFILE@

@@ -1,0 +1,31 @@
+import 'package:flutter_test/flutter_test.dart';
+import 'package:flutter_hbb/product/return_router.dart';
+
+void main() {
+  test('only an outstanding matching flow can consume a code, once', () async {
+    final router = ProductReturnRouter(scheme: 'thinkpasser-return');
+    final received = <String>[];
+    final state = router.begin(ProductReturnPurpose.auth, (code) async => received.add(code));
+    Uri callback(String host, {String extra = ''}) => Uri.parse(
+        'thinkpasser-return://$host/return?code=opaque-code-123&state=$state$extra');
+    expect(await router.dispatch(callback('checkout')), isFalse);
+    expect(await router.dispatch(callback('auth', extra: '&peer=123')), isFalse);
+    expect(await router.dispatch(callback('auth', extra: '&state=$state')), isFalse);
+    expect(await router.dispatch(callback('auth')), isTrue);
+    expect(await router.dispatch(callback('auth')), isFalse);
+    expect(received, ['opaque-code-123']);
+  });
+
+  test('expired returns and arbitrary connection URIs have no effect', () async {
+    var clock = DateTime.utc(2026, 11, 8);
+    var called = false;
+    final router = ProductReturnRouter(scheme: 'thinkpasser-return', now: () => clock);
+    final state = router.begin(ProductReturnPurpose.checkout, (_) async { called = true; });
+    expect(await router.dispatch(Uri.parse('rustdesk://connect/123')), isFalse);
+    expect(await router.dispatch(Uri.parse('thinkpasser-return://connect/123')), isFalse);
+    clock = clock.add(const Duration(minutes: 6));
+    expect(await router.dispatch(Uri.parse(
+        'thinkpasser-return://checkout/return?code=opaque-code-123&state=$state')), isFalse);
+    expect(called, isFalse);
+  });
+}

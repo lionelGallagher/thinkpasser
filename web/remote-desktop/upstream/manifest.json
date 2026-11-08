@@ -1,0 +1,74 @@
+[
+  {
+    "file": "message.proto",
+    "url": "https://raw.githubusercontent.com/rustdesk/rustdesk/23e5bb471a040d62f0a6ad52591fb30784265b73/libs/base/protos/message.proto",
+    "sha256": "03646089840bb5189003aee547d51cd5afd3ccc3843f0e18436b6ef8e134ba0c",
+    "bytes": 22871
+  },
+  {
+    "file": "rendezvous.proto",
+    "url": "https://raw.githubusercontent.com/rustdesk/hbb_common/fae47e024dd83cef6aaecde0aa7d11731df11649/protos/rendezvous.proto",
+    "sha256": "f5fac24cd1167dc6018729672aace5ac7d2311b8a13555062cbaf161010a5448",
+    "bytes": 7242
+  },
+  {
+    "file": "bytes_codec.rs",
+    "url": "https://raw.githubusercontent.com/rustdesk/hbb_common/fae47e024dd83cef6aaecde0aa7d11731df11649/src/bytes_codec.rs",
+    "sha256": "7c5fe622b8a6576f6b0a3ed016c89a2443f0256b87d9fea2ef15caf65cdc5a18",
+    "bytes": 9650
+  },
+  {
+    "file": "tcp.rs",
+    "url": "https://raw.githubusercontent.com/rustdesk/hbb_common/fae47e024dd83cef6aaecde0aa7d11731df11649/src/tcp.rs",
+    "sha256": "f354dc407bf30ff13f8289c4efe1e3f031333748e0da67ec401830f74285debc",
+    "bytes": 18615
+  },
+  {
+    "file": "websocket.rs",
+    "url": "https://raw.githubusercontent.com/rustdesk/hbb_common/fae47e024dd83cef6aaecde0aa7d11731df11649/src/websocket.rs",
+    "sha256": "f93f8ea683b549630d62973e2b97e09802e6b47bc11fe5bc98ed2b3a56442de3",
+    "bytes": 34936
+  },
+  {
+    "file": "webrtc.rs",
+    "url": "https://raw.githubusercontent.com/rustdesk/hbb_common/fae47e024dd83cef6aaecde0aa7d11731df11649/src/webrtc.rs",
+    "sha256": "950ae0f7a872aeb8f9da3d3963d73ee4754e39b1a2eb2f6f6adae69d0365980a",
+    "bytes": 134924
+  },
+  {
+    "file": "io_loop.rs",
+    "url": "https://raw.githubusercontent.com/rustdesk/rustdesk/23e5bb471a040d62f0a6ad52591fb30784265b73/src/client/io_loop.rs",
+    "sha256": "c0a2201f2775da01bd015b7c8039fd01093f3fcb475dccffd7d6f9128b9e4a8b",
+    "bytes": 154664
+  },
+  {
+    "file": "server-rendezvous.rs",
+    "url": "https://raw.githubusercontent.com/rustdesk/rustdesk-server/0415b0e05702a0a7cbdf90e16d274955ba186d35/src/rendezvous_server.rs",
+    "sha256": "d808756f83c390ad72f1968f74d8f2539640448f0617318cf545cb6565c3211c",
+    "bytes": 61809
+  },
+  {
+    "file": "server-relay.rs",
+    "url": "https://raw.githubusercontent.com/rustdesk/rustdesk-server/0415b0e05702a0a7cbdf90e16d274955ba186d35/src/relay_server.rs",
+    "sha256": "74f64b7b31cc66b6041755a7251c6562c4bf35e77a324b9ed833d5da7f6a33d5",
+    "bytes": 33592
+  },
+  {
+    "file": "LICENSE-client",
+    "url": "https://raw.githubusercontent.com/rustdesk/rustdesk/23e5bb471a040d62f0a6ad52591fb30784265b73/LICENCE",
+    "sha256": "8486a10c4393cee1c25392769ddd3b2d6c242d6ec7928e1414efff7dfb2f07ef",
+    "bytes": 34523
+  },
+  {
+    "file": "common.rs",
+    "url": "https://raw.githubusercontent.com/rustdesk/rustdesk/23e5bb471a040d62f0a6ad52591fb30784265b73/src/common.rs",
+    "sha256": "7bf0cbe1ad1964d70b7c8d0160f47ad6e928710122a222afbe8f6659058a7324",
+    "bytes": 128547
+  },
+  {
+    "file": "LICENSE-server",
+    "url": "https://raw.githubusercontent.com/rustdesk/rustdesk-server/0415b0e05702a0a7cbdf90e16d274955ba186d35/LICENSE",
+    "sha256": "8486a10c4393cee1c25392769ddd3b2d6c242d6ec7928e1414efff7dfb2f07ef",
+    "bytes": 34523
+  }
+]

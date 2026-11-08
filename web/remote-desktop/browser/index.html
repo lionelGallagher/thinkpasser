@@ -1,0 +1,18 @@
+<!doctype html>
+<html lang="zh-CN"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>网页远控协议验证 · 合成来源</title>
+<style>
+body{font:16px system-ui;max-width:1000px;margin:32px auto;padding:0 24px;background:#111827;color:#e5e7eb}h1{font-size:24px}p{line-height:1.7}.notice{padding:16px;border:1px solid #eab308;border-radius:8px;color:#fde68a}button,input,textarea{font:inherit;padding:10px;border-radius:6px}button{cursor:pointer}canvas{width:100%;max-width:640px;border:1px solid #475569;display:block;margin:20px 0;background:#020617;touch-action:none}textarea{width:90%;margin-top:12px}pre{white-space:pre-wrap}label{display:block;margin-top:16px}
+</style>
+<h1>浏览器协议适配验证</h1>
+<p class="notice">合成素材：FFmpeg 测试画面。本页仅连接同一页面内的两个 WebRTC 节点；没有连接 Windows 或 Mac 电脑，也不会控制本机系统。</p>
+<p>测试链路：RustDesk TCP 帧 → 公开 protobuf 视频消息 → WebRTC DataChannel 分片 → WebCodecs 解码。画面上的鼠标点击与输入只发送给本地模拟节点。</p>
+<button id="start">开始本地验证</button> <button id="stop" disabled>结束</button>
+<canvas id="screen" width="640" height="360" tabindex="0" aria-label="合成远端画面，可测试点击及快捷键"></canvas>
+<label for="text">中文与文本输入（组合输入结束后发送）</label><input id="text" placeholder="例如：中文输入测试" disabled>
+<button id="send" disabled>发送文本</button>
+<label for="clipboard">文本剪贴板协议测试（手动粘贴，无自动读取）</label><textarea id="clipboard" rows="2" disabled></textarea>
+<button id="copy" disabled>发送剪贴板消息</button>
+<pre id="status" role="status">尚未开始</pre>
+<script type="module" src="/browser.mjs"></script>
+</html>

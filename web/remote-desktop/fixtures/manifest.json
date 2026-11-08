@@ -1,0 +1,38 @@
+{
+  "source": "FFmpeg lavfi testsrc2; synthetic, not a real desktop",
+  "command": "ffmpeg -f lavfi -i testsrc2=size=640x360:rate=5:duration=1 -c:v libvpx -g 5 -f ivf synthetic-vp8.ivf",
+  "rustdesk_client_commit": "23e5bb471a040d62f0a6ad52591fb30784265b73",
+  "fixture_sha256": "1e89a374a7f4f95ba5816daf504cfb4daaddeebe51a769b9a1f31def6439f386",
+  "frames": [
+    {
+      "pts_ms": 0,
+      "key": true,
+      "bytes": 15025,
+      "sha256": "29117afb3214adaaf3e2865d79651c62559549492812fe8cae70ab628d74a6c2"
+    },
+    {
+      "pts_ms": 200,
+      "key": false,
+      "bytes": 4083,
+      "sha256": "c22c00662202a365a4eb624ccde4d1068a3f46740f86272c5b76ad3fec004a84"
+    },
+    {
+      "pts_ms": 400,
+      "key": false,
+      "bytes": 4523,
+      "sha256": "826cafac553bd73ea770eb8e0553de652c9d6c2ea36264a4780cca5125d1995e"
+    },
+    {
+      "pts_ms": 600,
+      "key": false,
+      "bytes": 3862,
+      "sha256": "aedba15faf583dde7dd689721aa4a3134ca798468771d6f7929de98e720d778f"
+    },
+    {
+      "pts_ms": 800,
+      "key": false,
+      "bytes": 3932,
+      "sha256": "87cfacd5a5627ea42e28aad683d2c8418a16dfab8125d6a8d22ad4c5762265c4"
+    }
+  ]
+}

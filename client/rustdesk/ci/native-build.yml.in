@@ -1,0 +1,93 @@
+# Copy into a reviewed fork only after provisioning the named native workers.
+# This template is not an active workflow in this repository. No publish job.
+name: Native product build review
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  windows:
+    runs-on: [self-hosted, Windows, X64, remote-product-build]
+    env:
+      THINKPASSER_RENDEZVOUS_SERVER: ${{ vars.PRODUCT_RENDEZVOUS_SERVER }}
+      THINKPASSER_RELAY_SERVER: ${{ vars.PRODUCT_RELAY_SERVER }}
+      THINKPASSER_SERVER_KEY: ${{ vars.PRODUCT_SERVER_PUBLIC_KEY }}
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+        with:
+          path: policy
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+        with:
+          repository: rustdesk/rustdesk
+          ref: 23e5bb471a040d62f0a6ad52591fb30784265b73
+          submodules: recursive
+          path: upstream
+      - name: Prepare and apply reviewed patch
+        shell: pwsh
+        run: |
+          python policy/client/rustdesk/prepare_trim_patch.py --source upstream --output "$env:RUNNER_TEMP/product.patch"
+          if ($LASTEXITCODE) { exit $LASTEXITCODE }
+          git -C upstream apply --check "$env:RUNNER_TEMP/product.patch"
+          if ($LASTEXITCODE) { exit $LASTEXITCODE }
+          git -C upstream apply "$env:RUNNER_TEMP/product.patch"
+          if ($LASTEXITCODE) { exit $LASTEXITCODE }
+      - name: Build and test the product feature
+        shell: pwsh
+        working-directory: upstream
+        run: |
+          python build.py --thinkpasser --flutter --portable --skip-portable-pack --hwcodec
+          if ($LASTEXITCODE) { exit $LASTEXITCODE }
+          $features = python build.py --thinkpasser --flutter --hwcodec --print-features
+          cargo test --locked --release --lib product_policy --features "$features"
+          if ($LASTEXITCODE) { exit $LASTEXITCODE }
+          Push-Location flutter
+          flutter test test/product_return_router_test.dart
+          $result = $LASTEXITCODE
+          Pop-Location
+          exit $result
+      - name: Check the actual unsigned payload
+        shell: pwsh
+        run: |
+          python policy/client/rustdesk/verify_product_artifact.py --platform windows --bundle upstream/flutter/build/windows/x64/runner/Release --executable upstream/flutter/build/windows/x64/runner/Release/rustdesk.exe
+          if ($LASTEXITCODE) { exit $LASTEXITCODE }
+  macos:
+    strategy:
+      matrix:
+        arch: [ARM64, X64]
+    runs-on: [self-hosted, macOS, '${{ matrix.arch }}', remote-product-build]
+    env:
+      THINKPASSER_RENDEZVOUS_SERVER: ${{ vars.PRODUCT_RENDEZVOUS_SERVER }}
+      THINKPASSER_RELAY_SERVER: ${{ vars.PRODUCT_RELAY_SERVER }}
+      THINKPASSER_SERVER_KEY: ${{ vars.PRODUCT_SERVER_PUBLIC_KEY }}
+      FLUTTER_XCODE_CODE_SIGNING_ALLOWED: 'NO'
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+        with:
+          path: policy
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+        with:
+          repository: rustdesk/rustdesk
+          ref: 23e5bb471a040d62f0a6ad52591fb30784265b73
+          submodules: recursive
+          path: upstream
+      - name: Prepare and apply reviewed patch
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 policy/client/rustdesk/prepare_trim_patch.py --source upstream --output "$RUNNER_TEMP/product.patch"
+          git -C upstream apply --check "$RUNNER_TEMP/product.patch"
+          git -C upstream apply "$RUNNER_TEMP/product.patch"
+      - name: Build and test the product feature
+        shell: bash
+        working-directory: upstream
+        run: |
+          set -euo pipefail
+          python3 build.py --thinkpasser --flutter --hwcodec --unix-file-copy-paste
+          features=$(python3 build.py --thinkpasser --flutter --hwcodec --unix-file-copy-paste --print-features)
+          cargo test --locked --release --lib product_policy --features "$features"
+          (cd flutter && flutter test test/product_return_router_test.dart)
+      - name: Check the actual unsigned payload
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 policy/client/rustdesk/verify_product_artifact.py --platform macos --bundle upstream/flutter/build/macos/Build/Products/Release/RustDesk.app --executable upstream/flutter/build/macos/Build/Products/Release/RustDesk.app/Contents/MacOS/RustDesk

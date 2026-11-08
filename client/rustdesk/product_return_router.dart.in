@@ -1,0 +1,67 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+import 'dart:async';
+import 'dart:convert';
+import 'dart:math';
+
+enum ProductReturnPurpose { auth, checkout }
+
+class _PendingProductReturn {
+  final ProductReturnPurpose purpose;
+  final DateTime expiresAt;
+  final Future<void> Function(String code) exchangeCode;
+  _PendingProductReturn(this.purpose, this.expiresAt, this.exchangeCode);
+}
+
+/// Delivers an opaque code only to an outstanding flow in this app process.
+/// exchangeCode must validate the code with the platform before changing login,
+/// order or entitlement state. No URI can start a peer connection or purchase.
+class ProductReturnRouter {
+  final String scheme;
+  final DateTime Function() now;
+  final _pending = <String, _PendingProductReturn>{};
+  ProductReturnRouter({required this.scheme, DateTime Function()? now})
+      : now = now ?? DateTime.now;
+
+  String begin(ProductReturnPurpose purpose,
+      Future<void> Function(String code) exchangeCode,
+      {Duration ttl = const Duration(minutes: 5)}) {
+    if (ttl <= Duration.zero || ttl > const Duration(minutes: 10)) {
+      throw ArgumentError.value(ttl, 'ttl');
+    }
+    _pending.removeWhere((_, value) => !value.expiresAt.isAfter(now()));
+    final random = Random.secure();
+    final state = base64Url.encode(List<int>.generate(32, (_) => random.nextInt(256)))
+        .replaceAll('=', '');
+    _pending[state] = _PendingProductReturn(purpose, now().add(ttl), exchangeCode);
+    return state;
+  }
+
+  void cancel(String state) => _pending.remove(state);
+
+  Future<bool> dispatch(Uri? uri) async {
+    if (uri == null || uri.scheme != scheme || uri.userInfo.isNotEmpty ||
+        uri.hasPort || uri.fragment.isNotEmpty || uri.path != '/return' ||
+        uri.toString().length > 4096) return false;
+    final purpose = switch (uri.host) {
+      'auth' => ProductReturnPurpose.auth,
+      'checkout' => ProductReturnPurpose.checkout,
+      _ => null,
+    };
+    if (purpose == null) return false;
+    final values = uri.queryParametersAll;
+    if (values.length != 2 || !values.containsKey('state') ||
+        !values.containsKey('code') || values.values.any((v) => v.length != 1)) {
+      return false;
+    }
+    final state = values['state']!.single;
+    final code = values['code']!.single;
+    if (!RegExp(r'^[A-Za-z0-9_-]{43}$').hasMatch(state) ||
+        !RegExp(r'^[A-Za-z0-9._~-]{8,2048}$').hasMatch(code)) return false;
+    final pending = _pending[state];
+    if (pending == null || pending.purpose != purpose) return false;
+    _pending.remove(state); // Consume before awaiting a network exchange.
+    if (!pending.expiresAt.isAfter(now())) return false;
+    await pending.exchangeCode(code);
+    return true;
+  }
+}

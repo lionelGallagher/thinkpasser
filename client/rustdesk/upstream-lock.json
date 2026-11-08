@@ -1,0 +1,63 @@
+{
+  "checkedAt": "2026-11-08",
+  "client": {
+    "repository": "https://github.com/rustdesk/rustdesk",
+    "tag": "1.5.1",
+    "commit": "23e5bb471a040d62f0a6ad52591fb30784265b73"
+  },
+  "serverOss": {
+    "repository": "https://github.com/rustdesk/rustdesk-server",
+    "commit": "0415b0e05702a0a7cbdf90e16d274955ba186d35"
+  },
+  "hbbCommon": {
+    "repository": "https://github.com/rustdesk/hbb_common",
+    "commit": "fae47e024dd83cef6aaecde0aa7d11731df11649"
+  },
+  "hashNormalization": "UTF-8; CRLF to LF; exactly one final LF",
+  "sourceFiles": {
+    "Cargo.toml": "d8879fa21a932b4ca331b19137476073be93f2cd4692ac0e300c12e58e2f8c4f",
+    "src/lib.rs": "d59fd5541ce10ca82fd8358caecdfd2ebde4d91968e1e18557465c1ce638d535",
+    "src/server/connection.rs": "5d1f77656c3d533b08e846794987a687208c8557d10942aa49aa6e36b4cc0893",
+    "src/ui_session_interface.rs": "a8e04fefded8d1f5cd829b78ee016d81c9352d71cb5a1a244b3d4d29a74aee50",
+    "src/core_main.rs": "e0af92ce060bc279eb2351b83d031d69b6f662abef5d078af7a831464d30778c",
+    "src/ui_interface.rs": "b2ee60f90428af0483d5f4fc0b0306510264ad3535b0168aff54bbbdbbb0639d",
+    "src/server/audio_service.rs": "c0a23d7ed76f934be052d5e0565e511fbea72ddf21d89924ffed80a90df3ef61",
+    "src/flutter.rs": "c7a377869fc6dad88d7e8afe292cf95eaa0358509e4eab03ffb169b3022bddde",
+    "src/client.rs": "ef1db4d1443a25d7b05b90b0b92216bb6bf9e007f77d3e0fbb57f0e992e91356",
+    "src/server/video_service.rs": "9b5ea12aa3ec261510cf5044dc38c7ffba136b199002708d3c3d3cacf5b34db7",
+    "flutter/lib/common.dart": "449c74fb07c86c9adf400002248d83a27b528dfc3e43e625e8277a26bd686f13",
+    "flutter/lib/common/widgets/peer_card.dart": "8b63befbe2066b54ba35456fb4b3db893b858f762a195750dffa051a28291650",
+    "flutter/lib/common/widgets/toolbar.dart": "0db6743bd29a54210f933c9125c2dee2c6fa9771153e6eee75a663d0269e04f5",
+    "flutter/lib/desktop/widgets/remote_toolbar.dart": "18e579d949340401535e797855bbbc79133a926ee3f83799f551fd4a444a6fc2",
+    "flutter/lib/desktop/pages/desktop_setting_page.dart": "a21ad23dc93d9fd052d7620452c25f474c57531589fba09ea29f084b1c4fdef1",
+    "flutter/lib/utils/multi_window_manager.dart": "e94128aaf434d57d54dccb719633704e814b41fee052e142c4fa9ea4a5e13f3f",
+    "flutter/lib/models/chat_model.dart": "4db5b9d5a058500fc497c4ce9874cd32b1c4c15c861e99fdea1f548d1dd93ff8",
+    "flutter/lib/models/shortcut_model.dart": "6a4eb28b86f6ac8d97323eec316067af2320395b7cc207738b6c908eeb84c52b",
+    "flutter/lib/desktop/pages/connection_page.dart": "87937e1472785ebd1e6d56485d63dc8428dbd54c376f616a303f288b7fc205f4",
+    "flutter/macos/Runner/MainFlutterWindow.swift": "cbd195a39a042fb3726533b627cb5125444532db43970c2409e6254278e4c30f",
+    "flutter/macos/Runner/Info.plist": "16087b3bb4126f089077662bdc64b3a17a8472ff027b77361c601499c7775aec",
+    "flutter/macos/Runner/Release.entitlements": "af1133e3f01887bf1cb8e011f927d4c298c5eb3771b1535f278d98786131c100",
+    "flutter/macos/Runner/DebugProfile.entitlements": "bca6a4c1c3e5a1932d3e54814155b3665deb7a414a9e99b41f622f6182548e0f",
+    "build.py": "0328ffd4f654dee01ce8baf18c3b10f21b5bda7e8043a3f9e3b25ea53b1005c3",
+    "src/common.rs": "7bf0cbe1ad1964d70b7c8d0160f47ad6e928710122a222afbe8f6659058a7324",
+    "src/platform/windows.rs": "c2d4e6f28971d7b53351db9f85650e843242a23b2f9374d46448ee6a8e290cf7",
+    "src/client/io_loop.rs": "c0a2201f2775da01bd015b7c8039fd01093f3fcb475dccffd7d6f9128b9e4a8b",
+    "flutter/lib/desktop/pages/desktop_home_page.dart": "da7738d81b0ea56731fa3c0b72a6ae4136b5e93d220936d84c9e7e40beb4018a",
+    "flutter/lib/desktop/pages/server_page.dart": "b26477ae17af29659ea515ecf083c0c50ecd23177505f88f0f1d2089e96cb032",
+    "flutter/lib/desktop/pages/install_page.dart": "209ca8f5a2030f758ac435fe57311d2746d561e0101fa389c2d01222d48eb324",
+    ".github/scripts/sign-macos-app.sh": "c976bc84aefd4e3b23de9b240fedebee0e1338ae33477e0ca029447bf2f1999d",
+    "res/msi/preprocess.py": "ed4e2112927120c09124922c16aaa9437f69e7bcefa8c0b6cb435f5c8045e852",
+    "res/msi/Package/Package.wxs": "590113b2799c6ab3643ad3e869b943104762fa31cc78c1aaf8db832445cb1fa2",
+    "res/msi/Package/Components/Regs.wxs": "ee3ca5eae359e8926e19d2e4bd82eaa4a972f86ec3572dae1be0d19246af9017",
+    "res/msi/Package/Components/RustDesk.wxs": "6bf57d6e682e3133d824fd72402297fd9987ac3802cae7f057f67a821d909d79",
+    "res/msi/Package/Fragments/ShortcutProperties.wxs": "2d4bdc73dc4342b2ba4de0e399167539db6ab4b38ef7c41ea41cef9884262960",
+    "res/msi/Package/UI/MyInstallDirDlg.wxs": "e6d089ede9b44dcc7c9380fceb1f8c8b04c97f5dfa344384d087834efef69296",
+    "res/msi/Package/Fragments/CustomActions.wxs": "0519f3ea4c82bc752b97869b5cb4db6006896d1d6a06d4ceb3c137278c9a6f83",
+    "src/flutter_ffi.rs": "400191f6761117e67562a68bb02cf0adb834e8e01134cbfc47ed0b634fa9d607"
+  },
+  "cpal": {
+    "repository": "https://github.com/rustdesk-org/cpal",
+    "commit": "96d4da121b7d949677ac5b6887413a9185fd7f39",
+    "evidence": "RustDesk Cargo.lock and src/host/screencapturekit/mod.rs; system Audio output, no microphone output configured"
+  }
+}

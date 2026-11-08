@@ -1,11 +1,17 @@
 {
-  "name": "thinkpasser-account-store",
-  "version": "1.0.0",
+  "name": "thinkpasser-remote-computer-platform",
+  "version": "0.1.0",
   "private": true,
-  "description": "模型平权 · 自营 AI 账号商城前台",
+  "description": "Thinkpasser 独享远程电脑平台：客户端、网页端、管理端、供应商端与后端",
+  "engines": {
+    "node": ">=22.22.0"
+  },
   "scripts": {
-    "test": "node --test tests/store.test.cjs tests/release.test.cjs",
-    "assets:version": "node scripts/version-assets.cjs",
-    "preview": "python -m http.server 4173 --bind 127.0.0.1"
+    "test": "node --test backend/domain/lease-policy.test.cjs backend/device-health/health-contract.test.cjs backend/device-health/reference-runtime.test.cjs web/remote-desktop/test/authority.test.mjs web/remote-desktop/test/protocol.test.mjs",
+    "test:backend": "node --test backend/domain/lease-policy.test.cjs backend/device-health/health-contract.test.cjs backend/device-health/reference-runtime.test.cjs",
+    "test:web": "node --test web/remote-desktop/test/authority.test.mjs web/remote-desktop/test/protocol.test.mjs",
+    "test:product-domain": "node --test backend/domain/lease-policy.test.cjs",
+    "demo:web-remote": "node web/remote-desktop/fixture-server.mjs",
+    "demo:device-health": "node backend/device-health/reference-demo.cjs"
   }
 }

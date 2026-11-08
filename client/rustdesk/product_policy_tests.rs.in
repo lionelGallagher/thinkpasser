@@ -1,0 +1,65 @@
+
+#[cfg(test)]
+mod product_tests {
+    use super::*;
+    use base::message_proto::{AudioFrame, AudioFormat, Misc, VoiceCallRequest,
+        VoiceCallResponse, FileAction, FileTransferSendRequest, TogglePrivacyMode};
+
+    #[test]
+    fn system_audio_is_directional_and_close_messages_remain_usable() {
+        let mut message = Message::new();
+        message.set_audio_frame(AudioFrame::new());
+        assert!(accepts_host_message(&message));
+        assert!(!accepts_controller_message(&message));
+        let mut misc = Misc::new();
+        misc.set_audio_format(AudioFormat::new());
+        message.set_misc(misc);
+        assert!(accepts_host_message(&message));
+        assert!(!accepts_controller_message(&message));
+
+        for start in [false, true] {
+            message.set_voice_call_request(VoiceCallRequest { is_connect: start, ..Default::default() });
+            assert_eq!(accepts_controller_message(&message), !start);
+            assert_eq!(accepts_host_message(&message), !start);
+            message.set_voice_call_response(VoiceCallResponse { accepted: start, ..Default::default() });
+            assert_eq!(accepts_controller_message(&message), !start);
+            assert_eq!(accepts_host_message(&message), !start);
+        }
+        let mut misc = Misc::new();
+        misc.set_close_reason("normal disconnect".to_owned());
+        message.set_misc(misc);
+        assert!(accepts_controller_message(&message));
+        assert!(accepts_host_message(&message));
+    }
+
+    #[test]
+    fn printer_job_is_rejected_in_both_directions_but_generic_transfer_remains() {
+        for printer in [false, true] {
+            let mut action = FileAction::new();
+            action.set_send(FileTransferSendRequest {
+                file_type: (if printer { file_transfer_send_request::FileType::Printer }
+                            else { file_transfer_send_request::FileType::Generic }).into(),
+                ..Default::default()
+            });
+            let mut message = Message::new();
+            message.set_file_action(action);
+            assert_eq!(accepts_controller_message(&message), !printer);
+            assert_eq!(accepts_host_message(&message), !printer);
+        }
+    }
+
+    #[test]
+    fn optional_feature_cleanup_does_not_close_a_normal_desktop_session() {
+        for active in [false, true] {
+            let mut misc = Misc::new();
+            misc.set_client_record_status(active);
+            let mut message = Message::new();
+            message.set_misc(misc);
+            assert_eq!(accepts_controller_message(&message), !active);
+            let mut misc = Misc::new();
+            misc.set_toggle_privacy_mode(TogglePrivacyMode { on: active, ..Default::default() });
+            message.set_misc(misc);
+            assert_eq!(accepts_controller_message(&message), !active);
+        }
+    }
+}

@@ -1,0 +1,71 @@
+{
+  "scope": "source patch application, static guard review, executed Python build/MSI transforms, Bash syntax and unsigned plist preparation; no native build or remote session",
+  "clientVersion": {
+    "repository": "https://github.com/rustdesk/rustdesk",
+    "tag": "1.5.1",
+    "commit": "23e5bb471a040d62f0a6ad52591fb30784265b73"
+  },
+  "checks": [
+    {
+      "check": "pinned-baseline-and-patch-apply-check",
+      "passed": true
+    },
+    {
+      "check": "patch-applied-in-isolated-copy-and-compared",
+      "passed": true
+    },
+    {
+      "check": "applied-source-guard-order-review",
+      "passed": true,
+      "scope": "Static guard placement only; Rust, Dart and protocol behavior were not executed",
+      "paths": [
+        "host login and authorized message dispatch",
+        "permission role/local precedence",
+        "native FFI session creation",
+        "CLI dispatch and Dart URI parsing",
+        "outgoing and incoming automatic recorder construction"
+      ]
+    },
+    {
+      "check": "patched-python-build-and-msi-transform-executed",
+      "passed": true,
+      "scope": "Build flag selection, missing environment/stale artifact rejection, forbidden asset rejection and XML transformation only; no native payload or MSI executed",
+      "platformsSimulatedForBuildFlags": [
+        "windows",
+        "macos",
+        "unsupported-linux"
+      ],
+      "nativePayloadProvenanceInvocationVerified": false
+    },
+    {
+      "check": "macos-signer-bash-syntax",
+      "passed": true,
+      "scope": "bash -n only; codesign and macOS tools not executed"
+    },
+    {
+      "check": "macos-product-plists-parse-and-preserve-unrelated-keys",
+      "passed": true,
+      "scope": "Unsigned build inputs only; no macOS permission or capture runtime test"
+    },
+    {
+      "check": "changed-baseline-rejected-without-output",
+      "passed": true
+    },
+    {
+      "check": "source-tree-output-rejected-and-source-unchanged",
+      "passed": true,
+      "tools": [
+        "patch-generator",
+        "macos-profile-generator"
+      ]
+    }
+  ],
+  "nativeRustCompiled": false,
+  "nativeFlutterCompiled": false,
+  "rustPolicyTestsPreparedButNotExecuted": true,
+  "dartProductReturnTestsPreparedButNotExecuted": true,
+  "macosRuntimeVerified": false,
+  "windowsRuntimeVerified": false,
+  "browserRuntimeVerified": false,
+  "remainingReleaseGates": "capability-policy.json: unimplementedReleaseGates"
+}

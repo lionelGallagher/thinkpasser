@@ -1,0 +1,203 @@
+{
+  "schemaVersion": 1,
+  "status": "native-source-and-packaging-integration-prepared-not-native-built",
+  "product": "dedicated-development-desktop",
+  "upstreamClient": {
+    "repository": "https://github.com/rustdesk/rustdesk",
+    "tag": "1.5.1",
+    "commit": "23e5bb471a040d62f0a6ad52591fb30784265b73",
+    "license": "AGPL-3.0"
+  },
+  "build": {
+    "controllers": [
+      "windows-x64",
+      "macos-arm64",
+      "macos-x64"
+    ],
+    "hosts": [
+      "windows-x64",
+      "macos-arm64",
+      "macos-x64"
+    ],
+    "productFeature": "thinkpasser",
+    "webRuntimeIncludedInPublicClientRepository": false,
+    "macosSystemAudioRequiresSeparateCaptureValidation": true,
+    "flutterProductFlag": "Rust ui_interface::get_builtin_option(thinkpasser-product); immutable cfg!(feature = thinkpasser), no independent dart-define",
+    "requiredNativeFeatures": [
+      "flutter",
+      "thinkpasser"
+    ],
+    "productTargetCompileGuard": [
+      "windows",
+      "macos"
+    ],
+    "upstreamBuildEntry": "python build.py --thinkpasser --flutter; deployment environment validated before build side effects; skip-cargo rejected",
+    "requiredCompileTimeEnvironment": [
+      "THINKPASSER_RENDEZVOUS_SERVER",
+      "THINKPASSER_RELAY_SERVER",
+      "THINKPASSER_SERVER_KEY"
+    ]
+  },
+  "permissions": {
+    "allow": [
+      "enable-keyboard",
+      "enable-clipboard",
+      "enable-file-transfer",
+      "enable-audio",
+      "enable-remote-restart"
+    ],
+    "unknown": "deny"
+  },
+  "controllerUi": {
+    "allow": [
+      "assigned-computer",
+      "verified-account-switch",
+      "keyboard-and-mouse",
+      "resolution-and-quality",
+      "fullscreen-and-displays",
+      "clipboard",
+      "file-transfer",
+      "remote-system-audio",
+      "reconnect-and-confirmed-takeover",
+      "connection-status"
+    ],
+    "exclude": [
+      "camera",
+      "microphone-forwarding",
+      "voice-call",
+      "chat",
+      "remote-printer",
+      "tcp-tunnel",
+      "session-recording",
+      "standalone-terminal",
+      "switch-control-direction",
+      "privacy-mode",
+      "block-local-input",
+      "arbitrary-peer-id",
+      "shared-address-book",
+      "cross-group-sharing",
+      "lan-discovery",
+      "end-user-server-configuration"
+    ]
+  },
+  "upstreamSettingCandidates": {
+    "notice": "Audited mapping compiled into the product policy by compiled_profile.py; not an upstream custom.txt. The product initializer skips the vendor-signed custom.txt loader.",
+    "override-settings": {
+      "access-mode": "custom",
+      "enable-keyboard": "Y",
+      "enable-clipboard": "Y",
+      "enable-file-transfer": "Y",
+      "enable-audio": "Y",
+      "enable-remote-restart": "Y",
+      "enable-camera": "N",
+      "enable-terminal": "N",
+      "enable-remote-printer": "N",
+      "enable-tunnel": "N",
+      "enable-record-session": "N",
+      "enable-block-input": "N",
+      "enable-privacy-mode": "N",
+      "allow-remote-config-modification": "N",
+      "allow-auto-record-incoming": "N",
+      "allow-auto-record-outgoing": "N",
+      "hide-recording-button": "Y",
+      "enable-lan-discovery": "N",
+      "direct-server": "N",
+      "disable-discovery-panel": "Y",
+      "disable-group-panel": "Y",
+      "hide-network-settings": "Y",
+      "hide-server-settings": "Y",
+      "hide-proxy-settings": "Y",
+      "hide-websocket-settings": "Y",
+      "hide-remote-printer-settings": "Y",
+      "allow-auto-disconnect": "N",
+      "allow-insecure-tls-fallback": "N",
+      "privacy_mode": "N",
+      "terminal-persistent": "N",
+      "printer-incomming-job-action": "dismiss",
+      "allow-printer-auto-print": "N",
+      "hide-stop-service": "Y",
+      "hide-elevate-button-in-accept-window": "N",
+      "allow-auto-update": "N",
+      "enable-check-update": "N"
+    }
+  },
+  "businessEnforcementRequired": [
+    "authenticated-user-and-tenant",
+    "assigned-device-and-single-computer-limit",
+    "computer-lease-validity",
+    "short-lived-device-bound-connection-grant",
+    "revoke-before-confirmed-takeover",
+    "disable-and-reassignment-revocation",
+    "management-role-is-not-desktop-access"
+  ],
+  "unimplementedReleaseGates": [
+    "controller-and-host-native-build-and-regression-tests",
+    "assigned-computer-view-and-platform-account-and-main-account-shopping-ui",
+    "native-menus-entry-and-shortcut-runtime-validation",
+    "native-printer-and-msi-exe-install-update-uninstall-runtime-validation",
+    "dedicated-return-router-platform-exchange-and-actor-binding-integration",
+    "macos-signed-permission-and-system-audio-runtime-validation",
+    "controlled-product-update-feed",
+    "brand-application-identities-and-windows-macos-certificates",
+    "browser-session-runtime",
+    "business-connection-grant-enforcement"
+  ],
+  "implementedSourceLayers": [
+    "host-permission-before-role-and-full-mode",
+    "host-login-kind-and-option-gate",
+    "host-authorized-message-and-cm-gates",
+    "native-controller-session-creation-kind-gate",
+    "flutter-menus-and-window-kind-gates",
+    "persisted-shortcut-registration-and-dispatch-gates",
+    "external-cli-and-uri-connection-denial",
+    "controller-and-host-automatic-recorder-creation-gates",
+    "windows-wasapi-output-and-macos-screencapturekit-only-audio",
+    "unsigned-macos-permission-profile-and-swift-microphone-request-guard",
+    "reverse-host-to-controller-printer-and-voice-message-filter",
+    "optional-feature-denial-drops-message-without-closing-desktop",
+    "voice-refusal-and-close-and-recording-stop-cleanup-preserved",
+    "immutable-product-profile-initialization-and-explicit-deployment-inputs",
+    "windows-exe-install-update-and-direct-ffi-printer-install-guards",
+    "msi-native-payload-policy-provenance-gate-and-product-transform",
+    "product-macos-signing-input-and-output-entitlement-checks",
+    "dedicated-one-time-native-auth-and-checkout-return-router",
+    "product-main-left-pane-and-cm-and-install-page-trimming"
+  ],
+  "externalConnectionEntries": {
+    "mode": "deny-legacy-connections-and-config-import; isolated-one-time-platform-return-router",
+    "maintenanceCommands": "server, service, tray and installation lifecycle retained",
+    "platformGrantFlowImplemented": false,
+    "genericPeerPage": "hidden; assigned-resource UI must be implemented separately",
+    "productReturnIntegration": "reserved native auth/checkout code+state route; no payment implementation"
+  },
+  "macosProductProfile": {
+    "status": "integrated-into-product-build-source-not-native-or-signed-runtime-verified",
+    "requiredRustFeatures": [
+      "flutter",
+      "thinkpasser",
+      "screencapturekit"
+    ],
+    "microphoneUsageDescription": false,
+    "microphoneAudioInputEntitlement": false,
+    "screenCapturePermissionFlow": "retained",
+    "originalRustdeskUrlSchemeRegistration": false,
+    "systemAudioCaptureUnavailable": "return audio capture error; never choose microphone fallback",
+    "productReturnScheme": "thinkpasser-return"
+  },
+  "productReturnIntegration": {
+    "scheme": "thinkpasser-return",
+    "purposes": [
+      "auth",
+      "checkout"
+    ],
+    "path": "/return",
+    "parameters": [
+      "code",
+      "state"
+    ],
+    "state": "32 random bytes; outstanding flow in app process; expires within 10 minutes; consumed before network exchange",
+    "backendValidationRequired": true,
+    "peerConnectionAllowed": false,
+    "paymentOrAccountStateTrustedFromUri": false
+  }
+}

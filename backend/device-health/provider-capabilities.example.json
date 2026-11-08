@@ -1,0 +1,46 @@
+{
+  "schemaVersion": 1,
+  "referenceOnly": true,
+  "checkedAt": "2026-11-08",
+  "adapters": [
+    {
+      "adapterId": "aws-ec2-reference",
+      "configured": false,
+      "documentedOperations": ["RebootInstances", "RunInstances", "CreateSnapshot"],
+      "capabilitiesVerifiedInOurAccount": [],
+      "requires": ["account and region binding", "least privilege IAM", "instance/host/volume inventory", "external network isolation design", "approved AMI and bootstrap artifacts", "polling and independent acceptance"],
+      "sources": [
+        "https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_RebootInstances.html",
+        "https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_RunInstances.html",
+        "https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/mac-instance-stop.html"
+      ]
+    },
+    {
+      "adapterId": "scaleway-apple-silicon-reference",
+      "configured": false,
+      "documentedOperations": ["server reboot", "server reinstall", "server get", "OS list"],
+      "capabilitiesVerifiedInOurAccount": [],
+      "requires": ["project and zone binding", "least privilege API key", "stable server ID", "network isolation and read-only export verified separately", "reinstall completion polling", "approved OS ID and platform bootstrap"],
+      "sources": [
+        "https://www.scaleway.com/en/developers/api/apple-silicon",
+        "https://www.scaleway.com/en/developers/cli/apple-silicon",
+        "https://www.scaleway.com/en/docs/apple-silicon/faq/"
+      ]
+    },
+    {
+      "adapterId": "macstadium-power-reference",
+      "configured": false,
+      "documentedOperations": ["server list", "server status", "power on", "power off", "power reboot"],
+      "capabilitiesVerifiedInOurAccount": [],
+      "requires": ["account entitlement", "delegated bearer token", "stable server ID", "power result interpretation and independent boot verification", "separate evidence for network isolation, export and disk reimage"],
+      "sources": ["https://api.macstadium.com/core/api/"]
+    }
+  ],
+  "supplierMachineOnboarding": {
+    "configured": false,
+    "requiredInventoryFields": ["supplierId", "supplierMachineRef", "customerTenantId", "assignedAccountId", "assignmentVersion", "managementMode", "certifiedCapabilities"],
+    "supplierOwnershipGrantsCustomerDesktopAccess": false,
+    "guestAgentAloneGuaranteesExpiryIsolation": false,
+    "guestAgentAloneGuaranteesDiskReimage": false
+  }
+}

@@ -1,0 +1,24 @@
+* text=auto
+.gitignore text eol=lf
+.gitattributes text eol=lf
+*.md text eol=lf
+*.json text eol=lf
+*.cjs text eol=lf
+*.mjs text eol=lf
+*.py text eol=lf
+*.rs text eol=lf
+*.proto text eol=lf
+*.in text eol=lf
+*.patch text eol=lf
+*.plist text eol=lf
+*.entitlements text eol=lf
+*.ivf binary
+*.rdtcp binary
+*.html text eol=lf
+
+# Preserve pinned upstream bytes and recorded source hashes.
+web/remote-desktop/upstream/* -text whitespace=-blank-at-eol
+# Unified diff context markers must remain on blank context lines.
+client/rustdesk/patches/*.patch whitespace=-blank-at-eol
+# Keep the formatting of the user's original questionnaire answers.
+docs/questionnaires/*.md whitespace=-blank-at-eol
