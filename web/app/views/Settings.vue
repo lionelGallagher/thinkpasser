@@ -27,10 +27,8 @@ function savePassword() {
 <template>
   <section class="page-heading">
     <div>
-      <p class="eyebrow">{{ accounts ? "SAVED ACCOUNTS" : "MAKE IT YOURS" }}</p>
       <h1>
-        {{ accounts ? "账号管理" : desktop ? "客户端设置" : "账号设置"
-        }}<span class="greeting-dot">.</span>
+        {{ accounts ? "账号管理" : desktop ? "客户端设置" : "账号设置" }}
       </h1>
       <p>
         {{

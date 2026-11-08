@@ -12,7 +12,7 @@ import {
   type Product,
   type Portal,
 } from "./models";
-export const STORAGE_KEY = "thinkpasser.interactive-demo.v1";
+export const STORAGE_KEY = "thinkpasser.interactive-demo.v2";
 const id = (prefix: string) => prefix + "-" + crypto.randomUUID().slice(0, 8);
 function initialState(): DemoState {
   const now = Date.now();
@@ -38,8 +38,19 @@ function initialState(): DemoState {
       leaseStart: now - (30 - days) * DAY,
       expiresAt: now + days * DAY,
       assignedTo,
+      pendingAssignmentTo: null,
+      waitIntervals: [],
       state: "online",
       ai: ai.map((provider) => ({
+        id: "ai-" + mid + "-" + provider,
+        orderId:
+          mid === "m-01"
+            ? "TP-20261108-001"
+            : mid === "m-05"
+              ? "TP-20261108-002"
+              : "seed-" + mid,
+        unitId:
+          mid === "m-01" ? "u-01" : mid === "m-05" ? "u-05" : "seed-" + mid,
         provider,
         state: "available",
         promisedFrom: now - 10 * DAY,
@@ -66,13 +77,26 @@ function initialState(): DemoState {
   machines[4]!.ai[0]!.promisedFrom = 0;
   machines[4]!.ai[0]!.promisedUntil = 0;
   return {
-    version: 1,
+    version: 2,
     subscriptionResources: [
       {
-        id: "sr-01",
-        supplierId: "s-subscription",
-        externalRef: "NORTHSTAR-SUB-DEMO-01",
+        id: "sr-ai-01",
+        subtype: "activation_service",
+        supplierId: "s-activation",
+        externalRef: "SELF-AI-001",
         providers: ["claude", "codex"],
+        costMinor: 28000,
+        currency: "CNY",
+        capacity: 10,
+        validUntil: now + 35 * DAY,
+        state: "verified",
+      },
+      {
+        id: "sr-01",
+        subtype: "payment_card",
+        supplierId: "s-subscription",
+        externalRef: "NORTHSTAR-CARD-DEMO-01",
+        providers: [],
         costMinor: 28000,
         currency: "CNY",
         capacity: 8,
@@ -119,6 +143,7 @@ function initialState(): DemoState {
         units: [
           {
             id: "u-01",
+            entitlementIds: ["ai-m-01-claude", "ai-m-01-codex"],
             machineId: "m-01",
             state: "delivered",
             ai: ["claude", "codex"],
@@ -133,12 +158,28 @@ function initialState(): DemoState {
         amountMinor: products[4]!.priceMinor + AI_PRICE.claude,
         productName: "Windows 开发工作站",
         units: [
-          { id: "u-05", machineId: "m-05", state: "preparing", ai: ["claude"] },
+          {
+            id: "u-05",
+            entitlementIds: ["ai-m-05-claude"],
+            machineId: "m-05",
+            state: "preparing",
+            ai: ["claude"],
+          },
         ],
         aiEmail: "workspace@example.invalid",
       },
     ],
     suppliers: [
+      {
+        id: "s-activation",
+        name: "Thinkpasser 开通执行",
+        kind: "subscription",
+        selfOperated: true,
+        canActivateAi: true,
+        state: "approved",
+        contact: "activation@example.invalid",
+        leadHours: 4,
+      },
       {
         id: "s-compute",
         name: "Thinkpasser 自营",
@@ -150,7 +191,8 @@ function initialState(): DemoState {
       },
       {
         id: "s-subscription",
-        name: "Northstar 订阅服务",
+        name: "Northstar 卡经销商",
+        canActivateAi: false,
         kind: "subscription",
         selfOperated: false,
         state: "approved",
@@ -169,6 +211,21 @@ function initialState(): DemoState {
     ],
     tasks: [
       {
+        id: "T-CARD-001",
+        supplierId: "s-subscription",
+        orderId: "PO-CARD-001",
+        unitId: "procurement-card-001",
+        machineId: "",
+        kind: "card_supply",
+        supplierResourceId: "sr-01",
+        state: "offered",
+        targetEmail: "",
+        createdAt: now,
+        deadline: now + 4 * 3600000,
+        evidence: "",
+        costMinor: 21000,
+      },
+      {
         id: "T-1001",
         supplierId: "s-compute",
         orderId: "TP-20261108-002",
@@ -184,7 +241,9 @@ function initialState(): DemoState {
       },
       {
         id: "T-1002",
-        supplierId: "s-subscription",
+        supplierId: "s-activation",
+        entitlementId: "ai-m-05-claude",
+        supplierResourceId: "sr-ai-01",
         orderId: "TP-20261108-002",
         unitId: "u-05",
         machineId: "m-05",
@@ -240,7 +299,7 @@ function load(): DemoState {
     if (value) {
       const data = JSON.parse(value);
       if (
-        data.version === 1 &&
+        data.version === 2 &&
         Array.isArray(data.members) &&
         Array.isArray(data.machines) &&
         Array.isArray(data.tasks) &&
@@ -270,7 +329,11 @@ export const currentAccount = computed(
   () => state.members.find((m) => m.id === state.currentAccountId)!,
 );
 export const myMachines = computed(() =>
-  state.machines.filter((m) => m.assignedTo === currentAccount.value.id),
+  state.machines.filter(
+    (m) =>
+      m.assignedTo === currentAccount.value.id ||
+      m.pendingAssignmentTo === currentAccount.value.id,
+  ),
 );
 export const isMain = computed(() => currentAccount.value.role === "main");
 export const visibleMachines = computed(() =>
@@ -417,27 +480,56 @@ export function assign(
     state.machines.some(
       (other) =>
         other.id !== machineId &&
-        other.assignedTo === accountId &&
-        other.state !== "resetting",
+        (other.assignedTo === accountId ||
+          other.pendingAssignmentTo === accountId),
     )
   )
     throw new Error("该账号已有一台电脑，请先收回原分配");
-  const changing = m.assignedTo && m.assignedTo !== accountId;
-  if (changing) {
-    m.credentialVersion++;
-    if (mode === "reset")
-      log("已提交演示重置", m.code + " · 真实清理仍需设备验收", "amber");
-  }
-  m.assignedTo = accountId;
+  if (m.assignedTo === accountId && mode === "preserve_files") return;
+  m.assignedTo = null;
+  m.pendingAssignmentTo = accountId;
+  m.state = "resetting";
   m.leaseVersion++;
   ui.activeMachineId = "";
-  log("电脑分配已更新", m.code + " → " + member.name);
-  notify("演示分配已更新；实际设备凭据需要后端执行");
+  log(
+    "交接处理中",
+    m.code +
+      (mode === "reset"
+        ? " · 等待重置及凭据验收"
+        : " · 保留工作文件，等待私人登录及凭据验收"),
+    "amber",
+  );
+  notify("已提交演示交接；验收前不向新使用者开放");
+}
+export function completeDemoHandoff(machineId: string) {
+  const m = getMachine(machineId),
+    target = state.members.find(
+      (member) => member.id === m.pendingAssignmentTo,
+    );
+  if (m.state !== "resetting" || !target?.enabled || m.expiresAt <= Date.now())
+    throw new Error("交接条件不满足，保持待核验");
+  if (
+    state.machines.some(
+      (other) =>
+        other.id !== m.id &&
+        (other.assignedTo === target.id ||
+          other.pendingAssignmentTo === target.id),
+    )
+  )
+    throw new Error("目标账号存在其他分配");
+  m.assignedTo = target.id;
+  m.pendingAssignmentTo = null;
+  m.credentialVersion++;
+  m.leaseVersion++;
+  m.state = "online";
+  notify("演示交接验收完成；未执行真实重装或凭据写入");
 }
 export function unassign(machineId: string) {
   mainOnly();
   const m = getMachine(machineId);
+  if (m.state === "resetting") throw new Error("重置已开始，请先核验操作结果");
   m.assignedTo = null;
+  m.pendingAssignmentTo = null;
   m.credentialVersion++;
   m.leaseVersion++;
   ui.activeMachineId = "";
@@ -517,6 +609,7 @@ export function createOrder(
       { length: kind === "new" ? quantity : 1 },
       (_, index) => ({
         id: id("unit"),
+        entitlementIds: [],
         aiEmail: ai.length ? targetEmails[index] : undefined,
         machineId: existing?.id ?? "",
         state: "preparing" as const,
@@ -595,6 +688,8 @@ export function simulatePayment(
         leaseStart: 0,
         expiresAt: 0,
         assignedTo: null,
+        pendingAssignmentTo: null,
+        waitIntervals: [],
         state: "preparing",
         ai: [],
         priceMinor: p.priceMinor,
@@ -615,25 +710,40 @@ export function simulatePayment(
       }
     }
     const promiseFrom = order.type === "renewal" ? m.expiresAt - 30 * DAY : now;
-    for (const provider of unit.ai)
+    for (const provider of unit.ai) {
+      const entitlementId = id("ai");
+      unit.entitlementIds.push(entitlementId);
       m.ai.push({
+        id: entitlementId,
+        orderId: order.id,
+        unitId: unit.id,
         provider,
         state: "preparing",
         promisedFrom: promiseFrom,
         promisedUntil: order.type === "new" ? 0 : m.expiresAt,
         paidMinor: AI_PRICE[provider],
       });
+    }
     const kinds: ("computer_prepare" | AI)[] =
       order.type === "new" ? ["computer_prepare", ...unit.ai] : [...unit.ai];
     for (const kind of kinds)
       state.tasks.unshift({
         id: id("T"),
-        supplierId:
-          kind === "computer_prepare" ? "s-compute" : "s-subscription",
+        supplierId: kind === "computer_prepare" ? "s-compute" : "s-activation",
         orderId: order.id,
         unitId: unit.id,
         machineId: m.id,
         kind,
+        entitlementId:
+          kind === "computer_prepare"
+            ? undefined
+            : m.ai.find(
+                (a) =>
+                  a.orderId === order.id &&
+                  a.unitId === unit.id &&
+                  a.provider === kind,
+              )?.id,
+        supplierResourceId: kind === "computer_prepare" ? m.id : "sr-ai-01",
         state: "offered",
         targetEmail:
           kind === "computer_prepare"
@@ -681,13 +791,23 @@ export function verifyTask(taskId: string) {
   task.state = "verified";
   const order = state.orders.find((o) => o.id === task.orderId);
   const unit = order?.units.find((u) => u.id === task.unitId);
-  if (
-    unit &&
-    state.tasks
-      .filter((t) => t.unitId === unit.id)
-      .every((t) => t.state === "verified")
-  )
-    unit.state = "ready";
+  if (unit && order) {
+    const verified = state.tasks.filter(
+      (t) =>
+        t.orderId === order.id &&
+        t.unitId === unit.id &&
+        t.state === "verified",
+    );
+    const computerReady =
+      order.type !== "new" ||
+      verified.some((t) => t.kind === "computer_prepare");
+    const aiReady =
+      unit.entitlementIds.length === unit.ai.length &&
+      unit.entitlementIds.every((entitlementId) =>
+        verified.some((t) => t.entitlementId === entitlementId),
+      );
+    if (computerReady && aiReady) unit.state = "ready";
+  }
   notify("演示验收已记录；真实服务仍需实际证据");
 }
 export function deliverUnit(orderId: string, unitId: string) {
@@ -697,25 +817,65 @@ export function deliverUnit(orderId: string, unitId: string) {
     throw new Error("电脑及所购 AI 尚未全部验收");
   const m = getMachine(unit.machineId),
     now = Date.now();
+  const entitlements = unit.entitlementIds.map((entitlementId) =>
+    m.ai.find(
+      (item) =>
+        item.id === entitlementId &&
+        item.orderId === order.id &&
+        item.unitId === unit.id,
+    ),
+  );
+  if (
+    entitlements.length !== unit.ai.length ||
+    entitlements.some((item) => !item || item.state !== "preparing")
+  )
+    throw new Error("本单元权益未完整匹配");
+  if (
+    order.type !== "new" &&
+    entitlements.some((item) => item!.promisedUntil <= now)
+  )
+    throw new Error("原承诺期已结束，请处理该订单异常");
   if (order.type === "new") {
     m.state = "online";
     m.leaseStart = now;
     m.expiresAt = now + 30 * DAY;
   }
-  for (const ai of m.ai.filter(
-    (a) => a.state === "preparing" && unit.ai.includes(a.provider),
-  )) {
+  for (const item of entitlements) {
+    const ai = item!;
     if (order.type === "new") {
       ai.promisedFrom = now;
       ai.promisedUntil = m.expiresAt;
     }
-    if (ai.promisedUntil <= now)
-      throw new Error("原承诺期已结束，请先处理异常");
     ai.state = "available";
   }
   if (order.type === "ai_addon") {
-    m.expiresAt += Math.max(0, now - (order.paidAt ?? now));
-    m.leaseVersion++;
+    const duration = (intervals: [number, number][]) => {
+      const sorted = intervals
+        .filter(([a, b]) => b > a)
+        .sort((a, b) => a[0] - b[0]);
+      let total = 0,
+        left = 0,
+        right = 0;
+      for (const [a, b] of sorted) {
+        if (!right) {
+          left = a;
+          right = b;
+        } else if (a <= right) right = Math.max(right, b);
+        else {
+          total += right - left;
+          left = a;
+          right = b;
+        }
+      }
+      return total + (right ? right - left : 0);
+    };
+    const previous = duration([...m.waitIntervals]);
+    m.waitIntervals.push([order.paidAt ?? now, now]);
+    const delta = duration([...m.waitIntervals]) - previous;
+    if (delta > 0) {
+      m.expiresAt += delta;
+      m.leaseVersion++;
+    }
   }
   unit.state = "delivered";
   if (order.units.every((u) => u.state === "delivered"))
@@ -792,6 +952,8 @@ export function registerResource(
     leaseStart: 0,
     expiresAt: 0,
     assignedTo: null,
+    pendingAssignmentTo: null,
+    waitIntervals: [],
     state: "preparing",
     ai: [],
     priceMinor: p.priceMinor,
@@ -874,8 +1036,11 @@ export function registerSubscriptionResource(
     throw new Error("当前供方未开通卡／订阅供货权限");
   if (!externalRef.trim() || /^[0-9]{12,19}$/.test(externalRef.trim()))
     throw new Error("请填写供方脱敏资源引用，不填写完整卡号");
+  if (!supplier.canActivateAi && providers.length)
+    throw new Error("纯供卡资源不能申报 AI 开通能力");
+  if (supplier.canActivateAi && !providers.length)
+    throw new Error("请选择已审核的开通服务");
   if (
-    !providers.length ||
     !Number.isSafeInteger(costMinor) ||
     costMinor <= 0 ||
     !Number.isInteger(capacity) ||
@@ -894,6 +1059,7 @@ export function registerSubscriptionResource(
     throw new Error("此供方资源引用已登记");
   state.subscriptionResources.push({
     id: id("subscription"),
+    subtype: supplier.canActivateAi ? "activation_service" : "payment_card",
     supplierId: supplier.id,
     externalRef: externalRef.trim(),
     providers: [...new Set(providers)],
@@ -919,7 +1085,7 @@ function onDemoStorage(event: StorageEvent) {
   try {
     const incoming = JSON.parse(event.newValue) as DemoState;
     if (
-      incoming.version !== 1 ||
+      incoming.version !== 2 ||
       !Array.isArray(incoming.members) ||
       !Array.isArray(incoming.machines) ||
       !Array.isArray(incoming.orders) ||

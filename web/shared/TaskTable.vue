@@ -4,7 +4,7 @@ import Icon from "./Icon.vue";
 import Status from "./Status.vue";
 import EmptyState from "./EmptyState.vue";
 import { state, ui, acceptTask, verifyTask, openDialog, safely } from "./store";
-import { AI_NAME, date, money } from "./models";
+import { TASK_NAME, date, money } from "./models";
 const props = defineProps<{ supplier?: boolean }>(),
   filter = ref("all");
 const tasks = computed(() =>
@@ -70,15 +70,15 @@ const tones: Record<string, string> = {
                 :class="{ subscription: task.kind !== 'computer_prepare' }"
                 ><Icon
                   :name="
-                    task.kind === 'computer_prepare' ? 'server' : 'sparkles'
+                    task.kind === 'computer_prepare'
+                      ? 'server'
+                      : task.kind === 'card_supply'
+                        ? 'card'
+                        : 'sparkles'
                   "
                   :size="18" /></span
               ><span
-                ><strong>{{
-                  task.kind === "computer_prepare"
-                    ? "电脑准备"
-                    : AI_NAME[task.kind] + " 开通"
-                }}</strong
+                ><strong>{{ TASK_NAME[task.kind] }}</strong
                 ><small>{{ task.id }} · {{ task.orderId }}</small></span
               >
             </div>
@@ -86,13 +86,19 @@ const tones: Record<string, string> = {
           <td>
             <template v-if="supplier"
               ><strong class="table-plain">{{
-                task.targetEmail ||
+                (task.kind === "card_supply"
+                  ? state.subscriptionResources.find(
+                      (r) => r.id === task.supplierResourceId,
+                    )?.externalRef
+                  : task.targetEmail) ||
                 state.machines.find((m) => m.id === task.machineId)?.code
               }}</strong
               ><small class="table-small">{{
                 task.kind === "computer_prepare"
                   ? "配置、环境与远控能力验收"
-                  : "指定账号，不可替换成其他现成账号"
+                  : task.kind === "card_supply"
+                    ? "验收供卡资源，不代表客户 AI 已开通"
+                    : "仅向获授权的开通执行方提供指定账号"
               }}</small></template
             ><template v-else
               ><strong class="table-plain">{{

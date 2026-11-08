@@ -7,6 +7,8 @@ import {
   verifySubscriptionResource,
   resetDemo,
   assign,
+  completeDemoHandoff,
+  unassign,
   switchAccount,
   createOrder,
   simulatePayment,
@@ -20,6 +22,28 @@ import {
 } from "../shared/store";
 import { products } from "../shared/catalog";
 describe("两类供方与订阅资源", () => {
+  it("纯卡供应商不接受 AI 开通用途，开通方必须声明服务", () => {
+    ui.supplierId = "s-subscription";
+    expect(() =>
+      registerSubscriptionResource(
+        "CARD-ONLY",
+        ["claude"],
+        10000,
+        1,
+        Date.now() + DAY,
+      ),
+    ).toThrow("纯供卡");
+    ui.supplierId = "s-activation";
+    expect(() =>
+      registerSubscriptionResource(
+        "NO-SERVICE",
+        [],
+        10000,
+        1,
+        Date.now() + DAY,
+      ),
+    ).toThrow("请选择");
+  });
   it("电脑供方不能登记卡订阅资源", () => {
     ui.supplierId = "s-compute";
     expect(() =>
@@ -43,13 +67,7 @@ describe("两类供方与订阅资源", () => {
         Date.now() + DAY,
       ),
     ).toThrow();
-    registerSubscriptionResource(
-      "REF-NEW",
-      ["claude", "codex"],
-      28000,
-      2,
-      Date.now() + DAY,
-    );
+    registerSubscriptionResource("REF-NEW", [], 28000, 2, Date.now() + DAY);
     const resource = state.subscriptionResources.at(-1)!;
     expect(resource.state).toBe("inspection");
     expect(() =>
@@ -72,7 +90,7 @@ describe("跨入口状态与付款选择", () => {
     incoming.currentAccountId = "a-lin";
     window.dispatchEvent(
       new StorageEvent("storage", {
-        key: "thinkpasser.interactive-demo.v1",
+        key: "thinkpasser.interactive-demo.v2",
         newValue: JSON.stringify(incoming),
       }),
     );
@@ -192,6 +210,9 @@ describe("平台时间与费用边界", () => {
     expect(canConnect(m, member)).toBe(true);
     m.ai = [
       {
+        id: "expired-ai",
+        orderId: "expired-order",
+        unitId: "expired-unit",
         provider: "claude",
         state: "expired",
         promisedFrom: 1,
@@ -231,6 +252,27 @@ describe("平台时间与费用边界", () => {
   });
 });
 describe("分配与账户", () => {
+  it.each(["reset", "preserve_files"] as const)(
+    "%s 交接验收前不开放，并预留目标账号",
+    (mode) => {
+      createMember("新成员", "handoff@example.invalid", "temporary-password");
+      const target = state.members.at(-1)!;
+      assign("m-03", target.id, mode);
+      const machine = state.machines.find((m) => m.id === "m-03")!;
+      expect(machine.state).toBe("resetting");
+      expect(machine.assignedTo).toBeNull();
+      expect(machine.pendingAssignmentTo).toBe(target.id);
+      expect(canConnect(machine, target)).toBe(false);
+      expect(() => assign("m-01", target.id, "preserve_files")).toThrow(
+        "已有一台",
+      );
+      expect(() => unassign(machine.id)).toThrow();
+      completeDemoHandoff(machine.id);
+      expect(machine.assignedTo).toBe(target.id);
+      expect(machine.pendingAssignmentTo).toBeNull();
+      expect(machine.state).toBe("online");
+    },
+  );
   it("账号已有电脑时不能再分配，失败不改变原分配", () => {
     expect(() => assign("m-03", "a-main", "preserve_files")).toThrow();
     expect(state.machines.find((m) => m.id === "m-03")!.assignedTo).toBeNull();
@@ -251,6 +293,78 @@ describe("分配与账户", () => {
   });
 });
 describe("完整本地交付流程", () => {
+  it("两笔同种 AI 续费按精确权益验收，不能串单激活", () => {
+    const first = createOrder(
+      null,
+      "m-03",
+      "renewal",
+      ["claude"],
+      1,
+      "same@example.invalid",
+    );
+    simulatePayment(first.orderId);
+    const second = createOrder(
+      null,
+      "m-03",
+      "renewal",
+      ["claude"],
+      1,
+      "same@example.invalid",
+    );
+    simulatePayment(second.orderId);
+    const order = state.orders.find((o) => o.id === first.orderId)!,
+      unit = order.units[0]!;
+    for (const task of state.tasks.filter((t) => t.unitId === unit.id)) {
+      acceptTask(task.id);
+      reportTask(task.id, "演示验收：指定账号和本次权益匹配。");
+      verifyTask(task.id);
+    }
+    deliverUnit(order.id, unit.id);
+    const machine = state.machines.find((m) => m.id === "m-03")!;
+    expect(machine.ai.find((a) => a.orderId === first.orderId)!.state).toBe(
+      "available",
+    );
+    expect(machine.ai.find((a) => a.orderId === second.orderId)!.state).toBe(
+      "preparing",
+    );
+  });
+  it("同时等待两种 AI 的重叠时间只补电脑一次", () => {
+    vi.useFakeTimers();
+    const start = Date.now(),
+      machine = state.machines.find((m) => m.id === "m-03")!,
+      original = machine.expiresAt;
+    const first = createOrder(
+      null,
+      machine.id,
+      "ai_addon",
+      ["claude"],
+      1,
+      "same@example.invalid",
+    );
+    simulatePayment(first.orderId);
+    const second = createOrder(
+      null,
+      machine.id,
+      "ai_addon",
+      ["codex"],
+      1,
+      "same@example.invalid",
+    );
+    simulatePayment(second.orderId);
+    vi.setSystemTime(start + 3600000);
+    for (const created of [first, second]) {
+      const order = state.orders.find((o) => o.id === created.orderId)!,
+        unit = order.units[0]!;
+      for (const task of state.tasks.filter((t) => t.unitId === unit.id)) {
+        acceptTask(task.id);
+        reportTask(task.id, "演示验收：指定账号和本次权益匹配。");
+        verifyTask(task.id);
+      }
+      deliverUnit(order.id, unit.id);
+    }
+    expect(machine.expiresAt).toBe(original + 3600000);
+    expect(machine.ai.every((a) => a.promisedUntil === original)).toBe(true);
+  });
   it("付款和供方回报不直接交付，全部平台验收后单独起租", () => {
     const created = createOrder(
       products[0]!,

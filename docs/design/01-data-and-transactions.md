@@ -71,7 +71,7 @@ MySQL InnoDB，UTF-8。UUID 在 API 为字符串；数据库首期用 CHAR(36) A
 
 续费收款需进入 T06 的同租约锁序，支付已确认但租约条件失效时保留 exception 和资金事实，进入退款／重新确认处理，不声称续费成功。外部资金事实不能因业务事务失败而被“回滚成未收款”。
 
-退款先锁原 payment 与项目，去重并预留额度，提交 outbox 后调用渠道；succeeded 将预留转已退款，明确失败释放预留，unknown 保留预留并查询。不得用新退款号盲重试结果未知的旧请求。
+退款先确定原 order、项目／服务段和 payment ID，再按统一锁序锁 order → unit／lease／项目段 → payment／refund，去重并预留额度（不得从 payment 反向锁订单），提交 outbox 后调用渠道；succeeded 将预留转已退款，明确失败释放预留，unknown 保留预留并查询。不得用新退款号盲重试结果未知的旧请求。
 
 ## T05 分配与换人
 
@@ -90,3 +90,35 @@ MySQL InnoDB，UTF-8。UUID 在 API 为字符串；数据库首期用 CHAR(36) A
 锁 order／unit／computer／所购 AI，检查付款确认、供方证据及真实电脑可达；所购 AI 须完成指定账号、登录和实际可用核验并覆盖承诺期。纯电脑无需等待 AI。
 
 一次性记录 delivered_at=t、lease.starts_at=t、expires_at=t+所购周期；初始化 AI 承诺区间和租约专用资源，提交开放状态及通知 outbox。重复交付请求返回已有记录，不重置时间。交付后即计时，即使仍待主账号分配；多单元分别执行。
+
+## 生产补充实体与约束
+
+[生产蓝图](08-production-implementation.md)和新版 OpenAPI 为本节补充字段；不覆盖原订单事实。
+
+| 表 | 必要字段与索引 |
+| --- | --- |
+| supplier_capabilities | supplier_id、capability、provider（供卡可空）、status、evidence_ref、valid_until、version；审核能力独立于账号状态 |
+| supply_purchases / purchase_items | supplier、resource、数量、报价／合同 hash、unit_cost_minor、currency、fulfillment_state、payment_state、version；无需客户 task |
+| payment_instrument_references | supplier、safe_ref、owner／holder／funder／custodian／authorized_operator、authorization_evidence_ref；无明文 PAN／CVV |
+| fund_reservations | purchase／task、amount_minor、remaining_minor、currency、state、version；只代表内部资金占用 |
+| upstream_operations / upstream_results | attempt、purchase／task、instrument_ref、target_account、external_operation_id、state；result 追加 event_id、outcome、实际金额币种、evidence_ref、late_result；外部结果号按供方范围唯一 |
+| supplier_obligations / settlements | purchase／task、核定成本、预付抵扣、应付／实付、贷项、currency、凭证；自营不产生对自身应付 |
+| payment_attempts / payment_receipts | order、provider、merchant、attempt、外部交易号、金额币种、received_at、application_state；渠道＋商户＋交易号唯一；orders.accepted_receipt_id 只接受一笔履约款 |
+| service_segments | order_item、receipt、lease、kind、原实付、原承诺 from／until、refund_reserved_minor／refunded_minor、version；续费新增段，禁止覆盖旧段 |
+| unit_resolutions / resolution_quotes | unit、reason、choice、fulfillment_version、逐项目退款／成本证据、disclosure_hash、expires_at、confirmation；同决策幂等 |
+| supplier_task_attempts | task、ai_entitlement、target_account、resource、fulfillment_version、attempt_id、quote_snapshot、deadline、evidence；同权益同当前代际仅一执行 attempt |
+| connection_attempts | actor、allocation、旧 session、state、operation_id、失败码、version；等待接管时不伪造新 session |
+| remote_sessions | 原字段加 revoked_at／reason、connection_generation、connection_id、device_identity、policy_version；closing 仍占唯一控制位 |
+| assignment_reservations | account、allocation、handoff_operation、state、version；当前分配和交接预留统一参与账号独占，不能分表各建唯一后仍允许各占一次 |
+| export_ownership / export_files | 原使用账号、lease／allocation、job、file_id、受限相对路径、大小、chunk_size、chunk_hashes；历史导出归属独立于当前 assignment |
+| enrollment_tokens / device_certificates | resource、token_hash、single_use、expires_at；device_identity、证书序列、公钥引用、有效期、撤销状态 |
+
+账号独占的具体实现采用统一 `account_computer_slots(account_id PK, allocation_id UNIQUE, state active/pending_handoff, operation_id, version)`；与 assignments／reservation 历史在同一事务更新，不分别依赖两个表的唯一键。电脑到期撤销桌面分配后保留历史 exportOwner；保留期续费恢复分配时必须重新竞争 slot。
+
+所有普通业务按既定全局锁序。外部收款事实先入 receipt／inbox，不持资金事实锁再反向锁 order；应用 worker 锁 order 起执行一次。纯供货事实同理异步影响交付，不能持 supplier 锁回锁 order。取消后迟到结果可记录真实成本，但旧 fulfillmentVersion 不能改变当前 unit。expectedVersion 冲突统一用 VERSION_CONFLICT。
+
+退款跨多次续费时先读取相关 serviceSegment 的原 order／receipt ID，然后按稳定排序锁聚合根和项目，按各原区间计算、预留并分别原路退款。CHECK 只约束本行非负与单行上限，跨表归属、合计和不重叠期间由显式锁及真实 MySQL 测试保证。
+
+remote_sessions 表示逻辑独占会话；新增 remote_connections(session_id、connection_id、generation、state、ready_at、closed_at、version) 表示每代实际传输。同 session 未关闭传输用生成列唯一约束。resume 保留逻辑 sid，只关闭旧 generation 后创建新 connection；整会话撤销时进入 session.closing，全部传输关闭后才 closed。SessionActivated／ActivationAck 记录在当前 connection，激活回执可幂等重发，不得解锁旧代次。
+
+SupplyPurchase 返回服务端冻结 quoteHash／quoteVersion；审批回传该 hash，不让前端自行猜测序列化规范。资源报价改变必须重新生成采购快照并再次审批。

@@ -12,6 +12,8 @@ def run(full=False):
     spec = json.loads((BASE / "openapi.json").read_text(encoding="utf-8"))
     model = json.loads((BASE / "state-machines.json").read_text(encoding="utf-8"))
     examples = json.loads((BASE / "examples.json").read_text(encoding="utf-8"))["cases"]
+    remote = json.loads((BASE / "remote-signaling.schema.json").read_text(encoding="utf-8"))
+    remote_examples = json.loads((BASE / "remote-examples.json").read_text(encoding="utf-8"))["cases"]
     operations = []
     references = 0
     def walk(node):
@@ -39,6 +41,19 @@ def run(full=False):
             }
             operations.append(operation["operationId"])
     assert len(operations) == len(set(operations)), "Duplicate operationId"
+    # Check cross-file obligations that a valid OpenAPI document alone cannot enforce.
+    assert "disclosureHash" in spec["components"]["schemas"]["Quote"]["required"]
+    assert spec["paths"]["/machines/{machineId}/sessions"]["post"]["responses"]["202"]["content"]["application/json"]["schema"]["$ref"].endswith("/ConnectionAttempt")
+    assert spec["paths"]["/agent/policy-sync"]["post"]["security"] == [{"deviceMTLS": []}]
+    assert "revoked" not in model["machines"]["session"]["transitions"]
+    assert model["machines"]["session"]["transitions"]["closing"] == ["closed"]
+    assert model["transactions"]["T04"]["locks"] == model["globalLockOrder"]
+    assert model["machines"]["computerInventory"]["transitions"]["clearing"] == ["inspection", "quarantined"]
+    assert model["machines"]["lease"]["transitions"]["clearing"] == ["ended"]
+    # Compare through canonical JSON so local ref names can change without schema drift.
+    for name, schema in remote["$defs"].items():
+        expected = json.dumps(spec["components"]["schemas"][name], ensure_ascii=False, sort_keys=True).replace("#/components/schemas/", "#/$defs/")
+        assert json.loads(expected) == schema, ("Remote/OpenAPI schema drift", name)
     for name, machine in model["machines"].items():
         states = machine["transitions"]
         assert machine["initial"] in states, name
@@ -57,7 +72,7 @@ def run(full=False):
         assert question["review"]["status"] == "confirmed"
         assert question["answerRaw"] in answer_md, question["id"]
     documents = set((ROOT / "docs").rglob("*.md"))
-    documents.update(ROOT / p for p in ["README.md","web/README.md","admin/README.md","supplier/README.md","client/README.md","backend/README.md","client/rustdesk/README.md","web/remote-desktop/gateway-contract.md"])
+    documents.update(ROOT / p for p in ["README.md","web/README.md","admin/README.md","supplier/README.md","client/README.md","client/preview/README.md","backend/README.md","client/rustdesk/README.md","web/remote-desktop/gateway-contract.md"])
     local_links = 0
     fence = chr(96)*3
     for document in documents:
@@ -74,16 +89,22 @@ def run(full=False):
         from openapi_spec_validator import validate
         from jsonschema import Draft202012Validator, FormatChecker
         validate(spec)
+        Draft202012Validator.check_schema(remote)
         for case in examples:
             schema = {"$ref":"#/components/schemas/" + case["schema"],"components":spec["components"]}
             errors = list(Draft202012Validator(schema,format_checker=FormatChecker()).iter_errors(case["value"]))
-            assert (not errors) == case["valid"], case["name"]
+            assert (not errors) == case["valid"], (case["name"], [error.message for error in errors])
+        for case in remote_examples:
+            errors = list(Draft202012Validator(remote, format_checker=FormatChecker()).iter_errors(case["value"]))
+            assert (not errors) == case["valid"], (case["name"], [error.message for error in errors])
     return {
         "passed": True, "apiOperations":len(operations),
         "schemas":len(spec["components"]["schemas"]), "references":references,
         "stateMachines":len(model["machines"]), "transactions":len(model["transactions"]),
         "originalConfirmedAnswers":len(answers), "localLinks":local_links,
         "fullSchemaValidation":full, "fieldExamplesValidated":len(examples) if full else 0,
+        "remoteMessageExamplesValidated":len(remote_examples) if full else 0,
+        "remoteSchemasCompared":len(remote["$defs"]),
         "doesNotVerify":["production Java API","MySQL migration or concurrent transactions","real desktop control","real supplier or payment results","browser layout or screenshots"]
     }
 

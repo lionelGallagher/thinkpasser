@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { useNow } from "../../shared/useNow";
+const now = useNow();
 import { computed, ref } from "vue";
 import Icon from "../../shared/Icon.vue";
 import Status from "../../shared/Status.vue";
@@ -51,10 +53,7 @@ function connect(m: Machine) {
 <template>
   <section class="page-heading">
     <div>
-      <p class="eyebrow">
-        {{ desktop ? "DESKTOP WORKSPACE" : "YOUR DEDICATED COMPUTERS" }}
-      </p>
-      <h1>我的电脑<span class="greeting-dot">.</span></h1>
+      <h1>我的电脑</h1>
       <p>你的环境、你的工具，随时接着上次的工作继续。</p>
     </div>
     <a v-if="isMain" class="button primary" href="/web/#marketplace"
@@ -97,20 +96,22 @@ function connect(m: Machine) {
               ? 'blue'
               : machine.state === 'unknown'
                 ? 'amber'
-                : phase(machine) === 'desktop'
+                : phase(machine, now) === 'desktop'
                   ? 'green'
                   : 'amber'
           "
           >{{
             machine.state === "preparing"
               ? "准备中"
-              : machine.state === "unknown"
-                ? "连接待检查"
-                : phase(machine) === "desktop"
-                  ? "租约有效"
-                  : phase(machine) === "export_only"
-                    ? "仅可导出"
-                    : "已到期"
+              : machine.state === "resetting"
+                ? "交接／清理中"
+                : machine.state === "unknown"
+                  ? "连接待检查"
+                  : phase(machine, now) === "desktop"
+                    ? "租约有效"
+                    : phase(machine, now) === "export_only"
+                      ? "仅可导出"
+                      : "已到期"
           }}</Status
         ><button
           class="icon-button machine-detail-trigger"
@@ -138,15 +139,16 @@ function connect(m: Machine) {
         <span v-if="!machine.ai.length" class="empty-tools"
           ><Icon name="terminal" :size="14" />纯电脑 · 可按需加购 AI</span
         ><span
-          v-for="(ai, index) in machine.ai.filter(
-            (a) => a.state !== 'terminated',
-          )"
-          :key="ai.provider + index"
+          v-for="ai in machine.ai.filter((a) => a.state !== 'terminated')"
+          :key="ai.id"
           class="entitlement"
           :class="[
             ai.provider,
             {
-              muted: ai.state !== 'available' || Date.now() > ai.promisedUntil,
+              muted:
+                ai.state !== 'available' ||
+                now < ai.promisedFrom ||
+                now >= ai.promisedUntil,
             },
           ]"
           ><span
@@ -154,7 +156,10 @@ function connect(m: Machine) {
             {{ AI_NAME[ai.provider] }}</span
           ><i
             :class="{
-              off: ai.state !== 'available' || Date.now() > ai.promisedUntil,
+              off:
+                ai.state !== 'available' ||
+                now < ai.promisedFrom ||
+                now >= ai.promisedUntil,
             }"
           ></i
           ><small>{{
@@ -162,9 +167,11 @@ function connect(m: Machine) {
               ? "开通中"
               : ai.state === "interrupted"
                 ? "检查中"
-                : Date.now() > ai.promisedUntil
+                : now >= ai.promisedUntil
                   ? "已到期"
-                  : remaining(ai.promisedUntil)
+                  : now < ai.promisedFrom
+                    ? "待生效"
+                    : remaining(ai.promisedUntil, now)
           }}</small></span
         >
       </div>
@@ -177,7 +184,7 @@ function connect(m: Machine) {
           }}</span
         ><strong
           v-if="machine.state !== 'preparing'"
-          :class="{ warning: phase(machine) !== 'desktop' }"
+          :class="{ warning: phase(machine, now) !== 'desktop' }"
           >{{ remaining(machine.expiresAt) }}</strong
         >
       </div>
@@ -187,7 +194,7 @@ function connect(m: Machine) {
         }}</span
         ><span>{{ owner(machine) }}</span
         ><button
-          v-if="isMain && phase(machine) === 'desktop'"
+          v-if="isMain && phase(machine, now) === 'desktop'"
           class="text-link"
           @click="openDialog('assign', machine.id)"
         >
@@ -197,7 +204,7 @@ function connect(m: Machine) {
       <div class="machine-actions">
         <button
           v-if="
-            phase(machine) === 'export_only' &&
+            phase(machine, now) === 'export_only' &&
             machine.assignedTo === currentAccount.id
           "
           class="button primary"
@@ -207,8 +214,8 @@ function connect(m: Machine) {
         ><button
           v-else
           class="button"
-          :class="{ primary: canConnect(machine, currentAccount) }"
-          :disabled="!canConnect(machine, currentAccount)"
+          :class="{ primary: canConnect(machine, currentAccount, now) }"
+          :disabled="!canConnect(machine, currentAccount, now)"
           @click="connect(machine)"
         >
           <Icon name="arrowUp" :size="16" />{{
@@ -220,7 +227,9 @@ function connect(m: Machine) {
           }}</button
         ><button
           v-if="
-            isMain && machine.state !== 'preparing' && phase(machine) !== 'none'
+            isMain &&
+            machine.state !== 'preparing' &&
+            phase(machine, now) !== 'none'
           "
           class="button subtle"
           @click="openDialog('checkout', machine.id, 'renewal')"
@@ -229,7 +238,7 @@ function connect(m: Machine) {
         ><button
           v-if="
             isMain &&
-            phase(machine) === 'desktop' &&
+            phase(machine, now) === 'desktop' &&
             machine.state !== 'preparing'
           "
           class="icon-button"
@@ -239,7 +248,7 @@ function connect(m: Machine) {
           <Icon name="sparkles" />
         </button>
       </div>
-      <p v-if="phase(machine) === 'export_only'" class="retention-note">
+      <p v-if="phase(machine, now) === 'export_only'" class="retention-note">
         原环境保留至
         {{ date(machine.expiresAt + 3 * 86400000, true) }}，不开放完整桌面。
       </p>

@@ -135,7 +135,9 @@
       "valid": false,
       "value": {
         "expectedVersion": 1,
-        "outcome": "reported"
+        "outcome": "reported",
+        "attemptId": "11111111-1111-4111-8111-111111111111",
+        "fulfillmentVersion": 1
       }
     },
     {
@@ -146,7 +148,9 @@
         "expectedVersion": 1,
         "outcome": "reported",
         "evidenceRef": "evidence/example",
-        "externalRef": "supplier-1"
+        "externalRef": "supplier-1",
+        "attemptId": "11111111-1111-4111-8111-111111111111",
+        "fulfillmentVersion": 1
       }
     },
     {
@@ -164,7 +168,8 @@
       "value": {
         "expectedVersion": 1,
         "environmentMode": "preserve_files",
-        "confirmationId": "00000000-0000-4000-8000-000000000001"
+        "confirmationId": "00000000-0000-4000-8000-000000000001",
+        "confirmationToken": "test-confirmation-token"
       }
     },
     {
@@ -220,7 +225,8 @@
         "quoteCurrency": "CNY",
         "costMinor": 28000,
         "capacity": 3,
-        "validUntil": 1800000000000
+        "validUntil": 1800000000000,
+        "subtype": "activation_service"
       }
     },
     {
@@ -236,7 +242,8 @@
         "quoteCurrency": "CNY",
         "costMinor": 28000,
         "capacity": 3,
-        "validUntil": 1800000000000
+        "validUntil": 1800000000000,
+        "subtype": "activation_service"
       }
     },
     {
@@ -253,8 +260,122 @@
         "costMinor": 28000,
         "capacity": 3,
         "validUntil": 1800000000000,
-        "cvv": "123"
+        "cvv": "123",
+        "subtype": "activation_service"
       }
+    },
+    {
+      "name": "pure card resource has no activation provider",
+      "schema": "SubscriptionResourceRegistration",
+      "value": {
+        "resourceKind": "card_subscription",
+        "subtype": "payment_card",
+        "externalRef": "SUPPLIER-CARD-01",
+        "providers": [],
+        "quoteCurrency": "CNY",
+        "costMinor": 20000,
+        "capacity": 1,
+        "validUntil": 1800000000000
+      },
+      "valid": true
+    },
+    {
+      "name": "pure card cannot claim activation provider",
+      "schema": "SubscriptionResourceRegistration",
+      "value": {
+        "resourceKind": "card_subscription",
+        "subtype": "payment_card",
+        "externalRef": "SUPPLIER-CARD-01",
+        "providers": [
+          "claude"
+        ],
+        "quoteCurrency": "CNY",
+        "costMinor": 20000,
+        "capacity": 1,
+        "validUntil": 1800000000000
+      },
+      "valid": false
+    },
+    {
+      "name": "card procurement needs no customer unit",
+      "schema": "TaskDispatch",
+      "value": {
+        "supplierId": "11111111-1111-4111-8111-111111111111",
+        "supplierResourceId": "11111111-1111-4111-8111-111111111111",
+        "fulfillmentVersion": 1,
+        "kind": "card_supply",
+        "purchaseId": "11111111-1111-4111-8111-111111111111",
+        "deadlineAt": 1800000000000
+      },
+      "valid": true
+    },
+    {
+      "name": "card task cannot carry customer entitlement",
+      "schema": "TaskDispatch",
+      "value": {
+        "supplierId": "11111111-1111-4111-8111-111111111111",
+        "supplierResourceId": "11111111-1111-4111-8111-111111111111",
+        "fulfillmentVersion": 1,
+        "kind": "card_supply",
+        "purchaseId": "11111111-1111-4111-8111-111111111111",
+        "deadlineAt": 1800000000000,
+        "aiEntitlementId": "11111111-1111-4111-8111-111111111111"
+      },
+      "valid": false
+    },
+    {
+      "name": "AI dispatch requires exact entitlement",
+      "schema": "TaskDispatch",
+      "value": {
+        "supplierId": "11111111-1111-4111-8111-111111111111",
+        "supplierResourceId": "11111111-1111-4111-8111-111111111111",
+        "fulfillmentVersion": 1,
+        "kind": "ai_activate",
+        "unitId": "11111111-1111-4111-8111-111111111111",
+        "deadlineAt": 1800000000000
+      },
+      "valid": false
+    },
+    {
+      "name": "precise AI dispatch",
+      "schema": "TaskDispatch",
+      "value": {
+        "supplierId": "11111111-1111-4111-8111-111111111111",
+        "supplierResourceId": "11111111-1111-4111-8111-111111111111",
+        "fulfillmentVersion": 1,
+        "kind": "ai_activate",
+        "unitId": "11111111-1111-4111-8111-111111111111",
+        "deadlineAt": 1800000000000,
+        "aiEntitlementId": "11111111-1111-4111-8111-111111111111"
+      },
+      "valid": true
+    },
+    {
+      "name": "takeover can wait before new session exists",
+      "schema": "ConnectionAttempt",
+      "value": {
+        "id": "11111111-1111-4111-8111-111111111111",
+        "state": "waiting_previous_close",
+        "previousSessionId": "11111111-1111-4111-8111-111111111111",
+        "version": 1
+      },
+      "valid": true
+    },
+    {
+      "name": "delivery requires exact evidence entries",
+      "schema": "DeliveryDecision",
+      "value": {
+        "expectedVersion": 1,
+        "fulfillmentVersion": 1,
+        "computerEvidenceRef": "evidence:computer",
+        "aiEvidence": [
+          {
+            "entitlementId": "11111111-1111-4111-8111-111111111111",
+            "evidenceRef": "evidence:ai"
+          }
+        ]
+      },
+      "valid": true
     }
   ]
 }

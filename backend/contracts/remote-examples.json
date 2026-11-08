@@ -1,0 +1,330 @@
+{
+  "cases": [
+    {
+      "name": "all channels close acknowledged",
+      "valid": true,
+      "value": {
+        "messageType": "CloseAck",
+        "messageId": "11111111-1111-4111-8111-111111111111",
+        "sentAt": 1800000000000,
+        "body": {
+          "sessionId": "11111111-1111-4111-8111-111111111111",
+          "connectionId": "11111111-1111-4111-8111-111111111111",
+          "epoch": 2,
+          "connectionGeneration": 1,
+          "deviceIdentityId": "11111111-1111-4111-8111-111111111111",
+          "policyVersion": 3,
+          "commandId": "11111111-1111-4111-8111-111111111111",
+          "bootId": "boot-1",
+          "inputReleased": true,
+          "closedChannels": [
+            "screen",
+            "input",
+            "system_audio",
+            "clipboard",
+            "files"
+          ],
+          "closedAt": 1800000000000,
+          "scope": "session"
+        }
+      }
+    },
+    {
+      "name": "missing file channel cannot acknowledge close",
+      "valid": false,
+      "value": {
+        "messageType": "CloseAck",
+        "messageId": "11111111-1111-4111-8111-111111111111",
+        "sentAt": 1800000000000,
+        "body": {
+          "sessionId": "11111111-1111-4111-8111-111111111111",
+          "connectionId": "11111111-1111-4111-8111-111111111111",
+          "epoch": 2,
+          "connectionGeneration": 1,
+          "deviceIdentityId": "11111111-1111-4111-8111-111111111111",
+          "policyVersion": 3,
+          "commandId": "11111111-1111-4111-8111-111111111111",
+          "bootId": "boot-1",
+          "inputReleased": true,
+          "closedChannels": [
+            "screen",
+            "input",
+            "system_audio",
+            "clipboard"
+          ],
+          "closedAt": 1800000000000,
+          "scope": "session"
+        }
+      }
+    },
+    {
+      "name": "zero epoch rejected",
+      "valid": false,
+      "value": {
+        "messageType": "CloseAck",
+        "messageId": "11111111-1111-4111-8111-111111111111",
+        "sentAt": 1800000000000,
+        "body": {
+          "sessionId": "11111111-1111-4111-8111-111111111111",
+          "connectionId": "11111111-1111-4111-8111-111111111111",
+          "epoch": 0,
+          "connectionGeneration": 1,
+          "deviceIdentityId": "11111111-1111-4111-8111-111111111111",
+          "policyVersion": 3,
+          "commandId": "11111111-1111-4111-8111-111111111111",
+          "bootId": "boot-1",
+          "inputReleased": true,
+          "closedChannels": [
+            "screen",
+            "input",
+            "system_audio",
+            "clipboard",
+            "files"
+          ],
+          "closedAt": 1800000000000,
+          "scope": "session"
+        }
+      }
+    },
+    {
+      "name": "unknown secret field rejected",
+      "valid": false,
+      "value": {
+        "messageType": "CloseAck",
+        "messageId": "11111111-1111-4111-8111-111111111111",
+        "sentAt": 1800000000000,
+        "body": {
+          "sessionId": "11111111-1111-4111-8111-111111111111",
+          "connectionId": "11111111-1111-4111-8111-111111111111",
+          "epoch": 2,
+          "connectionGeneration": 1,
+          "deviceIdentityId": "11111111-1111-4111-8111-111111111111",
+          "policyVersion": 3,
+          "commandId": "11111111-1111-4111-8111-111111111111",
+          "bootId": "boot-1",
+          "inputReleased": true,
+          "closedChannels": [
+            "screen",
+            "input",
+            "system_audio",
+            "clipboard",
+            "files"
+          ],
+          "closedAt": 1800000000000,
+          "password": "forbidden",
+          "scope": "session"
+        }
+      }
+    },
+    {
+      "name": "bound client proof payload",
+      "valid": true,
+      "value": {
+        "messageType": "ClientProof",
+        "messageId": "11111111-1111-4111-8111-111111111111",
+        "sentAt": 1800000000000,
+        "body": {
+          "sessionId": "11111111-1111-4111-8111-111111111111",
+          "connectionId": "11111111-1111-4111-8111-111111111111",
+          "epoch": 2,
+          "connectionGeneration": 1,
+          "deviceIdentityId": "11111111-1111-4111-8111-111111111111",
+          "policyVersion": 3,
+          "challengeId": "11111111-1111-4111-8111-111111111111",
+          "nonce": "nonce-random-per-challenge",
+          "clientKeyThumbprint": "key-reference",
+          "channelBinding": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "purpose": "connect"
+        }
+      }
+    },
+    {
+      "name": "proof without channel binding rejected",
+      "valid": false,
+      "value": {
+        "messageType": "ClientProof",
+        "messageId": "11111111-1111-4111-8111-111111111111",
+        "sentAt": 1800000000000,
+        "body": {
+          "sessionId": "11111111-1111-4111-8111-111111111111",
+          "connectionId": "11111111-1111-4111-8111-111111111111",
+          "epoch": 2,
+          "connectionGeneration": 1,
+          "deviceIdentityId": "11111111-1111-4111-8111-111111111111",
+          "policyVersion": 3,
+          "challengeId": "11111111-1111-4111-8111-111111111111",
+          "nonce": "nonce-random-per-challenge",
+          "clientKeyThumbprint": "key-reference",
+          "purpose": "connect"
+        }
+      }
+    },
+    {
+      "name": "unassigned device can synchronize deny policy",
+      "valid": true,
+      "value": {
+        "messageType": "DevicePolicySnapshot",
+        "messageId": "11111111-1111-4111-8111-111111111111",
+        "sentAt": 1800000000000,
+        "body": {
+          "deviceIdentityId": "11111111-1111-4111-8111-111111111111",
+          "computerId": "11111111-1111-4111-8111-111111111111",
+          "bootId": "boot-1",
+          "policyVersion": 1,
+          "sessionEpoch": 1,
+          "serverTime": 1800000000000,
+          "validUntil": 1800000030000,
+          "leaseExpiresAt": 0,
+          "allocationId": null,
+          "assignmentId": null,
+          "leaseVersion": 0,
+          "assignmentVersion": 0,
+          "credentialVersion": 1,
+          "accountAuthVersion": 0,
+          "challengeId": "11111111-1111-4111-8111-111111111111",
+          "challenge": "fresh-challenge",
+          "permittedSessions": [],
+          "capabilities": []
+        }
+      }
+    },
+    {
+      "name": "reset uses constrained payload",
+      "value": {
+        "messageType": "DeviceCommandPayload",
+        "messageId": "11111111-1111-4111-8111-111111111111",
+        "sentAt": 1800000000000,
+        "body": {
+          "commandId": "11111111-1111-4111-8111-111111111111",
+          "operationId": "11111111-1111-4111-8111-111111111111",
+          "computerId": "11111111-1111-4111-8111-111111111111",
+          "kind": "reset_machine",
+          "issuedAt": 1800000000000,
+          "expiresAt": 1800000030000,
+          "expectedBootId": "boot-1",
+          "policyVersion": 1,
+          "leaseVersion": 1,
+          "assignmentVersion": 1,
+          "credentialVersion": 1,
+          "challengeId": "11111111-1111-4111-8111-111111111111",
+          "payload": {
+            "templateVersion": "mac-2026-11-approved",
+            "eraseScope": "customer_volumes",
+            "approvalEvidenceRef": "evidence:approved"
+          },
+          "accountAuthVersion": 0
+        }
+      },
+      "valid": true
+    },
+    {
+      "name": "reset refuses arbitrary shell payload",
+      "value": {
+        "messageType": "DeviceCommandPayload",
+        "messageId": "11111111-1111-4111-8111-111111111111",
+        "sentAt": 1800000000000,
+        "body": {
+          "commandId": "11111111-1111-4111-8111-111111111111",
+          "operationId": "11111111-1111-4111-8111-111111111111",
+          "computerId": "11111111-1111-4111-8111-111111111111",
+          "kind": "reset_machine",
+          "issuedAt": 1800000000000,
+          "expiresAt": 1800000030000,
+          "expectedBootId": "boot-1",
+          "policyVersion": 1,
+          "leaseVersion": 1,
+          "assignmentVersion": 1,
+          "credentialVersion": 1,
+          "challengeId": "11111111-1111-4111-8111-111111111111",
+          "payload": {
+            "shell": "arbitrary-command"
+          },
+          "accountAuthVersion": 0
+        }
+      },
+      "valid": false
+    },
+    {
+      "name": "inventory verification without a lease reports zero versions",
+      "valid": true,
+      "value": {
+        "messageType": "AgentResult",
+        "messageId": "11111111-1111-4111-8111-111111111111",
+        "sentAt": 1800000000000,
+        "body": {
+          "eventId": "11111111-1111-4111-8111-111111111111",
+          "deviceIdentityId": "11111111-1111-4111-8111-111111111111",
+          "commandId": "11111111-1111-4111-8111-111111111111",
+          "operationId": "11111111-1111-4111-8111-111111111111",
+          "bootId": "boot-1",
+          "agentInstanceId": "11111111-1111-4111-8111-111111111111",
+          "sequence": 1,
+          "challengeId": "11111111-1111-4111-8111-111111111111",
+          "policyVersion": 1,
+          "leaseVersion": 0,
+          "assignmentVersion": 0,
+          "credentialVersion": 1,
+          "accountAuthVersion": 0,
+          "state": "effect_reported",
+          "probeResults": [],
+          "occurredAt": 1800000000000
+        }
+      }
+    },
+    {
+      "name": "server activation binds connection and expiry",
+      "valid": true,
+      "value": {
+        "messageType": "SessionActivated",
+        "messageId": "11111111-1111-4111-8111-111111111111",
+        "sentAt": 1800000000000,
+        "body": {
+          "sessionId": "11111111-1111-4111-8111-111111111111",
+          "connectionId": "11111111-1111-4111-8111-111111111111",
+          "epoch": 1,
+          "connectionGeneration": 1,
+          "deviceIdentityId": "11111111-1111-4111-8111-111111111111",
+          "policyVersion": 1,
+          "activationId": "11111111-1111-4111-8111-111111111111",
+          "leaseVersion": 1,
+          "assignmentVersion": 1,
+          "credentialVersion": 1,
+          "accountAuthVersion": 1,
+          "jti": "11111111-1111-4111-8111-111111111111",
+          "expiresAt": 1800000030000,
+          "capabilities": [
+            "screen",
+            "input"
+          ]
+        }
+      }
+    },
+    {
+      "name": "activation without id cannot open channels",
+      "valid": false,
+      "value": {
+        "messageType": "SessionActivated",
+        "messageId": "11111111-1111-4111-8111-111111111111",
+        "sentAt": 1800000000000,
+        "body": {
+          "sessionId": "11111111-1111-4111-8111-111111111111",
+          "connectionId": "11111111-1111-4111-8111-111111111111",
+          "epoch": 1,
+          "connectionGeneration": 1,
+          "deviceIdentityId": "11111111-1111-4111-8111-111111111111",
+          "policyVersion": 1,
+          "leaseVersion": 1,
+          "assignmentVersion": 1,
+          "credentialVersion": 1,
+          "accountAuthVersion": 1,
+          "jti": "11111111-1111-4111-8111-111111111111",
+          "expiresAt": 1800000030000,
+          "capabilities": [
+            "screen",
+            "input"
+          ]
+        }
+      }
+    }
+  ]
+}

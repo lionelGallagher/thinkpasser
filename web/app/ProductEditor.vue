@@ -48,10 +48,7 @@ function save() {
 }
 </script>
 <template>
-  <BaseModal
-    title="编辑商品配置"
-    eyebrow="CATALOG SETTINGS"
-    @close="emit('close')"
+  <BaseModal title="编辑商品配置" @close="emit('close')"
     ><form class="modal-form" @submit.prevent="save">
       <label class="field"
         >商品名称<input v-model="name" required maxlength="60" /></label

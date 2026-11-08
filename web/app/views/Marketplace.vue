@@ -51,18 +51,14 @@ function choose(id: string) {
 <template>
   <section class="page-heading">
     <div>
-      <p class="eyebrow">
-        {{ admin ? "CATALOG MANAGEMENT" : "FIND YOUR NEXT WORKSPACE" }}
-      </p>
       <h1>
-        {{ admin ? "商品管理" : "为下一件大事，选一台好电脑"
-        }}<span class="greeting-dot">.</span>
+        {{ admin ? "商品管理" : "选择电脑" }}
       </h1>
       <p>
         {{
           admin
             ? "维护客户看到的配置与 AI 组合，成交订单使用购买时快照。"
-            : "选择适合的独享环境，AI 工具按需搭配。每一台，都只属于你的工作。"
+            : "选择配置和地区，AI 工具可选。"
         }}
       </p>
     </div>
@@ -72,9 +68,8 @@ function choose(id: string) {
   </section>
   <div v-if="!admin" class="catalog-intro">
     <div>
-      <span class="small-overline">BUILD YOUR SETUP</span>
-      <h3>一台电脑，四种选择。</h3>
-      <p>只买电脑，或搭配 Claude Code、Codex，也可以同时拥有。</p>
+      <h3>AI 工具</h3>
+      <p>按需选择，可不购买。</p>
     </div>
     <div class="ai-choice-row">
       <label
@@ -141,30 +136,11 @@ function choose(id: string) {
       class="product-card"
       :class="{ unavailable: !product.available }"
     >
-      <div class="product-art" :class="product.os">
-        <span class="country-pill"
-          >{{ COUNTRY[product.country]?.flag }} {{ product.region }}</span
-        ><span v-if="product.badge" class="product-badge">{{
-          product.badge
-        }}</span>
-        <div v-if="product.os === 'macos'" class="mac-device">
-          <div class="mac-face"><span>✦</span></div>
-          <div class="mac-front"><i></i><i></i><b></b></div>
-          <span class="device-shadow"></span>
-        </div>
-        <div v-else class="windows-device">
-          <div class="tower-top"></div>
-          <div class="tower-front">
-            <span class="tower-light"></span><i></i><i></i
-            ><span class="windows-mark"><b></b><b></b><b></b><b></b></span>
-          </div>
-          <span class="device-shadow"></span>
-        </div>
-        <span class="art-caption">{{
-          product.os === "macos"
-            ? "DESIGNED FOR YOUR IDEAS"
-            : "READY FOR WHAT’S NEXT"
-        }}</span>
+      <div class="product-identity">
+        <span>{{ product.os === "macos" ? "macOS" : "Windows" }}</span
+        ><span
+          >{{ COUNTRY[product.country]?.label }} · {{ product.region }}</span
+        >
       </div>
       <div class="product-content">
         <div class="product-title-row">
@@ -245,11 +221,5 @@ function choose(id: string) {
       清除筛选
     </button></EmptyState
   >
-  <div class="catalog-bottom">
-    <span><Icon name="shield" />独享电脑，环境相互独立</span
-    ><span><Icon name="sparkles" />AI 工具，自由搭配</span
-    ><span><Icon name="calendar" />验收开放后，独立计时</span
-    ><span><Icon name="help" />有问题，工单跟进处理</span>
-  </div>
   <ProductEditor v-if="editing" :product="editing" @close="editing = null" />
 </template>

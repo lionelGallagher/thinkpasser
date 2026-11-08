@@ -27,11 +27,8 @@ const tickets = computed(() =>
 <template>
   <section class="page-heading">
     <div>
-      <p class="eyebrow">
-        {{ admin ? "SERVICE & RESOLUTION" : "WE’RE HERE TO HELP" }}
-      </p>
       <h1>
-        {{ admin ? "售后工单" : "服务工单" }}<span class="greeting-dot">.</span>
+        {{ admin ? "售后工单" : "服务工单" }}
       </h1>
       <p>
         {{
@@ -45,18 +42,6 @@ const tickets = computed(() =>
       <Icon name="plus" :size="17" />提交工单
     </button>
   </section>
-  <div class="support-overview">
-    <div>
-      <span class="support-symbol"><Icon name="help" :size="29" /></span>
-      <div>
-        <h2>先解决问题，再处理补偿。</h2>
-        <p>电脑连接、AI 权益、续费与交付，都可以通过工单跟进。</p>
-      </div>
-    </div>
-    <a class="button" href="/web/#machines"
-      >查看我的电脑 <Icon name="arrowUp" :size="15"
-    /></a>
-  </div>
   <div class="filter-bar">
     <div class="segmented">
       <button

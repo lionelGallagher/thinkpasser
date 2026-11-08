@@ -12,12 +12,15 @@ import {
   notify,
 } from "../../web/shared/store";
 import { canConnect } from "../../web/shared/models";
+import { useNow } from "../../web/shared/useNow";
+const now = useNow();
 const location = window.location;
 const machine = computed(() =>
   state.machines.find((m) => m.id === ui.activeMachineId),
 );
 const valid = computed(
-  () => machine.value && canConnect(machine.value, currentAccount.value),
+  () =>
+    machine.value && canConnect(machine.value, currentAccount.value, now.value),
 );
 const activeFile = ref("hello.ts"),
   audio = ref(false),
@@ -227,8 +230,7 @@ async function fullscreen() {
   ><template v-else
     ><section class="page-heading">
       <div>
-        <p class="eyebrow">YOUR DESKTOP, ANYWHERE</p>
-        <h1>远控工作区<span class="greeting-dot">.</span></h1>
+        <h1>远控工作区</h1>
         <p>选择分配给当前账号的有效电脑，查看桌面界面预览。</p>
       </div>
     </section>
@@ -237,14 +239,16 @@ async function fullscreen() {
       description="只显示当前账号有权使用的独享电脑。此处不会连接真实机器。"
       icon="monitor"
       ><button
-        v-for="m in myMachines.filter((m) => canConnect(m, currentAccount))"
+        v-for="m in myMachines.filter((m) =>
+          canConnect(m, currentAccount, now),
+        )"
         :key="m.id"
         class="button primary"
         @click="safely(() => openDesktop(m.id))"
       >
         {{ m.name }} <Icon name="arrowUp" :size="15" /></button
       ><a
-        v-if="!myMachines.some((m) => canConnect(m, currentAccount))"
+        v-if="!myMachines.some((m) => canConnect(m, currentAccount, now))"
         class="button"
         href="#machines"
         >查看电脑与租期状态</a

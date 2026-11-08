@@ -394,3 +394,7 @@ AI 故障退费是平台给客户的售后支出，不假设官方能按天退�
 - [RustDesk 构建](../client/rustdesk/BUILD_INTEGRATION.md)、[会话契约](../web/remote-desktop/gateway-contract.md)、[设备协议](../backend/device-health/protocol-v1.md)：专项工程约定。
 
 实施中新增证据应更新对应状态，不以“有代码／有设置／有回执”代替真实能力验收，也不把已经确认的业务重新变成重复问卷。
+
+## 生产实施定案
+
+以[生产实现蓝图](design/08-production-implementation.md)、[端到端矩阵](design/09-end-to-end-matrix.md)及[远控协议](design/10-remote-protocol.md)补齐实施细节。业务基线为 Java 21 LTS／Spring Boot 4.1.x／MySQL 8.4 LTS；本地现有 JDK17 与 MySQL8.0 只是已探测环境。纯供卡与指定账号开通是两种审核能力，仍属于卡／订阅侧；平台不卖卡。采购与实际资金、精确权益交付、续费服务段、异步接管、外部隔离和恢复验收均按新字段契约实现。

@@ -12,7 +12,6 @@ const initialProducts: Product[] = [
     disk: 512,
     priceMinor: 29900,
     available: true,
-    badge: "开发者之选",
   },
   {
     id: "mac-jp",
@@ -49,7 +48,6 @@ const initialProducts: Product[] = [
     disk: 1024,
     priceMinor: 69900,
     available: true,
-    badge: "高性能",
   },
   {
     id: "win-de",

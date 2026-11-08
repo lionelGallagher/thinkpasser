@@ -2,7 +2,7 @@
   "openapi": "3.1.1",
   "info": {
     "title": "Thinkpasser implementation contract",
-    "version": "1.0.0",
+    "version": "0.2.0-design",
     "description": "详细设计契约；所有端点待实现。时间为UTC epoch毫秒；金额为最小货币单位。外部支付回调由渠道独立协议接入。"
   },
   "servers": [
@@ -1825,7 +1825,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Session"
+                  "$ref": "#/components/schemas/ConnectionAttempt"
                 }
               }
             }
@@ -3626,7 +3626,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/ResourceReview"
+                "$ref": "#/components/schemas/TaskVerification"
               }
             }
           }
@@ -4006,7 +4006,7 @@
       "post": {
         "operationId": "agentHeartbeat",
         "summary": "agentHeartbeat",
-        "description": "业务处理及前置条件见 docs/design/02-api-and-permissions.md 与事务 T13",
+        "description": "mTLS 设备身份与 JWS 设备消息均验证；解码 body 按 AgentHeartbeat 校验；序号不因重发改变。",
         "x-roles": [
           "device"
         ],
@@ -4053,7 +4053,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/AgentHeartbeat"
+                "$ref": "#/components/schemas/SignedDeviceMessage"
               }
             }
           }
@@ -4069,7 +4069,7 @@
       "post": {
         "operationId": "pollAgentCommand",
         "summary": "pollAgentCommand",
-        "description": "业务处理及前置条件见 docs/design/02-api-and-permissions.md 与事务 T13",
+        "description": "mTLS 设备身份与 JWS 设备消息均验证；解码 body 按 AgentPoll 校验；序号不因重发改变。",
         "x-roles": [
           "device"
         ],
@@ -4081,7 +4081,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/AgentPollResult"
+                  "$ref": "#/components/schemas/SignedDeviceMessage"
                 }
               }
             }
@@ -4116,7 +4116,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/AgentPoll"
+                "$ref": "#/components/schemas/SignedDeviceMessage"
               }
             }
           }
@@ -4179,7 +4179,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/AgentResult"
+                "$ref": "#/components/schemas/SignedDeviceMessage"
               }
             }
           }
@@ -4306,6 +4306,1559 @@
           }
         }
       }
+    },
+    "/connection-attempts/{attemptId}": {
+      "get": {
+        "operationId": "getConnectionAttempt",
+        "summary": "getConnectionAttempt",
+        "description": "完整实现语义见 docs/design/08-production-implementation.md。外部结果须独立核实。",
+        "x-roles": [
+          "main",
+          "sub"
+        ],
+        "x-transaction": "T07",
+        "parameters": [
+          {
+            "name": "attemptId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "400": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "401": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "403": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "404": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "409": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "422": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "429": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "503": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "200": {
+            "description": "已取得状态；非外部效果完成证明",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConnectionAttempt"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/supply-purchases": {
+      "post": {
+        "operationId": "createSupplyPurchase",
+        "summary": "createSupplyPurchase",
+        "description": "完整实现语义见 docs/design/08-production-implementation.md。外部结果须独立核实。",
+        "x-roles": [
+          "admin"
+        ],
+        "x-transaction": "T14",
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 16,
+              "maxLength": 128
+            }
+          }
+        ],
+        "responses": {
+          "400": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "401": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "403": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "404": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "409": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "422": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "429": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "503": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "201": {
+            "description": "已取得状态；非外部效果完成证明",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SupplyPurchase"
+                }
+              }
+            }
+          }
+        },
+        "x-idempotency": "actor+operation+key, hash canonical request; conflict => 409",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SupplyPurchaseRequest"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/supply-purchases/{purchaseId}": {
+      "get": {
+        "operationId": "getSupplyPurchase",
+        "summary": "getSupplyPurchase",
+        "description": "完整实现语义见 docs/design/08-production-implementation.md。外部结果须独立核实。",
+        "x-roles": [
+          "admin"
+        ],
+        "x-transaction": "T14",
+        "parameters": [
+          {
+            "name": "purchaseId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "400": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "401": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "403": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "404": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "409": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "422": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "429": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "503": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "200": {
+            "description": "已取得状态；非外部效果完成证明",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SupplyPurchase"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/supply-purchases/{purchaseId}/approve": {
+      "post": {
+        "operationId": "approveSupplyPurchase",
+        "summary": "approveSupplyPurchase",
+        "description": "完整实现语义见 docs/design/08-production-implementation.md。外部结果须独立核实。",
+        "x-roles": [
+          "admin"
+        ],
+        "x-transaction": "T14",
+        "parameters": [
+          {
+            "name": "purchaseId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 16,
+              "maxLength": 128
+            }
+          }
+        ],
+        "responses": {
+          "400": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "401": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "403": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "404": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "409": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "422": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "429": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "503": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "202": {
+            "description": "已取得状态；非外部效果完成证明",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SupplyPurchase"
+                }
+              }
+            }
+          }
+        },
+        "x-idempotency": "actor+operation+key, hash canonical request; conflict => 409",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PurchaseApproval"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/upstream-operations/{operationId}": {
+      "get": {
+        "operationId": "getUpstreamOperation",
+        "summary": "getUpstreamOperation",
+        "description": "完整实现语义见 docs/design/08-production-implementation.md。外部结果须独立核实。",
+        "x-roles": [
+          "admin"
+        ],
+        "x-transaction": "T14",
+        "parameters": [
+          {
+            "name": "operationId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "400": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "401": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "403": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "404": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "409": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "422": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "429": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "503": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "200": {
+            "description": "已取得状态；非外部效果完成证明",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UpstreamOperation"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/upstream-operations/{operationId}/reconcile": {
+      "post": {
+        "operationId": "reconcileUpstreamOperation",
+        "summary": "reconcileUpstreamOperation",
+        "description": "完整实现语义见 docs/design/08-production-implementation.md。外部结果须独立核实。",
+        "x-roles": [
+          "admin"
+        ],
+        "x-transaction": "T14",
+        "parameters": [
+          {
+            "name": "operationId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 16,
+              "maxLength": 128
+            }
+          }
+        ],
+        "responses": {
+          "400": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "401": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "403": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "404": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "409": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "422": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "429": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "503": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "200": {
+            "description": "已取得状态；非外部效果完成证明",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UpstreamResult"
+                }
+              }
+            }
+          }
+        },
+        "x-idempotency": "actor+operation+key, hash canonical request; conflict => 409",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpstreamResultRequest"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/supplier/upstream-operations/{operationId}/results": {
+      "post": {
+        "operationId": "reportUpstreamResult",
+        "summary": "reportUpstreamResult",
+        "description": "完整实现语义见 docs/design/08-production-implementation.md。外部结果须独立核实。",
+        "x-roles": [
+          "supplier"
+        ],
+        "x-transaction": "T14",
+        "parameters": [
+          {
+            "name": "operationId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 16,
+              "maxLength": 128
+            }
+          }
+        ],
+        "responses": {
+          "400": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "401": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "403": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "404": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "409": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "422": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "429": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "503": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "200": {
+            "description": "已取得状态；非外部效果完成证明",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UpstreamResult"
+                }
+              }
+            }
+          }
+        },
+        "x-idempotency": "actor+operation+key, hash canonical request; conflict => 409",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpstreamResultRequest"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/settlements": {
+      "post": {
+        "operationId": "createSettlement",
+        "summary": "createSettlement",
+        "description": "完整实现语义见 docs/design/08-production-implementation.md。外部结果须独立核实。",
+        "x-roles": [
+          "admin"
+        ],
+        "x-transaction": "T15",
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 16,
+              "maxLength": 128
+            }
+          }
+        ],
+        "responses": {
+          "400": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "401": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "403": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "404": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "409": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "422": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "429": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "503": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "201": {
+            "description": "已取得状态；非外部效果完成证明",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Settlement"
+                }
+              }
+            }
+          }
+        },
+        "x-idempotency": "actor+operation+key, hash canonical request; conflict => 409",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SettlementRequest"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/settlements/{settlementId}": {
+      "get": {
+        "operationId": "getSettlement",
+        "summary": "getSettlement",
+        "description": "完整实现语义见 docs/design/08-production-implementation.md。外部结果须独立核实。",
+        "x-roles": [
+          "admin"
+        ],
+        "x-transaction": "T15",
+        "parameters": [
+          {
+            "name": "settlementId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "400": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "401": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "403": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "404": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "409": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "422": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "429": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "503": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "200": {
+            "description": "已取得状态；非外部效果完成证明",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Settlement"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/settlements/{settlementId}/confirm": {
+      "post": {
+        "operationId": "confirmSettlement",
+        "summary": "confirmSettlement",
+        "description": "完整实现语义见 docs/design/08-production-implementation.md。外部结果须独立核实。",
+        "x-roles": [
+          "admin"
+        ],
+        "x-transaction": "T15",
+        "parameters": [
+          {
+            "name": "settlementId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 16,
+              "maxLength": 128
+            }
+          }
+        ],
+        "responses": {
+          "400": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "401": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "403": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "404": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "409": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "422": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "429": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "503": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "200": {
+            "description": "已取得状态；非外部效果完成证明",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Settlement"
+                }
+              }
+            }
+          }
+        },
+        "x-idempotency": "actor+operation+key, hash canonical request; conflict => 409",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SettlementConfirmation"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/orders/{orderId}/units/{unitId}/resolution-quotes": {
+      "post": {
+        "operationId": "quoteUnitResolution",
+        "summary": "quoteUnitResolution",
+        "description": "完整实现语义见 docs/design/08-production-implementation.md。外部结果须独立核实。",
+        "x-roles": [
+          "main"
+        ],
+        "x-transaction": "T16",
+        "parameters": [
+          {
+            "name": "orderId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "unitId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 16,
+              "maxLength": 128
+            }
+          }
+        ],
+        "responses": {
+          "400": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "401": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "403": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "404": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "409": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "422": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "429": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "503": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "201": {
+            "description": "已取得状态；非外部效果完成证明",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResolutionQuote"
+                }
+              }
+            }
+          }
+        },
+        "x-idempotency": "actor+operation+key, hash canonical request; conflict => 409",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ResolutionChoice"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/orders/{orderId}/units/{unitId}/resolutions": {
+      "post": {
+        "operationId": "resolveUnit",
+        "summary": "resolveUnit",
+        "description": "完整实现语义见 docs/design/08-production-implementation.md。外部结果须独立核实。",
+        "x-roles": [
+          "main"
+        ],
+        "x-transaction": "T16",
+        "parameters": [
+          {
+            "name": "orderId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "unitId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 16,
+              "maxLength": 128
+            }
+          }
+        ],
+        "responses": {
+          "400": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "401": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "403": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "404": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "409": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "422": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "429": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "503": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "202": {
+            "description": "已取得状态；非外部效果完成证明",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnitResolution"
+                }
+              }
+            }
+          }
+        },
+        "x-idempotency": "actor+operation+key, hash canonical request; conflict => 409",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ResolutionAcceptance"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/exports/{exportId}/manifest": {
+      "get": {
+        "operationId": "getExportManifest",
+        "summary": "getExportManifest",
+        "description": "完整实现语义见 docs/design/08-production-implementation.md。外部结果须独立核实。",
+        "x-roles": [
+          "main",
+          "sub"
+        ],
+        "x-transaction": "T09",
+        "parameters": [
+          {
+            "name": "exportId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "400": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "401": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "403": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "404": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "409": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "422": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "429": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "503": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "200": {
+            "description": "已取得状态；非外部效果完成证明",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ExportManifest"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/exports/{exportId}/cancel": {
+      "post": {
+        "operationId": "cancelExport",
+        "summary": "cancelExport",
+        "description": "完整实现语义见 docs/design/08-production-implementation.md。外部结果须独立核实。",
+        "x-roles": [
+          "main",
+          "sub"
+        ],
+        "x-transaction": "T09",
+        "parameters": [
+          {
+            "name": "exportId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 16,
+              "maxLength": 128
+            }
+          }
+        ],
+        "responses": {
+          "400": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "401": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "403": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "404": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "409": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "422": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "429": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "503": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "202": {
+            "description": "已取得状态；非外部效果完成证明",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Export"
+                }
+              }
+            }
+          }
+        },
+        "x-idempotency": "actor+operation+key, hash canonical request; conflict => 409",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Version"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/exports/{exportId}/files/{fileId}/chunks/{chunkIndex}": {
+      "get": {
+        "operationId": "getExportChunk",
+        "summary": "getExportChunk",
+        "description": "每个分块复验所有权、job和保留截止；到时终止进行中的输出。返回字节不是 JSON。",
+        "x-roles": [
+          "main",
+          "sub"
+        ],
+        "x-transaction": "T09",
+        "parameters": [
+          {
+            "name": "exportId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "fileId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "chunkIndex",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            }
+          }
+        ],
+        "responses": {
+          "400": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "401": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "403": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "404": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "409": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "422": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "429": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "503": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "200": {
+            "description": "已取得状态；非外部效果完成证明",
+            "content": {
+              "application/octet-stream": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/agent/policy-sync": {
+      "post": {
+        "operationId": "syncDevicePolicy",
+        "summary": "syncDevicePolicy",
+        "description": "请求 JWS 解码验证 DeviceSyncRequest，响应 JWS 验证 DevicePolicySnapshot；设备证书身份必须一致。",
+        "x-roles": [
+          "agent"
+        ],
+        "x-transaction": "T13",
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 16,
+              "maxLength": 128
+            }
+          }
+        ],
+        "responses": {
+          "400": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "401": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "403": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "404": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "409": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "422": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "429": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "503": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "200": {
+            "description": "已取得状态；非外部效果完成证明",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SignedDeviceMessage"
+                }
+              }
+            }
+          }
+        },
+        "x-idempotency": "actor+operation+key, hash canonical request; conflict => 409",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SignedDeviceMessage"
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "deviceMTLS": []
+          }
+        ]
+      }
+    },
+    "/admin/resources/{resourceId}/enrollment-tokens": {
+      "post": {
+        "operationId": "createEnrollmentToken",
+        "summary": "createEnrollmentToken",
+        "description": "完整实现语义见 docs/design/08-production-implementation.md。外部结果须独立核实。",
+        "x-roles": [
+          "admin"
+        ],
+        "x-transaction": "T13",
+        "parameters": [
+          {
+            "name": "resourceId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 16,
+              "maxLength": 128
+            }
+          }
+        ],
+        "responses": {
+          "400": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "401": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "403": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "404": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "409": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "422": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "429": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "503": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "202": {
+            "description": "已取得状态；非外部效果完成证明",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EnrollmentToken"
+                }
+              }
+            }
+          }
+        },
+        "x-idempotency": "actor+operation+key, hash canonical request; conflict => 409",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EnrollmentTokenRequest"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/agent/enroll": {
+      "post": {
+        "operationId": "enrollDevice",
+        "summary": "enrollDevice",
+        "description": "TLS bootstrap. 单次资源绑定 token＋CSR 持有证明认证；不能当匿名纳管。成功响应包含设备证书，不包含私钥。",
+        "x-roles": [
+          "enrollment"
+        ],
+        "x-transaction": "T13",
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 16,
+              "maxLength": 128
+            }
+          }
+        ],
+        "responses": {
+          "400": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "401": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "403": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "404": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "409": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "422": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "429": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "503": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "202": {
+            "description": "已取得状态；非外部效果完成证明",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EnrollmentResult"
+                }
+              }
+            }
+          }
+        },
+        "x-idempotency": "actor+operation+key, hash canonical request; conflict => 409",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EnrollmentRequest"
+              }
+            }
+          }
+        },
+        "security": []
+      }
+    },
+    "/agent/credential-deliveries/{deliveryId}": {
+      "post": {
+        "operationId": "getDeviceCredentialDelivery",
+        "summary": "getDeviceCredentialDelivery",
+        "description": "仅命令目标设备可在有效操作窗口读取；no-store，禁用载荷日志和普通幂等缓存。相同设备对同一命令可幂等重读，失效后不能取得秘密。",
+        "x-roles": [
+          "agent"
+        ],
+        "x-transaction": "T08",
+        "parameters": [
+          {
+            "name": "deliveryId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 16,
+              "maxLength": 128
+            }
+          }
+        ],
+        "responses": {
+          "400": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "401": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "403": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "404": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "409": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "422": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "429": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "503": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "200": {
+            "description": "已取得状态；非外部效果完成证明",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CredentialDelivery"
+                }
+              }
+            }
+          }
+        },
+        "x-idempotency": "actor+operation+key, hash canonical request; conflict => 409",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CredentialDeliveryRequest"
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "deviceMTLS": []
+          }
+        ],
+        "x-sensitive-response": true
+      }
+    },
+    "/sessions/{sessionId}/challenges": {
+      "post": {
+        "operationId": "createRemoteChallenge",
+        "summary": "createRemoteChallenge",
+        "description": "验证当前使用者及会话公钥，challenge绑定purpose和当前连接代次并单次消费。resume先关闭旧传输，沿用sid创建新connectionGeneration，不能同时激活两个传输。",
+        "x-roles": [
+          "main",
+          "sub"
+        ],
+        "x-transaction": "T07",
+        "parameters": [
+          {
+            "name": "sessionId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 16,
+              "maxLength": 128
+            }
+          }
+        ],
+        "responses": {
+          "400": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "401": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "403": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "404": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "409": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "422": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "429": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "503": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "201": {
+            "description": "已返回挑战或受理连接进度",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RemoteChallenge"
+                }
+              }
+            }
+          }
+        },
+        "x-idempotency": "actor+operation+key, hash canonical request; conflict => 409",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RemoteChallengeRequest"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/sessions/{sessionId}/resume": {
+      "post": {
+        "operationId": "resumeRemoteSession",
+        "summary": "resumeRemoteSession",
+        "description": "验证当前使用者及会话公钥，challenge绑定purpose和当前连接代次并单次消费。resume先关闭旧传输，沿用sid创建新connectionGeneration，不能同时激活两个传输。",
+        "x-roles": [
+          "main",
+          "sub"
+        ],
+        "x-transaction": "T07",
+        "parameters": [
+          {
+            "name": "sessionId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 16,
+              "maxLength": 128
+            }
+          }
+        ],
+        "responses": {
+          "400": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "401": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "403": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "404": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "409": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "422": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "429": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "503": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "202": {
+            "description": "已返回挑战或受理连接进度",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConnectionAttempt"
+                }
+              }
+            }
+          }
+        },
+        "x-idempotency": "actor+operation+key, hash canonical request; conflict => 409",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ResumeSession"
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -4350,6 +5903,23 @@
               "currentVersion": {
                 "type": "integer",
                 "minimum": 1
+              },
+              "attemptId": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "operationId": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "unitId": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "retryAfterMs": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 9007199254740991
               }
             },
             "additionalProperties": false
@@ -5021,6 +6591,15 @@
             "items": {
               "type": "string"
             }
+          },
+          "disclosureHash": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$"
+          },
+          "termsVersion": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 2048
           }
         },
         "required": [
@@ -5028,7 +6607,9 @@
           "amountMinor",
           "currency",
           "expiresAt",
-          "disclosures"
+          "disclosures",
+          "disclosureHash",
+          "termsVersion"
         ],
         "additionalProperties": false
       },
@@ -5117,14 +6698,64 @@
                   "type": "integer",
                   "minimum": 1,
                   "maximum": 9007199254740991
+                },
+                "version": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "maximum": 9007199254740991
+                },
+                "fulfillmentVersion": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "maximum": 9007199254740991
+                },
+                "entitlements": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/AiEntitlement"
+                  },
+                  "maxItems": 1000
+                },
+                "segments": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ServiceSegment"
+                  },
+                  "maxItems": 1000
+                },
+                "resolutionId": {
+                  "type": "string",
+                  "format": "uuid"
                 }
               },
               "required": [
                 "id",
-                "state"
+                "state",
+                "version",
+                "fulfillmentVersion",
+                "entitlements",
+                "segments"
               ],
               "additionalProperties": false
             }
+          },
+          "acceptedReceiptId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "refunds": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Refund"
+            },
+            "maxItems": 1000
+          },
+          "receipts": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PaymentReceipt"
+            },
+            "maxItems": 1000
           }
         },
         "required": [
@@ -5227,12 +6858,31 @@
           "confirmationId": {
             "type": "string",
             "format": "uuid"
+          },
+          "confirmationToken": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 2048
           }
         },
         "required": [
           "expectedVersion"
         ],
-        "additionalProperties": false
+        "additionalProperties": false,
+        "allOf": [
+          {
+            "if": {
+              "required": [
+                "confirmationId"
+              ]
+            },
+            "then": {
+              "required": [
+                "confirmationToken"
+              ]
+            }
+          }
+        ]
       },
       "Machine": {
         "type": "object",
@@ -5380,13 +7030,32 @@
               "preserve_files",
               "reset"
             ]
+          },
+          "confirmationToken": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 2048
           }
         },
         "required": [
           "accountId",
           "expectedVersion"
         ],
-        "additionalProperties": false
+        "additionalProperties": false,
+        "allOf": [
+          {
+            "if": {
+              "required": [
+                "confirmationId"
+              ]
+            },
+            "then": {
+              "required": [
+                "confirmationToken"
+              ]
+            }
+          }
+        ]
       },
       "AutoRenew": {
         "type": "object",
@@ -5447,13 +7116,48 @@
           "takeoverSessionId": {
             "type": "string",
             "format": "uuid"
+          },
+          "confirmationId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "confirmationToken": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 2048
           }
         },
         "required": [
           "clientKeyJwk",
           "client"
         ],
-        "additionalProperties": false
+        "additionalProperties": false,
+        "allOf": [
+          {
+            "if": {
+              "required": [
+                "takeoverSessionId"
+              ]
+            },
+            "then": {
+              "required": [
+                "confirmationId"
+              ]
+            }
+          },
+          {
+            "if": {
+              "required": [
+                "confirmationId"
+              ]
+            },
+            "then": {
+              "required": [
+                "confirmationToken"
+              ]
+            }
+          }
+        ]
       },
       "Session": {
         "type": "object",
@@ -5469,7 +7173,6 @@
               "active",
               "closing",
               "closed",
-              "revoked",
               "failed"
             ]
           },
@@ -5496,13 +7199,83 @@
           },
           "challenge": {
             "type": "string"
+          },
+          "revokedAt": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9007199254740991
+          },
+          "revocationReason": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 2048
+          },
+          "connectionId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "connectionGeneration": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9007199254740991
+          },
+          "deviceIdentityId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "policyVersion": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9007199254740991
+          },
+          "leaseVersion": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9007199254740991
+          },
+          "assignmentVersion": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9007199254740991
+          },
+          "credentialVersion": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9007199254740991
+          },
+          "clientKeyThumbprint": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 2048
+          },
+          "connectionState": {
+            "enum": [
+              "pending",
+              "active",
+              "closing",
+              "closed",
+              "failed"
+            ]
+          },
+          "transportReadyAt": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9007199254740991
           }
         },
         "required": [
           "id",
           "state",
           "epoch",
-          "expiresAt"
+          "expiresAt",
+          "connectionGeneration",
+          "deviceIdentityId",
+          "policyVersion",
+          "leaseVersion",
+          "assignmentVersion",
+          "credentialVersion",
+          "clientKeyThumbprint",
+          "connectionState"
         ],
         "additionalProperties": false
       },
@@ -5515,11 +7288,17 @@
           "challengeId": {
             "type": "string",
             "format": "uuid"
+          },
+          "expectedConnectionGeneration": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9007199254740991
           }
         },
         "required": [
           "clientProof",
-          "challengeId"
+          "challengeId",
+          "expectedConnectionGeneration"
         ],
         "additionalProperties": false
       },
@@ -5595,13 +7374,50 @@
           "confirmationId": {
             "type": "string",
             "format": "uuid"
+          },
+          "confirmationToken": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 2048
           }
         },
         "required": [
           "kind",
           "expectedVersion"
         ],
-        "additionalProperties": false
+        "additionalProperties": false,
+        "allOf": [
+          {
+            "if": {
+              "required": [
+                "confirmationId"
+              ]
+            },
+            "then": {
+              "required": [
+                "confirmationToken"
+              ]
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "kind": {
+                  "const": "reset_machine"
+                }
+              },
+              "required": [
+                "kind"
+              ]
+            },
+            "then": {
+              "required": [
+                "confirmationId",
+                "confirmationToken"
+              ]
+            }
+          }
+        ]
       },
       "Operation": {
         "type": "object",
@@ -5783,6 +7599,25 @@
           },
           "decision": {
             "type": "string"
+          },
+          "segments": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ServiceSegment"
+            },
+            "maxItems": 1000
+          },
+          "refunds": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Refund"
+            },
+            "maxItems": 1000
+          },
+          "version": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9007199254740991
           }
         },
         "required": [
@@ -5910,6 +7745,16 @@
             "type": "integer",
             "minimum": 1,
             "maximum": 9007199254740991
+          },
+          "selfOperated": {
+            "type": "boolean"
+          },
+          "capabilities": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SupplierCapability"
+            },
+            "maxItems": 1000
           }
         },
         "required": [
@@ -5918,7 +7763,9 @@
           "state",
           "computerSupply",
           "subscriptionSupply",
-          "version"
+          "version",
+          "selfOperated",
+          "capabilities"
         ],
         "additionalProperties": false
       },
@@ -5963,6 +7810,13 @@
             "type": "integer",
             "minimum": 1,
             "maximum": 9007199254740991
+          },
+          "capabilities": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SupplierCapability"
+            },
+            "maxItems": 1000
           }
         },
         "required": [
@@ -6099,8 +7953,13 @@
             "type": "string",
             "enum": [
               "computer_prepare",
+              "card_supply",
               "ai_activate",
-              "ai_renew"
+              "ai_renew",
+              "ai_repair",
+              "maintenance",
+              "account_handoff",
+              "resource_reclaim"
             ]
           },
           "unitId": {
@@ -6133,17 +7992,179 @@
             "type": "integer",
             "minimum": 1,
             "maximum": 9007199254740991
+          },
+          "supplierResourceId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "aiEntitlementId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "purchaseId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "machineId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "fulfillmentVersion": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9007199254740991
+          },
+          "attemptId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "targetAccountId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "provider": {
+            "type": "string",
+            "enum": [
+              "claude",
+              "codex"
+            ]
           }
         },
         "required": [
           "id",
           "kind",
-          "unitId",
           "state",
           "deadlineAt",
-          "version"
+          "version",
+          "supplierResourceId",
+          "fulfillmentVersion",
+          "attemptId"
         ],
-        "additionalProperties": false
+        "additionalProperties": false,
+        "allOf": [
+          {
+            "if": {
+              "properties": {
+                "kind": {
+                  "enum": [
+                    "ai_activate",
+                    "ai_renew",
+                    "ai_repair",
+                    "account_handoff"
+                  ]
+                }
+              },
+              "required": [
+                "kind"
+              ]
+            },
+            "then": {
+              "required": [
+                "unitId",
+                "aiEntitlementId",
+                "targetAccountId",
+                "targetEmail",
+                "provider"
+              ]
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "kind": {
+                  "const": "card_supply"
+                }
+              },
+              "required": [
+                "kind"
+              ]
+            },
+            "then": {
+              "required": [
+                "purchaseId"
+              ],
+              "not": {
+                "anyOf": [
+                  {
+                    "required": [
+                      "aiEntitlementId"
+                    ]
+                  },
+                  {
+                    "required": [
+                      "targetEmail"
+                    ]
+                  },
+                  {
+                    "required": [
+                      "unitId"
+                    ]
+                  }
+                ]
+              }
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "kind": {
+                  "enum": [
+                    "maintenance",
+                    "resource_reclaim"
+                  ]
+                }
+              },
+              "required": [
+                "kind"
+              ]
+            },
+            "then": {
+              "required": [
+                "machineId"
+              ]
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "kind": {
+                  "const": "computer_prepare"
+                }
+              },
+              "required": [
+                "kind"
+              ]
+            },
+            "then": {
+              "required": [
+                "unitId"
+              ]
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "kind": {
+                  "enum": [
+                    "computer_prepare",
+                    "maintenance",
+                    "resource_reclaim"
+                  ]
+                }
+              },
+              "required": [
+                "kind"
+              ]
+            },
+            "then": {
+              "not": {
+                "required": [
+                  "aiEntitlementId"
+                ]
+              }
+            }
+          }
+        ]
       },
       "TaskList": {
         "type": "object",
@@ -6193,11 +8214,31 @@
           },
           "externalRef": {
             "type": "string"
+          },
+          "attemptId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "fulfillmentVersion": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9007199254740991
+          },
+          "reportedCostMinor": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
+          },
+          "costCurrency": {
+            "type": "string",
+            "pattern": "^[A-Z]{3}$"
           }
         },
         "required": [
           "expectedVersion",
-          "outcome"
+          "outcome",
+          "attemptId",
+          "fulfillmentVersion"
         ],
         "additionalProperties": false,
         "allOf": [
@@ -6236,8 +8277,13 @@
             "type": "string",
             "enum": [
               "computer_prepare",
+              "card_supply",
               "ai_activate",
-              "ai_renew"
+              "ai_renew",
+              "ai_repair",
+              "maintenance",
+              "account_handoff",
+              "resource_reclaim"
             ]
           },
           "aiEntitlementId": {
@@ -6248,15 +8294,154 @@
             "type": "integer",
             "minimum": 1,
             "maximum": 9007199254740991
+          },
+          "supplierResourceId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "purchaseId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "machineId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "fulfillmentVersion": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9007199254740991
           }
         },
         "required": [
           "supplierId",
-          "unitId",
           "kind",
-          "deadlineAt"
+          "deadlineAt",
+          "supplierResourceId",
+          "fulfillmentVersion"
         ],
-        "additionalProperties": false
+        "additionalProperties": false,
+        "allOf": [
+          {
+            "if": {
+              "properties": {
+                "kind": {
+                  "enum": [
+                    "ai_activate",
+                    "ai_renew",
+                    "ai_repair",
+                    "account_handoff"
+                  ]
+                }
+              },
+              "required": [
+                "kind"
+              ]
+            },
+            "then": {
+              "required": [
+                "unitId",
+                "aiEntitlementId"
+              ]
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "kind": {
+                  "const": "card_supply"
+                }
+              },
+              "required": [
+                "kind"
+              ]
+            },
+            "then": {
+              "required": [
+                "purchaseId"
+              ],
+              "not": {
+                "anyOf": [
+                  {
+                    "required": [
+                      "aiEntitlementId"
+                    ]
+                  },
+                  {
+                    "required": [
+                      "targetEmail"
+                    ]
+                  },
+                  {
+                    "required": [
+                      "unitId"
+                    ]
+                  }
+                ]
+              }
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "kind": {
+                  "enum": [
+                    "maintenance",
+                    "resource_reclaim"
+                  ]
+                }
+              },
+              "required": [
+                "kind"
+              ]
+            },
+            "then": {
+              "required": [
+                "machineId"
+              ]
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "kind": {
+                  "const": "computer_prepare"
+                }
+              },
+              "required": [
+                "kind"
+              ]
+            },
+            "then": {
+              "required": [
+                "unitId"
+              ]
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "kind": {
+                  "enum": [
+                    "computer_prepare",
+                    "maintenance",
+                    "resource_reclaim"
+                  ]
+                }
+              },
+              "required": [
+                "kind"
+              ]
+            },
+            "then": {
+              "not": {
+                "required": [
+                  "aiEntitlementId"
+                ]
+              }
+            }
+          }
+        ]
       },
       "DeliveryDecision": {
         "type": "object",
@@ -6266,20 +8451,45 @@
             "minimum": 1,
             "maximum": 9007199254740991
           },
-          "computerEvidenceRef": {
-            "type": "string"
+          "fulfillmentVersion": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9007199254740991
           },
-          "aiEvidenceRefs": {
+          "computerEvidenceRef": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 2048
+          },
+          "aiEvidence": {
             "type": "array",
             "items": {
-              "type": "string"
-            }
+              "type": "object",
+              "properties": {
+                "entitlementId": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "evidenceRef": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 2048
+                }
+              },
+              "required": [
+                "entitlementId",
+                "evidenceRef"
+              ],
+              "additionalProperties": false
+            },
+            "maxItems": 1000
           }
         },
         "required": [
           "expectedVersion",
+          "fulfillmentVersion",
           "computerEvidenceRef",
-          "aiEvidenceRefs"
+          "aiEvidence"
         ],
         "additionalProperties": false
       },
@@ -6355,7 +8565,11 @@
             "enum": [
               "cost",
               "payment",
-              "adjustment"
+              "adjustment",
+              "prepayment",
+              "payable",
+              "credit",
+              "upstream_refund"
             ]
           },
           "amountMinor": {
@@ -6370,15 +8584,31 @@
             "type": "integer",
             "minimum": 1,
             "maximum": 9007199254740991
+          },
+          "purchaseId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "settlementId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "obligationId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "sourceId": {
+            "type": "string",
+            "format": "uuid"
           }
         },
         "required": [
           "id",
-          "taskId",
           "kind",
           "amountMinor",
           "currency",
-          "createdAt"
+          "createdAt",
+          "sourceId"
         ],
         "additionalProperties": false
       },
@@ -6491,7 +8721,8 @@
             "maximum": 9007199254740991
           },
           "envelope": {
-            "type": "string"
+            "type": "string",
+            "description": "平台签名 compact JWS；解码消息 body 为 DeviceCommandPayload，外层 commandId/kind/expiresAt 必须与签名载荷一致。"
           }
         },
         "required": [
@@ -6530,9 +8761,68 @@
       "AgentResult": {
         "type": "object",
         "properties": {
+          "eventId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "deviceIdentityId": {
+            "type": "string",
+            "format": "uuid"
+          },
           "commandId": {
             "type": "string",
             "format": "uuid"
+          },
+          "operationId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "bootId": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 2048
+          },
+          "agentInstanceId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "remoteInstanceId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "sequence": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9007199254740991
+          },
+          "challengeId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "policyVersion": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9007199254740991
+          },
+          "leaseVersion": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
+          },
+          "assignmentVersion": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
+          },
+          "credentialVersion": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9007199254740991
+          },
+          "accountAuthVersion": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
           },
           "state": {
             "type": "string",
@@ -6545,21 +8835,46 @@
               "rejected"
             ]
           },
-          "observedVersion": {
+          "probeResults": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ProbeResult"
+            },
+            "maxItems": 1000
+          },
+          "evidenceRef": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 2048
+          },
+          "reasonCode": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 2048
+          },
+          "occurredAt": {
             "type": "integer",
             "minimum": 1,
             "maximum": 9007199254740991
-          },
-          "evidenceRef": {
-            "type": "string"
-          },
-          "reasonCode": {
-            "type": "string"
           }
         },
         "required": [
+          "eventId",
+          "deviceIdentityId",
           "commandId",
-          "state"
+          "operationId",
+          "bootId",
+          "agentInstanceId",
+          "sequence",
+          "challengeId",
+          "policyVersion",
+          "leaseVersion",
+          "assignmentVersion",
+          "credentialVersion",
+          "accountAuthVersion",
+          "state",
+          "probeResults",
+          "occurredAt"
         ],
         "additionalProperties": false
       },
@@ -6630,6 +8945,11 @@
           "confirmationId": {
             "type": "string",
             "format": "uuid"
+          },
+          "confirmationToken": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 2048
           }
         },
         "required": [
@@ -6637,7 +8957,21 @@
           "environmentMode",
           "confirmationId"
         ],
-        "additionalProperties": false
+        "additionalProperties": false,
+        "allOf": [
+          {
+            "if": {
+              "required": [
+                "confirmationId"
+              ]
+            },
+            "then": {
+              "required": [
+                "confirmationToken"
+              ]
+            }
+          }
+        ]
       },
       "ComputerResource": {
         "type": "object",
@@ -6716,7 +9050,7 @@
             },
             "uniqueItems": true,
             "maxItems": 2,
-            "minItems": 1
+            "minItems": 0
           },
           "quoteCurrency": {
             "type": "string",
@@ -6734,6 +9068,13 @@
           "validUntil": {
             "type": "integer",
             "minimum": 1
+          },
+          "subtype": {
+            "type": "string",
+            "enum": [
+              "payment_card",
+              "activation_service"
+            ]
           }
         },
         "required": [
@@ -6743,7 +9084,36 @@
           "quoteCurrency",
           "costMinor",
           "capacity",
-          "validUntil"
+          "validUntil",
+          "subtype"
+        ],
+        "allOf": [
+          {
+            "if": {
+              "properties": {
+                "subtype": {
+                  "const": "payment_card"
+                }
+              },
+              "required": [
+                "subtype"
+              ]
+            },
+            "then": {
+              "properties": {
+                "providers": {
+                  "maxItems": 0
+                }
+              }
+            },
+            "else": {
+              "properties": {
+                "providers": {
+                  "minItems": 1
+                }
+              }
+            }
+          }
         ]
       },
       "SubscriptionResource": {
@@ -6773,7 +9143,7 @@
             },
             "uniqueItems": true,
             "maxItems": 2,
-            "minItems": 1
+            "minItems": 0
           },
           "quoteCurrency": {
             "type": "string",
@@ -6811,6 +9181,13 @@
           "version": {
             "type": "integer",
             "minimum": 1
+          },
+          "subtype": {
+            "type": "string",
+            "enum": [
+              "payment_card",
+              "activation_service"
+            ]
           }
         },
         "required": [
@@ -6824,7 +9201,36 @@
           "id",
           "supplierId",
           "state",
-          "version"
+          "version",
+          "subtype"
+        ],
+        "allOf": [
+          {
+            "if": {
+              "properties": {
+                "subtype": {
+                  "const": "payment_card"
+                }
+              },
+              "required": [
+                "subtype"
+              ]
+            },
+            "then": {
+              "properties": {
+                "providers": {
+                  "maxItems": 0
+                }
+              }
+            },
+            "else": {
+              "properties": {
+                "providers": {
+                  "minItems": 1
+                }
+              }
+            }
+          }
         ]
       },
       "ResourceRegistration": {
@@ -6836,6 +9242,2935 @@
             "$ref": "#/components/schemas/SubscriptionResourceRegistration"
           }
         ]
+      },
+      "SupplierCapability": {
+        "type": "object",
+        "properties": {
+          "capability": {
+            "type": "string",
+            "enum": [
+              "computer_supply",
+              "card_supply",
+              "ai_activate",
+              "ai_renew",
+              "ai_repair"
+            ]
+          },
+          "providers": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "claude",
+                "codex"
+              ]
+            },
+            "maxItems": 1000
+          },
+          "state": {
+            "type": "string",
+            "enum": [
+              "pending",
+              "verified",
+              "suspended"
+            ]
+          },
+          "evidenceRef": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 2048
+          },
+          "validUntil": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9007199254740991
+          }
+        },
+        "required": [
+          "capability",
+          "providers",
+          "state",
+          "evidenceRef",
+          "validUntil"
+        ],
+        "additionalProperties": false
+      },
+      "TaskVerification": {
+        "type": "object",
+        "properties": {
+          "expectedVersion": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9007199254740991
+          },
+          "attemptId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "fulfillmentVersion": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9007199254740991
+          },
+          "evidenceRef": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 2048
+          },
+          "result": {
+            "type": "string",
+            "enum": [
+              "verified",
+              "failed"
+            ]
+          },
+          "reason": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 2048
+          }
+        },
+        "required": [
+          "expectedVersion",
+          "attemptId",
+          "fulfillmentVersion",
+          "evidenceRef",
+          "result",
+          "reason"
+        ],
+        "additionalProperties": false
+      },
+      "ServiceSegment": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "orderItemId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "receiptId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "computer",
+              "claude",
+              "codex"
+            ]
+          },
+          "originalPaidMinor": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
+          },
+          "promisedFrom": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9007199254740991
+          },
+          "promisedUntil": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9007199254740991
+          },
+          "refundReservedMinor": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
+          },
+          "refundedMinor": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
+          },
+          "state": {
+            "type": "string",
+            "enum": [
+              "preparing",
+              "active",
+              "ended",
+              "terminated"
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "orderItemId",
+          "receiptId",
+          "kind",
+          "originalPaidMinor",
+          "promisedFrom",
+          "promisedUntil",
+          "refundReservedMinor",
+          "refundedMinor",
+          "state"
+        ],
+        "additionalProperties": false
+      },
+      "AiEntitlement": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "unitId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "orderItemId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "leaseId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "aiAccountId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "provider": {
+            "type": "string",
+            "enum": [
+              "claude",
+              "codex"
+            ]
+          },
+          "state": {
+            "type": "string",
+            "enum": [
+              "preparing",
+              "available",
+              "interrupted",
+              "expired",
+              "terminated"
+            ]
+          },
+          "serviceSegmentId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "upstreamUntil": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9007199254740991
+          },
+          "verifiedAt": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9007199254740991
+          },
+          "version": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9007199254740991
+          }
+        },
+        "required": [
+          "id",
+          "unitId",
+          "orderItemId",
+          "leaseId",
+          "aiAccountId",
+          "provider",
+          "state",
+          "serviceSegmentId",
+          "version"
+        ],
+        "additionalProperties": false
+      },
+      "ConnectionAttempt": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "state": {
+            "type": "string",
+            "enum": [
+              "waiting_previous_close",
+              "authorizing",
+              "connecting",
+              "active",
+              "failed"
+            ]
+          },
+          "previousSessionId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "operationId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "session": {
+            "$ref": "#/components/schemas/Session"
+          },
+          "failureCode": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 2048
+          },
+          "version": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9007199254740991
+          }
+        },
+        "required": [
+          "id",
+          "state",
+          "version"
+        ],
+        "additionalProperties": false
+      },
+      "PaymentReceipt": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "orderId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "attemptId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "provider": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 2048
+          },
+          "providerTransactionId": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 2048
+          },
+          "amountMinor": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9007199254740991
+          },
+          "currency": {
+            "type": "string",
+            "pattern": "^[A-Z]{3}$"
+          },
+          "receivedAt": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9007199254740991
+          },
+          "applicationState": {
+            "type": "string",
+            "enum": [
+              "pending",
+              "accepted",
+              "overpaid",
+              "late_cancelled",
+              "exception"
+            ]
+          },
+          "refundedMinor": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
+          },
+          "reservedRefundMinor": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
+          }
+        },
+        "required": [
+          "id",
+          "orderId",
+          "attemptId",
+          "provider",
+          "providerTransactionId",
+          "amountMinor",
+          "currency",
+          "receivedAt",
+          "applicationState",
+          "refundedMinor",
+          "reservedRefundMinor"
+        ],
+        "additionalProperties": false
+      },
+      "SupplyPurchaseRequest": {
+        "type": "object",
+        "properties": {
+          "supplierId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "resourceId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "quantity": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9007199254740991
+          },
+          "quoteVersion": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9007199254740991
+          },
+          "unitCostMinor": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
+          },
+          "currency": {
+            "type": "string",
+            "pattern": "^[A-Z]{3}$"
+          },
+          "contractEvidenceRef": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 2048
+          }
+        },
+        "required": [
+          "supplierId",
+          "resourceId",
+          "quantity",
+          "quoteVersion",
+          "unitCostMinor",
+          "currency",
+          "contractEvidenceRef"
+        ],
+        "additionalProperties": false
+      },
+      "SupplyPurchase": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "supplierId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "resourceId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "quantity": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9007199254740991
+          },
+          "amountMinor": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
+          },
+          "currency": {
+            "type": "string",
+            "pattern": "^[A-Z]{3}$"
+          },
+          "state": {
+            "type": "string",
+            "enum": [
+              "draft",
+              "approved",
+              "ordered",
+              "received",
+              "exception",
+              "cancelled"
+            ]
+          },
+          "paymentState": {
+            "type": "string",
+            "enum": [
+              "pending",
+              "submitted",
+              "confirmed",
+              "failed",
+              "unknown"
+            ]
+          },
+          "version": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9007199254740991
+          },
+          "quoteHash": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$"
+          },
+          "quoteVersion": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9007199254740991
+          }
+        },
+        "required": [
+          "id",
+          "supplierId",
+          "resourceId",
+          "quantity",
+          "amountMinor",
+          "currency",
+          "state",
+          "paymentState",
+          "version",
+          "quoteHash",
+          "quoteVersion"
+        ],
+        "additionalProperties": false
+      },
+      "PurchaseApproval": {
+        "type": "object",
+        "properties": {
+          "expectedVersion": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9007199254740991
+          },
+          "quoteHash": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$"
+          },
+          "contractEvidenceRef": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 2048
+          }
+        },
+        "required": [
+          "expectedVersion",
+          "quoteHash",
+          "contractEvidenceRef"
+        ],
+        "additionalProperties": false
+      },
+      "UpstreamOperation": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "attemptId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "purchaseId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "taskId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "instrumentRef": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 2048
+          },
+          "targetAccountId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "externalOperationId": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 2048
+          },
+          "amountMinor": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
+          },
+          "currency": {
+            "type": "string",
+            "pattern": "^[A-Z]{3}$"
+          },
+          "state": {
+            "type": "string",
+            "enum": [
+              "pending",
+              "submitted",
+              "confirmed",
+              "failed",
+              "unknown"
+            ]
+          },
+          "version": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9007199254740991
+          }
+        },
+        "required": [
+          "id",
+          "attemptId",
+          "externalOperationId",
+          "amountMinor",
+          "currency",
+          "state",
+          "version"
+        ],
+        "additionalProperties": false
+      },
+      "UpstreamResultRequest": {
+        "type": "object",
+        "properties": {
+          "eventId": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 2048
+          },
+          "attemptId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "externalOperationId": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 2048
+          },
+          "outcome": {
+            "type": "string",
+            "enum": [
+              "confirmed",
+              "failed",
+              "unknown"
+            ]
+          },
+          "amountMinor": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
+          },
+          "currency": {
+            "type": "string",
+            "pattern": "^[A-Z]{3}$"
+          },
+          "evidenceRef": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 2048
+          },
+          "occurredAt": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9007199254740991
+          }
+        },
+        "required": [
+          "eventId",
+          "attemptId",
+          "externalOperationId",
+          "outcome",
+          "amountMinor",
+          "currency",
+          "evidenceRef",
+          "occurredAt"
+        ],
+        "additionalProperties": false
+      },
+      "UpstreamResult": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "operationId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "outcome": {
+            "type": "string",
+            "enum": [
+              "confirmed",
+              "failed",
+              "unknown"
+            ]
+          },
+          "lateResult": {
+            "type": "boolean"
+          },
+          "evidenceRef": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 2048
+          },
+          "recordedAt": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9007199254740991
+          }
+        },
+        "required": [
+          "id",
+          "operationId",
+          "outcome",
+          "lateResult",
+          "evidenceRef",
+          "recordedAt"
+        ],
+        "additionalProperties": false
+      },
+      "SettlementRequest": {
+        "type": "object",
+        "properties": {
+          "supplierId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "obligationIds": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "maxItems": 1000
+          },
+          "prepaymentOffsetMinor": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
+          },
+          "currency": {
+            "type": "string",
+            "pattern": "^[A-Z]{3}$"
+          }
+        },
+        "required": [
+          "supplierId",
+          "obligationIds",
+          "prepaymentOffsetMinor",
+          "currency"
+        ],
+        "additionalProperties": false
+      },
+      "Settlement": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "supplierId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "amountMinor": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
+          },
+          "currency": {
+            "type": "string",
+            "pattern": "^[A-Z]{3}$"
+          },
+          "state": {
+            "type": "string",
+            "enum": [
+              "draft",
+              "approved",
+              "submitted",
+              "paid",
+              "failed",
+              "unknown"
+            ]
+          },
+          "version": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9007199254740991
+          }
+        },
+        "required": [
+          "id",
+          "supplierId",
+          "amountMinor",
+          "currency",
+          "state",
+          "version"
+        ],
+        "additionalProperties": false
+      },
+      "SettlementConfirmation": {
+        "type": "object",
+        "properties": {
+          "expectedVersion": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9007199254740991
+          },
+          "outcome": {
+            "type": "string",
+            "enum": [
+              "paid",
+              "failed",
+              "unknown"
+            ]
+          },
+          "externalPaymentId": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 2048
+          },
+          "evidenceRef": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 2048
+          }
+        },
+        "required": [
+          "expectedVersion",
+          "outcome",
+          "externalPaymentId",
+          "evidenceRef"
+        ],
+        "additionalProperties": false
+      },
+      "ResolutionChoice": {
+        "type": "object",
+        "properties": {
+          "expectedVersion": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9007199254740991
+          },
+          "reason": {
+            "type": "string",
+            "enum": [
+              "voluntary_pre_delivery",
+              "platform_fulfillment_failure"
+            ]
+          },
+          "choice": {
+            "type": "string",
+            "enum": [
+              "wait",
+              "refund_unit",
+              "remove_ai"
+            ]
+          },
+          "entitlementIds": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "maxItems": 1000
+          }
+        },
+        "required": [
+          "expectedVersion",
+          "reason",
+          "choice",
+          "entitlementIds"
+        ],
+        "additionalProperties": false
+      },
+      "ResolutionQuote": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "unitId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "reason": {
+            "type": "string",
+            "enum": [
+              "voluntary_pre_delivery",
+              "platform_fulfillment_failure"
+            ]
+          },
+          "choice": {
+            "type": "string",
+            "enum": [
+              "wait",
+              "refund_unit",
+              "remove_ai"
+            ]
+          },
+          "amountMinor": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
+          },
+          "currency": {
+            "type": "string",
+            "pattern": "^[A-Z]{3}$"
+          },
+          "costDeductionMinor": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
+          },
+          "itemAmounts": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "orderItemId": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "refundMinor": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 9007199254740991
+                },
+                "costDeductionMinor": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 9007199254740991
+                },
+                "costEvidenceRefs": {
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 2048
+                  },
+                  "maxItems": 1000
+                }
+              },
+              "required": [
+                "orderItemId",
+                "refundMinor",
+                "costDeductionMinor",
+                "costEvidenceRefs"
+              ],
+              "additionalProperties": false
+            },
+            "maxItems": 1000
+          },
+          "disclosureHash": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$"
+          },
+          "expiresAt": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9007199254740991
+          },
+          "unitVersion": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9007199254740991
+          },
+          "fulfillmentVersion": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9007199254740991
+          }
+        },
+        "required": [
+          "id",
+          "unitId",
+          "reason",
+          "choice",
+          "amountMinor",
+          "currency",
+          "costDeductionMinor",
+          "itemAmounts",
+          "disclosureHash",
+          "expiresAt",
+          "unitVersion",
+          "fulfillmentVersion"
+        ],
+        "additionalProperties": false
+      },
+      "ResolutionAcceptance": {
+        "type": "object",
+        "properties": {
+          "quoteId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "acceptedDisclosureHash": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$"
+          },
+          "confirmationId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "expectedVersion": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9007199254740991
+          },
+          "confirmationToken": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 2048
+          }
+        },
+        "required": [
+          "quoteId",
+          "acceptedDisclosureHash",
+          "confirmationId",
+          "expectedVersion"
+        ],
+        "additionalProperties": false,
+        "allOf": [
+          {
+            "if": {
+              "required": [
+                "confirmationId"
+              ]
+            },
+            "then": {
+              "required": [
+                "confirmationToken"
+              ]
+            }
+          }
+        ]
+      },
+      "UnitResolution": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "unitId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "choice": {
+            "type": "string",
+            "enum": [
+              "wait",
+              "refund_unit",
+              "remove_ai"
+            ]
+          },
+          "state": {
+            "type": "string",
+            "enum": [
+              "accepted",
+              "stopping",
+              "reconciling",
+              "refund_pending",
+              "completed",
+              "exception"
+            ]
+          },
+          "refunds": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Refund"
+            },
+            "maxItems": 1000
+          },
+          "version": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9007199254740991
+          }
+        },
+        "required": [
+          "id",
+          "unitId",
+          "choice",
+          "state",
+          "refunds",
+          "version"
+        ],
+        "additionalProperties": false
+      },
+      "ExportManifest": {
+        "type": "object",
+        "properties": {
+          "exportId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "expiresAt": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9007199254740991
+          },
+          "files": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "fileId": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "relativePath": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 2048
+                },
+                "sizeBytes": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 9007199254740991
+                },
+                "chunkSize": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "maximum": 9007199254740991
+                },
+                "chunkHashes": {
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "pattern": "^[a-f0-9]{64}$"
+                  },
+                  "maxItems": 1000
+                }
+              },
+              "required": [
+                "fileId",
+                "relativePath",
+                "sizeBytes",
+                "chunkSize",
+                "chunkHashes"
+              ],
+              "additionalProperties": false
+            },
+            "maxItems": 1000
+          }
+        },
+        "required": [
+          "exportId",
+          "expiresAt",
+          "files"
+        ],
+        "additionalProperties": false
+      },
+      "DeviceSyncRequest": {
+        "type": "object",
+        "properties": {
+          "deviceIdentityId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "bootId": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 2048
+          },
+          "agentInstanceId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "sequence": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9007199254740991
+          },
+          "lastPolicyVersion": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
+          },
+          "lastSessionEpoch": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
+          },
+          "activeSessions": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "sessionId": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "connectionId": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "epoch": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "maximum": 9007199254740991
+                },
+                "connectionGeneration": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "maximum": 9007199254740991
+                },
+                "deviceIdentityId": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "policyVersion": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "maximum": 9007199254740991
+                },
+                "state": {
+                  "type": "string",
+                  "enum": [
+                    "pending",
+                    "active",
+                    "closing"
+                  ]
+                }
+              },
+              "required": [
+                "sessionId",
+                "connectionId",
+                "epoch",
+                "connectionGeneration",
+                "deviceIdentityId",
+                "policyVersion",
+                "state"
+              ],
+              "additionalProperties": false
+            },
+            "maxItems": 1000
+          }
+        },
+        "required": [
+          "deviceIdentityId",
+          "bootId",
+          "agentInstanceId",
+          "sequence",
+          "lastPolicyVersion",
+          "lastSessionEpoch",
+          "activeSessions"
+        ],
+        "additionalProperties": false
+      },
+      "DevicePolicySnapshot": {
+        "type": "object",
+        "properties": {
+          "deviceIdentityId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "computerId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "bootId": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 2048
+          },
+          "policyVersion": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9007199254740991
+          },
+          "sessionEpoch": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9007199254740991
+          },
+          "serverTime": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9007199254740991
+          },
+          "validUntil": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9007199254740991
+          },
+          "leaseExpiresAt": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
+          },
+          "allocationId": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "uuid"
+          },
+          "assignmentId": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "uuid"
+          },
+          "leaseVersion": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
+          },
+          "assignmentVersion": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
+          },
+          "credentialVersion": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
+          },
+          "accountAuthVersion": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
+          },
+          "challengeId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "challenge": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 2048
+          },
+          "permittedSessions": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "maxItems": 1000
+          },
+          "capabilities": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "screen",
+                "input",
+                "system_audio",
+                "clipboard",
+                "files",
+                "export_readonly"
+              ]
+            },
+            "maxItems": 1000
+          }
+        },
+        "required": [
+          "deviceIdentityId",
+          "computerId",
+          "bootId",
+          "policyVersion",
+          "sessionEpoch",
+          "serverTime",
+          "validUntil",
+          "leaseExpiresAt",
+          "allocationId",
+          "assignmentId",
+          "leaseVersion",
+          "assignmentVersion",
+          "credentialVersion",
+          "accountAuthVersion",
+          "challengeId",
+          "challenge",
+          "permittedSessions",
+          "capabilities"
+        ],
+        "additionalProperties": false
+      },
+      "ClientProof": {
+        "type": "object",
+        "properties": {
+          "sessionId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "connectionId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "epoch": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9007199254740991
+          },
+          "connectionGeneration": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9007199254740991
+          },
+          "deviceIdentityId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "policyVersion": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9007199254740991
+          },
+          "challengeId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "nonce": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 2048
+          },
+          "clientKeyThumbprint": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 2048
+          },
+          "channelBinding": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$"
+          },
+          "purpose": {
+            "enum": [
+              "connect",
+              "renew",
+              "resume"
+            ]
+          }
+        },
+        "required": [
+          "sessionId",
+          "connectionId",
+          "epoch",
+          "connectionGeneration",
+          "deviceIdentityId",
+          "policyVersion",
+          "challengeId",
+          "nonce",
+          "clientKeyThumbprint",
+          "channelBinding",
+          "purpose"
+        ],
+        "additionalProperties": false
+      },
+      "SessionReady": {
+        "type": "object",
+        "properties": {
+          "sessionId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "connectionId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "epoch": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9007199254740991
+          },
+          "connectionGeneration": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9007199254740991
+          },
+          "deviceIdentityId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "policyVersion": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9007199254740991
+          },
+          "leaseVersion": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9007199254740991
+          },
+          "assignmentVersion": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9007199254740991
+          },
+          "credentialVersion": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9007199254740991
+          },
+          "accountAuthVersion": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9007199254740991
+          },
+          "bootId": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 2048
+          },
+          "remoteInstanceId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "challengeId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "clientKeyThumbprint": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 2048
+          },
+          "channelBinding": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$"
+          },
+          "rustdeskAuth": {
+            "const": "passed"
+          },
+          "capabilities": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "screen",
+                "input",
+                "system_audio",
+                "clipboard",
+                "files"
+              ]
+            },
+            "maxItems": 1000
+          }
+        },
+        "required": [
+          "sessionId",
+          "connectionId",
+          "epoch",
+          "connectionGeneration",
+          "deviceIdentityId",
+          "policyVersion",
+          "leaseVersion",
+          "assignmentVersion",
+          "credentialVersion",
+          "accountAuthVersion",
+          "bootId",
+          "remoteInstanceId",
+          "challengeId",
+          "clientKeyThumbprint",
+          "channelBinding",
+          "rustdeskAuth",
+          "capabilities"
+        ],
+        "additionalProperties": false
+      },
+      "SessionRevoke": {
+        "type": "object",
+        "properties": {
+          "sessionId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "connectionId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "epoch": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9007199254740991
+          },
+          "connectionGeneration": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9007199254740991
+          },
+          "deviceIdentityId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "policyVersion": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9007199254740991
+          },
+          "commandId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "reason": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 2048
+          },
+          "issuedAt": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9007199254740991
+          },
+          "scope": {
+            "enum": [
+              "session",
+              "connection"
+            ]
+          }
+        },
+        "required": [
+          "sessionId",
+          "connectionId",
+          "epoch",
+          "connectionGeneration",
+          "deviceIdentityId",
+          "policyVersion",
+          "commandId",
+          "reason",
+          "issuedAt",
+          "scope"
+        ],
+        "additionalProperties": false
+      },
+      "CloseAck": {
+        "type": "object",
+        "properties": {
+          "sessionId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "connectionId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "epoch": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9007199254740991
+          },
+          "connectionGeneration": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9007199254740991
+          },
+          "deviceIdentityId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "policyVersion": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9007199254740991
+          },
+          "commandId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "bootId": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 2048
+          },
+          "inputReleased": {
+            "const": true
+          },
+          "closedChannels": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "screen",
+                "input",
+                "system_audio",
+                "clipboard",
+                "files"
+              ]
+            },
+            "uniqueItems": true,
+            "minItems": 5,
+            "maxItems": 5
+          },
+          "closedAt": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9007199254740991
+          },
+          "scope": {
+            "enum": [
+              "session",
+              "connection"
+            ]
+          }
+        },
+        "required": [
+          "sessionId",
+          "connectionId",
+          "epoch",
+          "connectionGeneration",
+          "deviceIdentityId",
+          "policyVersion",
+          "commandId",
+          "bootId",
+          "inputReleased",
+          "closedChannels",
+          "closedAt",
+          "scope"
+        ],
+        "additionalProperties": false
+      },
+      "RenewGrant": {
+        "type": "object",
+        "properties": {
+          "sessionId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "connectionId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "epoch": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9007199254740991
+          },
+          "connectionGeneration": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9007199254740991
+          },
+          "deviceIdentityId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "policyVersion": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9007199254740991
+          },
+          "leaseVersion": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9007199254740991
+          },
+          "assignmentVersion": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9007199254740991
+          },
+          "credentialVersion": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9007199254740991
+          },
+          "accountAuthVersion": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9007199254740991
+          },
+          "jti": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "grant": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 2048
+          },
+          "expiresAt": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9007199254740991
+          },
+          "deliveryChallengeId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "deliveryChallenge": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 2048
+          }
+        },
+        "required": [
+          "sessionId",
+          "connectionId",
+          "epoch",
+          "connectionGeneration",
+          "deviceIdentityId",
+          "policyVersion",
+          "leaseVersion",
+          "assignmentVersion",
+          "credentialVersion",
+          "accountAuthVersion",
+          "jti",
+          "grant",
+          "deliveryChallengeId",
+          "deliveryChallenge",
+          "expiresAt"
+        ],
+        "additionalProperties": false
+      },
+      "RenewAck": {
+        "type": "object",
+        "properties": {
+          "sessionId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "connectionId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "epoch": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9007199254740991
+          },
+          "connectionGeneration": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9007199254740991
+          },
+          "deviceIdentityId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "policyVersion": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9007199254740991
+          },
+          "leaseVersion": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9007199254740991
+          },
+          "assignmentVersion": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9007199254740991
+          },
+          "credentialVersion": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9007199254740991
+          },
+          "accountAuthVersion": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9007199254740991
+          },
+          "jti": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "actualExpiresAt": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9007199254740991
+          },
+          "bootId": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 2048
+          },
+          "deliveryChallengeId": {
+            "type": "string",
+            "format": "uuid"
+          }
+        },
+        "required": [
+          "sessionId",
+          "connectionId",
+          "epoch",
+          "connectionGeneration",
+          "deviceIdentityId",
+          "policyVersion",
+          "leaseVersion",
+          "assignmentVersion",
+          "credentialVersion",
+          "accountAuthVersion",
+          "jti",
+          "deliveryChallengeId",
+          "actualExpiresAt",
+          "bootId"
+        ],
+        "additionalProperties": false
+      },
+      "ProbeResult": {
+        "type": "object",
+        "properties": {
+          "kind": {
+            "type": "string",
+            "enum": [
+              "desktop",
+              "credential_auth",
+              "image",
+              "data_cleanup",
+              "private_logins",
+              "external_isolation"
+            ]
+          },
+          "state": {
+            "type": "string",
+            "enum": [
+              "pass",
+              "fail",
+              "unknown"
+            ]
+          },
+          "evidenceRef": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 2048
+          },
+          "observedAt": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9007199254740991
+          }
+        },
+        "required": [
+          "kind",
+          "state",
+          "evidenceRef",
+          "observedAt"
+        ],
+        "additionalProperties": false
+      },
+      "SignedDeviceMessage": {
+        "type": "object",
+        "properties": {
+          "jws": {
+            "type": "string",
+            "minLength": 80,
+            "maxLength": 65536,
+            "pattern": "^[A-Za-z0-9_-]+\\.[A-Za-z0-9_-]+\\.[A-Za-z0-9_-]+$"
+          }
+        },
+        "required": [
+          "jws"
+        ],
+        "additionalProperties": false
+      },
+      "ClientHello": {
+        "type": "object",
+        "properties": {
+          "sessionId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "connectionId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "epoch": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9007199254740991
+          },
+          "connectionGeneration": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9007199254740991
+          },
+          "deviceIdentityId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "policyVersion": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9007199254740991
+          },
+          "challengeId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "nonce": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 2048
+          },
+          "clientKeyThumbprint": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 2048
+          },
+          "channelBinding": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$"
+          },
+          "grantJti": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "purpose": {
+            "enum": [
+              "connect",
+              "renew",
+              "resume"
+            ]
+          }
+        },
+        "required": [
+          "sessionId",
+          "connectionId",
+          "epoch",
+          "connectionGeneration",
+          "deviceIdentityId",
+          "policyVersion",
+          "challengeId",
+          "nonce",
+          "clientKeyThumbprint",
+          "channelBinding",
+          "grantJti",
+          "purpose"
+        ],
+        "additionalProperties": false
+      },
+      "RemoteGrant": {
+        "type": "object",
+        "properties": {
+          "iss": {
+            "type": "string",
+            "format": "uri"
+          },
+          "aud": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 4096
+          },
+          "sub": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "tenantId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "deviceIdentityId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "leaseId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "allocationId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "assignmentId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "sid": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "epoch": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9007199254740991
+          },
+          "jti": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "iat": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
+          },
+          "nbf": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
+          },
+          "exp": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9007199254740991
+          },
+          "leaseExpiresAtMs": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9007199254740991
+          },
+          "leaseVersion": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9007199254740991
+          },
+          "assignmentVersion": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9007199254740991
+          },
+          "credentialVersion": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9007199254740991
+          },
+          "accountAuthVersion": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9007199254740991
+          },
+          "cnf": {
+            "type": "object",
+            "properties": {
+              "jkt": {
+                "type": "string",
+                "pattern": "^[A-Za-z0-9_-]{43}$"
+              }
+            },
+            "required": [
+              "jkt"
+            ],
+            "additionalProperties": false
+          },
+          "capabilities": {
+            "type": "array",
+            "items": {
+              "enum": [
+                "screen",
+                "input",
+                "system_audio",
+                "clipboard",
+                "files"
+              ]
+            },
+            "uniqueItems": true,
+            "minItems": 1,
+            "maxItems": 5
+          }
+        },
+        "required": [
+          "iss",
+          "aud",
+          "sub",
+          "tenantId",
+          "deviceIdentityId",
+          "leaseId",
+          "allocationId",
+          "assignmentId",
+          "sid",
+          "epoch",
+          "jti",
+          "iat",
+          "nbf",
+          "exp",
+          "leaseExpiresAtMs",
+          "leaseVersion",
+          "assignmentVersion",
+          "credentialVersion",
+          "accountAuthVersion",
+          "cnf",
+          "capabilities"
+        ],
+        "additionalProperties": false
+      },
+      "JwsProtectedHeader": {
+        "type": "object",
+        "properties": {
+          "alg": {
+            "const": "Ed25519"
+          },
+          "kid": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 4096
+          },
+          "typ": {
+            "enum": [
+              "tp-remote-grant-v1+jwt",
+              "tp-device-message-v1+jws",
+              "tp-client-message-v1+jws",
+              "tp-policy-message-v1+jws"
+            ]
+          }
+        },
+        "required": [
+          "alg",
+          "kid",
+          "typ"
+        ],
+        "additionalProperties": false
+      },
+      "EnrollmentRequest": {
+        "type": "object",
+        "properties": {
+          "resourceId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "token": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 4096
+          },
+          "csrPem": {
+            "type": "string",
+            "minLength": 64,
+            "maxLength": 8192
+          },
+          "challenge": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 4096
+          },
+          "publicKeyProof": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 4096
+          },
+          "bootId": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 4096
+          },
+          "agentInstanceId": {
+            "type": "string",
+            "format": "uuid"
+          }
+        },
+        "required": [
+          "resourceId",
+          "token",
+          "csrPem",
+          "challenge",
+          "publicKeyProof",
+          "bootId",
+          "agentInstanceId"
+        ],
+        "additionalProperties": false
+      },
+      "EnrollmentTokenRequest": {
+        "type": "object",
+        "properties": {
+          "expectedVersion": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9007199254740991
+          },
+          "ttlSeconds": {
+            "type": "integer",
+            "minimum": 30,
+            "maximum": 600
+          }
+        },
+        "required": [
+          "expectedVersion",
+          "ttlSeconds"
+        ],
+        "additionalProperties": false
+      },
+      "EnrollmentToken": {
+        "type": "object",
+        "properties": {
+          "resourceId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "token": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 4096
+          },
+          "expiresAt": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9007199254740991
+          }
+        },
+        "required": [
+          "resourceId",
+          "token",
+          "expiresAt"
+        ],
+        "additionalProperties": false
+      },
+      "EnrollmentResult": {
+        "type": "object",
+        "properties": {
+          "deviceIdentityId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "computerId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "certificatePem": {
+            "type": "string",
+            "maxLength": 16384
+          },
+          "chainPem": {
+            "type": "string",
+            "maxLength": 32768
+          },
+          "certificateExpiresAt": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9007199254740991
+          },
+          "policyUrl": {
+            "type": "string",
+            "format": "uri"
+          }
+        },
+        "required": [
+          "deviceIdentityId",
+          "computerId",
+          "certificatePem",
+          "chainPem",
+          "certificateExpiresAt",
+          "policyUrl"
+        ],
+        "additionalProperties": false
+      },
+      "DeviceCommandPayload": {
+        "type": "object",
+        "properties": {
+          "commandId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "operationId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "computerId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "restart_remote",
+              "reboot_os",
+              "rotate_credential",
+              "close_session",
+              "reset_machine",
+              "verify_machine"
+            ]
+          },
+          "issuedAt": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9007199254740991
+          },
+          "expiresAt": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9007199254740991
+          },
+          "expectedBootId": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 2048
+          },
+          "expectedRemoteInstanceId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "policyVersion": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9007199254740991
+          },
+          "leaseVersion": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
+          },
+          "assignmentVersion": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
+          },
+          "credentialVersion": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9007199254740991
+          },
+          "challengeId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "payload": {
+            "type": "object"
+          },
+          "accountAuthVersion": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
+          }
+        },
+        "required": [
+          "commandId",
+          "operationId",
+          "computerId",
+          "kind",
+          "issuedAt",
+          "expiresAt",
+          "expectedBootId",
+          "policyVersion",
+          "leaseVersion",
+          "assignmentVersion",
+          "credentialVersion",
+          "challengeId",
+          "payload",
+          "accountAuthVersion"
+        ],
+        "additionalProperties": false,
+        "allOf": [
+          {
+            "if": {
+              "properties": {
+                "kind": {
+                  "const": "restart_remote"
+                }
+              },
+              "required": [
+                "kind"
+              ]
+            },
+            "then": {
+              "properties": {
+                "payload": {
+                  "type": "object",
+                  "properties": {},
+                  "required": [],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "kind": {
+                  "const": "reboot_os"
+                }
+              },
+              "required": [
+                "kind"
+              ]
+            },
+            "then": {
+              "properties": {
+                "payload": {
+                  "type": "object",
+                  "properties": {},
+                  "required": [],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "kind": {
+                  "const": "rotate_credential"
+                }
+              },
+              "required": [
+                "kind"
+              ]
+            },
+            "then": {
+              "properties": {
+                "payload": {
+                  "type": "object",
+                  "properties": {
+                    "targetCredentialVersion": {
+                      "type": "integer",
+                      "minimum": 1,
+                      "maximum": 9007199254740991
+                    },
+                    "credentialDeliveryId": {
+                      "type": "string",
+                      "format": "uuid"
+                    }
+                  },
+                  "required": [
+                    "targetCredentialVersion",
+                    "credentialDeliveryId"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "kind": {
+                  "const": "close_session"
+                }
+              },
+              "required": [
+                "kind"
+              ]
+            },
+            "then": {
+              "properties": {
+                "payload": {
+                  "type": "object",
+                  "properties": {
+                    "sessionId": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "epoch": {
+                      "type": "integer",
+                      "minimum": 1,
+                      "maximum": 9007199254740991
+                    },
+                    "connectionId": {
+                      "type": "string",
+                      "format": "uuid"
+                    }
+                  },
+                  "required": [
+                    "sessionId",
+                    "epoch",
+                    "connectionId"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "kind": {
+                  "const": "reset_machine"
+                }
+              },
+              "required": [
+                "kind"
+              ]
+            },
+            "then": {
+              "properties": {
+                "payload": {
+                  "type": "object",
+                  "properties": {
+                    "templateVersion": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 2048
+                    },
+                    "eraseScope": {
+                      "enum": [
+                        "customer_volumes",
+                        "full_machine"
+                      ]
+                    },
+                    "approvalEvidenceRef": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 2048
+                    }
+                  },
+                  "required": [
+                    "templateVersion",
+                    "eraseScope",
+                    "approvalEvidenceRef"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "kind": {
+                  "const": "verify_machine"
+                }
+              },
+              "required": [
+                "kind"
+              ]
+            },
+            "then": {
+              "properties": {
+                "payload": {
+                  "type": "object",
+                  "properties": {
+                    "probeKinds": {
+                      "type": "array",
+                      "items": {
+                        "type": "string",
+                        "enum": [
+                          "desktop",
+                          "credential_auth",
+                          "image",
+                          "data_cleanup",
+                          "private_logins",
+                          "external_isolation"
+                        ]
+                      },
+                      "minItems": 1,
+                      "uniqueItems": true,
+                      "maxItems": 6
+                    }
+                  },
+                  "required": [
+                    "probeKinds"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          }
+        ]
+      },
+      "CredentialDeliveryRequest": {
+        "type": "object",
+        "properties": {
+          "commandId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "challengeId": {
+            "type": "string",
+            "format": "uuid"
+          }
+        },
+        "required": [
+          "commandId",
+          "challengeId"
+        ],
+        "additionalProperties": false
+      },
+      "CredentialDelivery": {
+        "type": "object",
+        "properties": {
+          "commandId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "credentialVersion": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9007199254740991
+          },
+          "credential": {
+            "type": "string",
+            "minLength": 22,
+            "maxLength": 1024
+          },
+          "expiresAt": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9007199254740991
+          }
+        },
+        "required": [
+          "commandId",
+          "credentialVersion",
+          "credential",
+          "expiresAt"
+        ],
+        "additionalProperties": false
+      },
+      "SessionActivated": {
+        "type": "object",
+        "properties": {
+          "sessionId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "connectionId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "epoch": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9007199254740991
+          },
+          "connectionGeneration": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9007199254740991
+          },
+          "deviceIdentityId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "policyVersion": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9007199254740991
+          },
+          "activationId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "leaseVersion": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9007199254740991
+          },
+          "assignmentVersion": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9007199254740991
+          },
+          "credentialVersion": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9007199254740991
+          },
+          "accountAuthVersion": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9007199254740991
+          },
+          "jti": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "expiresAt": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9007199254740991
+          },
+          "capabilities": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "screen",
+                "input",
+                "system_audio",
+                "clipboard",
+                "files"
+              ]
+            },
+            "maxItems": 1000
+          }
+        },
+        "required": [
+          "sessionId",
+          "connectionId",
+          "epoch",
+          "connectionGeneration",
+          "deviceIdentityId",
+          "policyVersion",
+          "activationId",
+          "leaseVersion",
+          "assignmentVersion",
+          "credentialVersion",
+          "accountAuthVersion",
+          "jti",
+          "expiresAt",
+          "capabilities"
+        ],
+        "additionalProperties": false
+      },
+      "SessionActivationAck": {
+        "type": "object",
+        "properties": {
+          "sessionId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "connectionId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "epoch": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9007199254740991
+          },
+          "connectionGeneration": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9007199254740991
+          },
+          "deviceIdentityId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "policyVersion": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9007199254740991
+          },
+          "activationId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "bootId": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 2048
+          },
+          "actualExpiresAt": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9007199254740991
+          },
+          "readyAt": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9007199254740991
+          },
+          "capabilities": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "screen",
+                "input",
+                "system_audio",
+                "clipboard",
+                "files"
+              ]
+            },
+            "maxItems": 1000
+          }
+        },
+        "required": [
+          "sessionId",
+          "connectionId",
+          "epoch",
+          "connectionGeneration",
+          "deviceIdentityId",
+          "policyVersion",
+          "activationId",
+          "bootId",
+          "actualExpiresAt",
+          "readyAt",
+          "capabilities"
+        ],
+        "additionalProperties": false
+      },
+      "RemoteChallengeRequest": {
+        "type": "object",
+        "properties": {
+          "purpose": {
+            "enum": [
+              "renew",
+              "resume"
+            ]
+          },
+          "connectionId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "connectionGeneration": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9007199254740991
+          }
+        },
+        "required": [
+          "purpose",
+          "connectionId",
+          "connectionGeneration"
+        ],
+        "additionalProperties": false
+      },
+      "RemoteChallenge": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "challenge": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 2048
+          },
+          "purpose": {
+            "enum": [
+              "renew",
+              "resume"
+            ]
+          },
+          "sessionId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "connectionId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "connectionGeneration": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9007199254740991
+          },
+          "epoch": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9007199254740991
+          },
+          "expiresAt": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9007199254740991
+          }
+        },
+        "required": [
+          "id",
+          "challenge",
+          "purpose",
+          "sessionId",
+          "connectionId",
+          "connectionGeneration",
+          "epoch",
+          "expiresAt"
+        ],
+        "additionalProperties": false
+      },
+      "ResumeSession": {
+        "type": "object",
+        "properties": {
+          "challengeId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "clientProof": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 2048
+          },
+          "previousConnectionId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "expectedConnectionGeneration": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9007199254740991
+          }
+        },
+        "required": [
+          "challengeId",
+          "clientProof",
+          "previousConnectionId",
+          "expectedConnectionGeneration"
+        ],
+        "additionalProperties": false
       }
     },
     "responses": {

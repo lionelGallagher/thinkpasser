@@ -4,6 +4,9 @@
 
 业务后端设计采用Java／Spring Boot＋MySQL InnoDB，以Maven构建；现有Node模块承担规则与协议验证。详细字段、事务、包职责和API见[开发交接](../docs/design/README.md)及[接口契约](contracts/openapi.json)，当前尚未创建生产Java应用。
 
+生产实施基线为 Java 21 LTS、Spring Boot 4.1.x、Spring JDBC、Flyway、Maven Wrapper 3.9.14、MySQL 8.4 LTS。[生产蓝图](../docs/design/08-production-implementation.md)给出模块、锁序、任务、资金、秘密和运维方案；[业务矩阵](../docs/design/09-end-to-end-matrix.md)及[远控协议](../docs/design/10-remote-protocol.md)作为实现验收入口。本轮不创建 Java 业务代码或执行数据库迁移。
+
+
 ## 业务职责
 
 - 身份、租户、主子账号、供应商角色及资源权限。

@@ -2,7 +2,7 @@
 
 ## 契约入口与公共规则
 
-[OpenAPI](../../backend/contracts/openapi.json) 给出请求／响应字段、路径、角色和 T01—T13 事务归属；均为待实现接口。生产域名由配置提供，example.invalid 只是占位。用 Spring MVC Controller＋校验 DTO，Application Service 承担授权及事务，Repository 承担 SQL；Controller 不直接更新资金或租期。
+[OpenAPI](../../backend/contracts/openapi.json) 给出请求／响应字段、路径、角色和 T01—T16 事务归属；均为待实现接口。T14 为采购／上游事实，T15 为供方结算，T16 为单元异常决策。生产域名由配置提供，example.invalid 只是占位。用 Spring MVC Controller＋校验 DTO，Application Service 承担授权及事务，Repository 承担 SQL；Controller 不直接更新资金或租期。
 
 URL 前缀 /v1；成功返回契约对象；异步动作返回 202 和真实状态，前端查询 operation。列表使用不透明 cursor、默认20、最多100条，排序为 createdAt＋id；服务端从可信身份筛选租户和供应商。版本变更比较 expectedVersion，不用最后写入覆盖竞争。
 
@@ -68,3 +68,7 @@ main 直接创建 sub，服务端写同 tenant 和 parent；主账号设置初�
 根包建议 com.thinkpasser：identity、catalog、commerce、lease、supply、payment、remote、device、aftersale、audit。每域设 api／application／domain／infrastructure；跨域通过明确服务接口调用，不在页面或 Controller 拼业务。
 
 事务在 Application Service 的独立 Bean 方法上执行；外部支付、供方和设备调用在提交后由 worker 执行。凭据服务、PaymentProvider、SupplierProvider、RemoteHostAdapter、MachineLifecycleProvider 都是端口接口，实现未配置时返回 ADAPTER_NOT_CONFIGURED。生产默认禁止测试适配器。Spring 事务边界按[官方说明](https://docs.spring.io/spring-framework/reference/data-access/transaction/declarative/annotations.html)验证，避免同类内部调用绕过代理。
+
+## 补充契约
+
+连接创建返回 ConnectionAttempt；接管等待期间没有新 session，不能伪造 session 对象。[远控消息](../../backend/contracts/remote-signaling.schema.json)由[协议规范](10-remote-protocol.md)约束。supplierTask 的精确权益、采购与资金、单元决策见[生产蓝图](08-production-implementation.md)。注册 token、登录／刷新响应和凭据读取等秘密接口不得使用普通幂等响应缓存；重试走各自专用交换规则。

@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, it, expect, vi } from "vitest";
 import { mount, flushPromises, type VueWrapper } from "./vue-dom";
+import { nextTick } from "vue";
 describe("订阅资源表单", () => {
   it("订阅侧能登记脱敏资源，平台端独立验收", async () => {
     app("supplier", "resources");
@@ -8,7 +9,7 @@ describe("订阅资源表单", () => {
       .find('select[aria-label="切换演示供应商"]')
       .setValue("s-subscription");
     await settle();
-    await button("登记订阅资源").trigger("click");
+    await button("登记供货资源").trigger("click");
     const form = wrapper!.find("form.modal-form");
     await form
       .find('input[type="text"], input:not([type])')
@@ -102,12 +103,45 @@ afterEach(() => {
   document.body.innerHTML = "";
   ui.toast = "";
   ui.dialog = null;
+  vi.useRealTimers();
 });
 describe("四端组件交互", () => {
+  it("桌面主账号可选购，切为子账号后禁止购买页面", async () => {
+    app("desktop", "marketplace");
+    await settle();
+    expect(wrapper!.findAll(".product-card")).toHaveLength(6);
+    expect(wrapper!.find(".main-nav").text()).toContain("选购电脑");
+    switchAccount("a-lin");
+    location.hash = "marketplace";
+    await settle();
+    expect(wrapper!.find(".main-nav").text()).not.toContain("选购电脑");
+    expect(wrapper!.text()).toContain("此页面需要主账号");
+    expect(wrapper!.findAll(".product-card")).toHaveLength(0);
+  });
+  it("停留桌面跨过电脑截止时自动撤下预览", async () => {
+    vi.useFakeTimers();
+    state.machines[0]!.expiresAt = Date.now() + 500;
+    openDesktop("m-01");
+    app("desktop", "desktop");
+    await nextTick();
+    expect(wrapper!.find(".desktop-frame").exists()).toBe(true);
+    vi.advanceTimersByTime(1001);
+    await nextTick();
+    expect(wrapper!.find(".desktop-frame").exists()).toBe(false);
+    expect(wrapper!.text()).toContain("查看电脑与租期状态");
+  });
+  it("用户首页以电脑操作为主，没有广告展示块", async () => {
+    app();
+    await settle();
+    expect(wrapper!.find(".primary-device").exists()).toBe(true);
+    expect(wrapper!.find(".welcome-banner").exists()).toBe(false);
+    expect(wrapper!.find(".sidebar-tip").exists()).toBe(false);
+    expect(wrapper!.find(".notification-button").exists()).toBe(false);
+  });
   it.each([
-    ["web", "overview", "欢迎回来"],
+    ["web", "overview", "我的电脑"],
     ["admin", "overview", "运营总览"],
-    ["supplier", "overview", "每一次交付"],
+    ["supplier", "overview", "供货工作台"],
     ["desktop", "machines", "我的电脑"],
   ])("%s入口能挂载并标记演示", async (portal, route, text) => {
     app(portal, route);
@@ -205,7 +239,10 @@ describe("四端组件交互", () => {
       .setValue("s-subscription");
     await settle();
     expect(wrapper!.findAll(".task-table tbody tr")).toHaveLength(1);
-    expect(wrapper!.find(".task-table").text()).toContain("Claude Code 开通");
+    expect(wrapper!.find(".task-table").text()).toContain("供卡准备");
+    expect(wrapper!.find(".task-table").text()).not.toContain(
+      "@example.invalid",
+    );
     expect(wrapper!.find(".task-table").text()).not.toContain("电脑准备");
   });
   it("管理员验收只改任务状态，不跳过整套交付条件", async () => {

@@ -21,11 +21,10 @@ const resources = computed(() =>
 <template>
   <section class="page-heading">
     <div>
-      <p class="eyebrow">PARTNER WORKSPACE</p>
       <h1>
         {{
           page === "overview"
-            ? "每一次交付，都值得认真"
+            ? "供货工作台"
             : page === "resources"
               ? "我的供货资源"
               : page === "tasks"
@@ -33,9 +32,9 @@ const resources = computed(() =>
                 : page === "settlement"
                   ? "结算记录"
                   : "供应商资料"
-        }}<span class="greeting-dot">.</span>
+        }}
       </h1>
-      <p>统一接单、准备、回报与结算，让合作更清晰。</p>
+      <p></p>
     </div>
     <label class="select-wrap supplier-select"
       ><Icon name="users" :size="17" /><select
@@ -43,7 +42,14 @@ const resources = computed(() =>
         aria-label="切换演示供应商"
       >
         <option v-for="s in state.suppliers" :key="s.id" :value="s.id">
-          {{ s.name }}
+          {{ s.name }} ·
+          {{
+            s.kind === "computer"
+              ? "电脑"
+              : s.canActivateAi
+                ? "AI 开通执行"
+                : "上游供卡"
+          }}
         </option>
       </select></label
     >
@@ -53,28 +59,7 @@ const resources = computed(() =>
       supplier.state === "applied" ? "等待审核" : "已暂停新供货"
     }}，通过平台审核后才能登记和接取新任务。
   </div>
-  <template v-if="page === 'overview'"
-    ><div class="partner-welcome">
-      <div>
-        <span class="small-overline">BUILD TOGETHER</span>
-        <h2>{{ supplier.name }}，欢迎回来。</h2>
-        <p>
-          {{
-            supplier.kind === "subscription"
-              ? "卡／订阅侧能力，用于指定账号的开通和续订任务。"
-              : "从可靠的机器开始，为每个用户交付可持续工作的环境。"
-          }}
-        </p>
-        <a class="button primary" href="#tasks"
-          >查看我的任务 <Icon name="arrowUp" :size="16"
-        /></a>
-      </div>
-      <div class="partner-illustration" aria-hidden="true">
-        <span class="partner-box"><Icon name="package" :size="65" /></span
-        ><span class="floating-check"><Icon name="check" :size="21" /></span
-        ><i></i><b>READY TO DELIVER</b>
-      </div>
-    </div>
+  <template v-if="page === 'overview'">
     <div class="metrics-grid">
       <article
         v-for="metric in [
@@ -133,15 +118,12 @@ const resources = computed(() =>
   <template v-else-if="page === 'tasks'"><TaskTable supplier /></template>
   <template v-else-if="page === 'resources'"
     ><SubscriptionResources v-if="supplier.kind !== 'computer'" />
-    <div class="section-heading">
+    <div v-if="supplier.kind !== 'subscription'" class="section-heading">
       <div>
-        <h2>
-          {{ supplier.kind === "subscription" ? "订阅侧供货能力" : "电脑资源" }}
-        </h2>
+        <h2>电脑资源</h2>
         <p>资源登记不等于验收，交付能力需单独核对。</p>
       </div>
       <button
-        v-if="supplier.kind !== 'subscription'"
         class="button primary"
         :disabled="supplier.state !== 'approved'"
         @click="openDialog('resource')"
@@ -149,28 +131,7 @@ const resources = computed(() =>
         <Icon name="plus" :size="16" />登记电脑
       </button>
     </div>
-    <div v-if="supplier.kind === 'subscription'" class="subscription-resources">
-      <article
-        v-for="provider in ['claude', 'codex'] as const"
-        :key="provider"
-        class="panel subscription-resource"
-      >
-        <span class="large-ai" :class="provider">{{
-          provider === "claude" ? "✳" : "⌘"
-        }}</span>
-        <div>
-          <h2>{{ AI_NAME[provider] }} 开通与续订</h2>
-          <p>按平台派发的指定邮箱处理，卡资源和真实订阅分别核验。</p>
-          <div class="supplier-tags">
-            <span class="tool-tag">指定账号</span
-            ><span class="tool-tag">结果回报</span
-            ><span class="tool-tag">实际期限核验</span>
-          </div>
-        </div>
-        <Status tone="blue">演示能力</Status>
-      </article>
-    </div>
-    <section v-else class="panel table-scroll">
+    <section v-if="supplier.kind !== 'subscription'" class="panel table-scroll">
       <table class="data-table">
         <thead>
           <tr>

@@ -208,7 +208,6 @@ function createSub() {
   <BaseModal
     v-if="ui.dialog === 'checkout'"
     :title="checkoutTitle"
-    eyebrow="CONFIGURE YOUR WORKSPACE"
     wide
     @close="closeDialog"
     ><form class="checkout-layout" @submit.prevent="submit(checkout)">
@@ -337,7 +336,6 @@ function createSub() {
         </div>
       </div>
       <aside class="checkout-summary">
-        <span class="small-overline">ORDER SUMMARY</span>
         <h3>这次准备，清楚明白</h3>
         <dl>
           <div v-if="ui.mode !== 'ai_addon'">
@@ -404,7 +402,6 @@ function createSub() {
   <BaseModal
     v-else-if="ui.dialog === 'assign'"
     title="分配独享电脑"
-    eyebrow="TEAM ALLOCATION"
     @close="closeDialog"
     ><form
       class="modal-form"
@@ -425,14 +422,20 @@ function createSub() {
             :value="member.id"
             :disabled="
               state.machines.some(
-                (m) => m.id !== ui.targetId && m.assignedTo === member.id,
+                (m) =>
+                  m.id !== ui.targetId &&
+                  (m.assignedTo === member.id ||
+                    m.pendingAssignmentTo === member.id),
               )
             "
           >
             {{ member.name }} · {{ member.role === "main" ? "主账号" : "子账号"
             }}{{
               state.machines.some(
-                (m) => m.id !== ui.targetId && m.assignedTo === member.id,
+                (m) =>
+                  m.id !== ui.targetId &&
+                  (m.assignedTo === member.id ||
+                    m.pendingAssignmentTo === member.id),
               )
                 ? "（已有电脑）"
                 : ""
@@ -473,7 +476,6 @@ function createSub() {
   <BaseModal
     v-else-if="ui.dialog === 'member'"
     title="创建子账号"
-    eyebrow="ONE PERSON, ONE SPACE"
     @close="closeDialog"
     ><form class="modal-form" @submit.prevent="submit(createSub)">
       <label class="field"
@@ -515,7 +517,6 @@ function createSub() {
   <BaseModal
     v-else-if="ui.dialog === 'ticket'"
     title="提交服务工单"
-    eyebrow="LET’S GET IT SORTED"
     @close="closeDialog"
     ><form
       class="modal-form"
@@ -580,7 +581,6 @@ function createSub() {
   <BaseModal
     v-else-if="ui.dialog === 'report'"
     title="回报供货结果"
-    eyebrow="REPORT, THEN VERIFY"
     @close="closeDialog"
     ><form
       class="modal-form"
@@ -610,7 +610,6 @@ function createSub() {
   <BaseModal
     v-else-if="ui.dialog === 'resource'"
     title="登记电脑资源"
-    eyebrow="ADD A RESOURCE"
     @close="closeDialog"
     ><form
       class="modal-form"
@@ -652,7 +651,6 @@ function createSub() {
   <BaseModal
     v-else-if="ui.dialog === 'supplier'"
     title="创建供应商"
-    eyebrow="BUILD WITH PARTNERS"
     @close="closeDialog"
     ><form
       class="modal-form"
@@ -692,7 +690,6 @@ function createSub() {
   <BaseModal
     v-else-if="ui.dialog === 'detail' && machine"
     :title="machine.name"
-    eyebrow="RESOURCE DETAILS"
     @close="closeDialog"
     ><div class="modal-form">
       <dl class="detail-list">

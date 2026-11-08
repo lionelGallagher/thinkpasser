@@ -8,4 +8,6 @@
 
 真实平台权限、供货证据、受限恢复、实际赔付、收退款和结算等待Java后端接入。运营身份不自动获得客户桌面或AI账号凭据，界面里的演示切换不是生产认证。
 
+交接中的账号和电脑保持预留与不可连接，资源页可完成明确标识的演示交接验收。纯卡资源与 AI 开通服务分开验收。生产采购、上游操作、资金占用及结算按[生产蓝图](../docs/design/08-production-implementation.md)接入，现有成本展示不代表已完成真实采购付款。
+
 [页面与任务](../docs/design/05-ui-and-delivery-plan.md) · [资金与售后](../docs/design/04-supplier-payments-aftersale.md) · [API契约](../backend/contracts/openapi.json)

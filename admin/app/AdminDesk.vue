@@ -12,6 +12,7 @@ import {
   safely,
   askConfirm,
   requestRestart,
+  completeDemoHandoff,
 } from "../../web/shared/store";
 import { phase, COUNTRY, money, date } from "../../web/shared/models";
 const props = defineProps<{ page: string }>(),
@@ -61,10 +62,8 @@ const headings: Record<string, [string, string]> = {
 <template>
   <section class="page-heading">
     <div>
-      <p class="eyebrow">THINKPASSER OPERATIONS</p>
       <h1>
-        {{ headings[page]?.[0] || "运营总览"
-        }}<span class="greeting-dot">.</span>
+        {{ headings[page]?.[0] || "运营总览" }}
       </h1>
       <p>{{ headings[page]?.[1] }}</p>
     </div>
@@ -183,7 +182,6 @@ const headings: Record<string, [string, string]> = {
         </div>
       </section>
       <section class="panel attention-panel">
-        <span class="small-overline">NEEDS ATTENTION</span>
         <h2>今天，先处理这些</h2>
         <a href="#tasks"
           ><span><i class="attention-dot purple"></i>供方结果待验收</span
@@ -302,6 +300,15 @@ const headings: Record<string, [string, string]> = {
             </td>
             <td>
               <div class="table-actions">
+                <button
+                  v-if="
+                    machine.state === 'resetting' && machine.pendingAssignmentTo
+                  "
+                  class="button small"
+                  @click="safely(() => completeDemoHandoff(machine.id))"
+                >
+                  完成演示交接验收
+                </button>
                 <button
                   class="text-link"
                   @click="openDialog('detail', machine.id)"

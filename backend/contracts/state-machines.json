@@ -1,5 +1,5 @@
 {
-  "version": 1,
+  "version": 2,
   "note": "设计模型，不是已接入真实设备的工作流引擎；所有无列出的转换拒绝。",
   "machines": {
     "unit": {
@@ -53,28 +53,28 @@
       "initial": "pending",
       "terminal": [
         "closed",
-        "revoked",
         "failed"
       ],
       "transitions": {
         "pending": [
           "active",
           "closing",
-          "failed",
-          "revoked"
+          "failed"
         ],
         "active": [
-          "closing",
-          "revoked"
+          "closing"
         ],
         "closing": [
-          "closed",
-          "revoked"
+          "closed"
         ],
         "closed": [],
-        "revoked": [],
         "failed": []
-      }
+      },
+      "invariants": [
+        "revokedAt is independent from physical transport state",
+        "closing retains exclusive control slot until verified CloseAck or verified external isolation",
+        "failed is permitted only after proving no open transport"
+      ]
     },
     "operation": {
       "initial": "queued",
@@ -184,6 +184,324 @@
         ],
         "succeeded": []
       }
+    },
+    "connectionAttempt": {
+      "initial": "authorizing",
+      "terminal": [
+        "active",
+        "failed"
+      ],
+      "transitions": {
+        "authorizing": [
+          "waiting_previous_close",
+          "connecting",
+          "failed"
+        ],
+        "waiting_previous_close": [
+          "connecting",
+          "failed"
+        ],
+        "connecting": [
+          "active",
+          "failed"
+        ],
+        "active": [],
+        "failed": []
+      }
+    },
+    "supplyPurchase": {
+      "initial": "draft",
+      "terminal": [
+        "received",
+        "cancelled"
+      ],
+      "transitions": {
+        "draft": [
+          "approved",
+          "cancelled"
+        ],
+        "approved": [
+          "ordered",
+          "exception",
+          "cancelled"
+        ],
+        "ordered": [
+          "received",
+          "exception"
+        ],
+        "exception": [
+          "ordered",
+          "received",
+          "cancelled"
+        ],
+        "received": [],
+        "cancelled": []
+      }
+    },
+    "upstreamOperation": {
+      "initial": "pending",
+      "terminal": [
+        "confirmed",
+        "failed"
+      ],
+      "transitions": {
+        "pending": [
+          "submitted",
+          "failed"
+        ],
+        "submitted": [
+          "confirmed",
+          "failed",
+          "unknown"
+        ],
+        "unknown": [
+          "confirmed",
+          "failed"
+        ],
+        "confirmed": [],
+        "failed": []
+      }
+    },
+    "unitResolution": {
+      "initial": "accepted",
+      "terminal": [
+        "completed"
+      ],
+      "transitions": {
+        "accepted": [
+          "stopping",
+          "reconciling",
+          "completed"
+        ],
+        "stopping": [
+          "reconciling",
+          "exception"
+        ],
+        "reconciling": [
+          "refund_pending",
+          "completed",
+          "exception"
+        ],
+        "refund_pending": [
+          "completed",
+          "exception"
+        ],
+        "exception": [
+          "reconciling",
+          "refund_pending",
+          "completed"
+        ],
+        "completed": []
+      }
+    },
+    "lease": {
+      "initial": "active",
+      "terminal": [
+        "ended"
+      ],
+      "transitions": {
+        "active": [
+          "retained",
+          "ending"
+        ],
+        "retained": [
+          "active",
+          "clearing",
+          "ending"
+        ],
+        "clearing": [
+          "ended"
+        ],
+        "ending": [
+          "ended"
+        ],
+        "ended": []
+      },
+      "invariants": [
+        "retained renewal competes for current account slot and anchors old expiry",
+        "clearing is irreversible for original environment",
+        "fault replacement changes allocation, not lease identity"
+      ]
+    },
+    "computerInventory": {
+      "initial": "inspection",
+      "terminal": [],
+      "transitions": {
+        "inspection": [
+          "available",
+          "quarantined"
+        ],
+        "available": [
+          "reserved",
+          "maintenance",
+          "quarantined"
+        ],
+        "reserved": [
+          "allocated",
+          "available",
+          "quarantined"
+        ],
+        "allocated": [
+          "retained",
+          "recovering",
+          "clearing",
+          "quarantined"
+        ],
+        "retained": [
+          "allocated",
+          "clearing",
+          "quarantined"
+        ],
+        "recovering": [
+          "allocated",
+          "quarantined"
+        ],
+        "clearing": [
+          "inspection",
+          "quarantined"
+        ],
+        "maintenance": [
+          "inspection",
+          "quarantined"
+        ],
+        "quarantined": [
+          "maintenance",
+          "clearing",
+          "inspection"
+        ]
+      },
+      "invariants": [
+        "only verified inspection can produce available",
+        "unknown destructive operations remain quarantined or clearing",
+        "supplier external isolation and reset capabilities are verified before sale"
+      ]
+    },
+    "aiEntitlement": {
+      "initial": "preparing",
+      "terminal": [
+        "expired",
+        "terminated"
+      ],
+      "transitions": {
+        "preparing": [
+          "available",
+          "terminated"
+        ],
+        "available": [
+          "interrupted",
+          "expired",
+          "terminated"
+        ],
+        "interrupted": [
+          "available",
+          "expired",
+          "terminated"
+        ],
+        "expired": [],
+        "terminated": []
+      },
+      "invariants": [
+        "available still requires now within original promise interval",
+        "no platform entitlement exists without its lease",
+        "AI expiry does not revoke an active computer"
+      ]
+    },
+    "settlement": {
+      "initial": "draft",
+      "terminal": [
+        "paid",
+        "failed"
+      ],
+      "transitions": {
+        "draft": [
+          "approved",
+          "failed"
+        ],
+        "approved": [
+          "submitted",
+          "failed"
+        ],
+        "submitted": [
+          "paid",
+          "failed",
+          "unknown"
+        ],
+        "unknown": [
+          "paid",
+          "failed"
+        ],
+        "paid": [],
+        "failed": []
+      }
+    },
+    "paymentReceiptApplication": {
+      "initial": "pending",
+      "terminal": [
+        "accepted",
+        "overpaid",
+        "late_cancelled",
+        "exception"
+      ],
+      "transitions": {
+        "pending": [
+          "accepted",
+          "overpaid",
+          "late_cancelled",
+          "exception"
+        ],
+        "accepted": [],
+        "overpaid": [],
+        "late_cancelled": [],
+        "exception": []
+      }
+    },
+    "accountComputerSlot": {
+      "initial": "free",
+      "terminal": [],
+      "transitions": {
+        "free": [
+          "pending_handoff",
+          "active"
+        ],
+        "pending_handoff": [
+          "active",
+          "free"
+        ],
+        "active": [
+          "closing"
+        ],
+        "closing": [
+          "pending_handoff",
+          "free"
+        ]
+      }
+    },
+    "remoteConnection": {
+      "initial": "pending",
+      "terminal": [
+        "closed",
+        "failed"
+      ],
+      "transitions": {
+        "pending": [
+          "active",
+          "closing",
+          "failed"
+        ],
+        "active": [
+          "closing"
+        ],
+        "closing": [
+          "closed"
+        ],
+        "closed": [],
+        "failed": []
+      },
+      "invariants": [
+        "one active or closing transport per logical session",
+        "resume retains logical sid and closes previous generation before new transport",
+        "server activation acknowledgement precedes data channel output"
+      ]
     }
   },
   "transactions": {
@@ -215,10 +533,14 @@
     "T04": {
       "owner": "payments",
       "locks": [
-        "payment",
         "order",
-        "lease-if-renewal",
-        "refund"
+        "unit",
+        "lease",
+        "allocation",
+        "computer",
+        "accounts-sorted/assignment",
+        "entitlement/service-segment",
+        "payment/refund"
       ],
       "doc": "01-data-and-transactions.md#t04-收款与退款"
     },
@@ -274,10 +596,14 @@
     "T10": {
       "owner": "aftersale",
       "locks": [
+        "order",
+        "unit",
         "lease",
-        "ticket",
-        "ai-items",
-        "payment"
+        "allocation",
+        "computer",
+        "accounts-sorted/assignment",
+        "entitlement/service-segment",
+        "payment/refund"
       ],
       "doc": "04-supplier-payments-aftersale.md#t10-工单与赔付"
     },
@@ -294,8 +620,12 @@
       "locks": [
         "order",
         "unit",
+        "lease",
+        "allocation",
         "computer",
-        "ai-items"
+        "accounts-sorted/assignment",
+        "entitlement/service-segment",
+        "payment/refund"
       ],
       "doc": "01-data-and-transactions.md#t12-首次交付"
     },
@@ -306,6 +636,50 @@
         "operation"
       ],
       "doc": "03-remote-and-device.md#t13-设备上报"
+    },
+    "T14": {
+      "owner": "supply",
+      "locks": [
+        "supplier",
+        "resource",
+        "purchase",
+        "reservation",
+        "upstream_operation"
+      ],
+      "doc": "08-production-implementation.md"
+    },
+    "T15": {
+      "owner": "supply",
+      "locks": [
+        "supplier",
+        "obligation-sorted",
+        "settlement"
+      ],
+      "doc": "08-production-implementation.md"
+    },
+    "T16": {
+      "owner": "commerce",
+      "locks": [
+        "order",
+        "unit",
+        "lease",
+        "allocation",
+        "computer",
+        "accounts-sorted/assignment",
+        "entitlement/service-segment",
+        "payment/refund"
+      ],
+      "doc": "08-production-implementation.md"
     }
-  }
+  },
+  "globalLockOrder": [
+    "order",
+    "unit",
+    "lease",
+    "allocation",
+    "computer",
+    "accounts-sorted/assignment",
+    "entitlement/service-segment",
+    "payment/refund"
+  ]
 }

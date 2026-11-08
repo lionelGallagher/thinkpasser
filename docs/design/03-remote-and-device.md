@@ -21,11 +21,11 @@
 3. 有有效旧会话返回409 TAKEOVER_REQUIRED＋旧sessionId。确认绑定当前session和版本，旧确认不能作用于后来产生的会话。
 4. 旧会话进入 closing，增加 allocation.sessionEpoch，发送撤销；设备释放键鼠，关闭画面、输入、声音、剪贴板和文件通道。确认关闭前不创建另一个可激活控制会话。
 5. 旧会话 closed 后创建 pending；服务端发短时签名授权。被控适配层验证签名、device、lease／assignment／credential版本、epoch、有效期、单次jti及客户端临时密钥持有。
-6. 密钥挑战绑定服务端nonce、session、epoch、双方通道身份与当前设备身份。验证成功并完成RustDesk底层认证后，设备确认 active；前端才显示已连接。
+6. 密钥挑战绑定服务端nonce、session、epoch、双方通道身份与当前设备身份。验证成功并完成RustDesk底层认证后，设备签名回报SessionReady；后端重核提交后发送SessionActivated，设备确认开放并回报SessionActivationAck，前端收到就绪及首帧才显示已连接。
 7. 每10秒续租、最长30秒控制授权是工程初值，授权截止取 min(now＋30秒,computer.expiresAt)。签名时刻和被控端的租期上限均需校验；断线重新授权，不缓存永久业务资格。
 8. 平台停用、到期、解绑或接管时主动撤销；通知失败也不得超过设备已验证的本地授权期限。离线恢复先同步epoch与当前绑定，不能重放旧grant。
 
-授权消息建议标准JWS EdDSA，含 kid、iss、aud、sub、tenantId、deviceId、leaseId、leaseVersion、assignmentId／version、credentialVersion、sid、epoch、jti、iat／exp、cnf和capabilities。JWT时间字段按标准使用秒，业务API毫秒需显式转换并向下取整，避免混用。现有 reference grant 是独立参考编码，不能直接当最终JWS实现。不得自制加密协议或将业务grant塞进上游password字段。
+生产授权消息采用标准JWS、明确Ed25519算法标识（RFC 9864），含 kid、iss、aud、sub、tenantId、deviceId、leaseId、leaseVersion、assignmentId／version、credentialVersion、sid、epoch、jti、iat／exp、cnf和capabilities。JWT时间字段按标准使用秒，业务API毫秒需显式转换并向下取整，避免混用。现有 reference grant 是独立参考编码，不能直接当最终JWS实现。不得自制加密协议或将业务grant塞进上游password字段。
 
 ## 原生接入端口
 
@@ -68,3 +68,9 @@ now < expiresAt 时正常文件权限；expiresAt <= now < expiresAt＋3天时�
 生产使用独立设备证书／mTLS，身份从证书映射，不接受body更改machine归属。bootId、agentInstanceId、严格递增sequence和服务端接收时间防止旧心跳续命。签名回执关联commandId和交付挑战；旧boot结果只可归档，不能覆盖新状态。
 
 现有[健康参考协议](../../backend/device-health/protocol-v1.md)使用HMAC和SQLite验证局部状态，生产mTLS／标准签名是后续契约，不将两者混写为已接入。管理心跳、远控服务、注册链路和真实桌面探针分别显示。
+
+## 生产消息和关闭语义
+
+字段及签名处理顺序见[远控协议实施规范](10-remote-protocol.md)。创建连接返回 ConnectionAttempt；旧 session 撤权用 revokedAt 单独记录，传输仍为 closing 并占独占位，可信 CloseAck 后才 closed。正常续费不递增撤权 epoch；设备先同步最新策略后重连。
+
+三天导出有独立 manifest／分块／取消接口，长流到时主动中断；只让下载 URL 过期不足以完成截止。清理先关闭导出，再执行版本栅栏和独立验收；失败或未知隔离，不回可售库存。

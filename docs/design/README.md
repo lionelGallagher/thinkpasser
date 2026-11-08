@@ -4,6 +4,8 @@
 
 ## 阅读顺序
 
+直接实现先读08→09→10，再按模块回看数据、API与专项设计。
+
 1. [架构总览](../architecture.md)：五模块、业务不变量、已有证据。
 2. [数据与事务](01-data-and-transactions.md)：对象字段、MySQL 约束、交付与并发。
 3. [API 与权限](02-api-and-permissions.md)：角色、身份、错误和接口约束。
@@ -13,6 +15,10 @@
 7. [难点与验证](06-difficulties-and-validation.md)：风险、验证方法、证据及通过标准。
 8. [前端交接](07-frontend-handoff.md)：四个入口、本地演示链路、验证命令及接入边界。
 
+9. [生产实现蓝图](08-production-implementation.md)：技术定案、分工供货、采购资金、服务分段、远控、隔离与运维发布。
+10. [端到端矩阵](09-end-to-end-matrix.md)：各角色正常及异常业务的状态、幂等、收口和真实验收场景。
+11. [远控协议实施规范](10-remote-protocol.md)：注册、签名、消息、接管、重连、命令与导出执行条件。
+
 本轮已运行的检查、结果与未验证项见[验证记录](verification.md)。
 
 字段契约：[OpenAPI](../../backend/contracts/openapi.json)。状态与事务编号：[状态契约](../../backend/contracts/state-machines.json)。字段与状态冲突时先修订契约再实现，不能在四端分别发明规则。用户原始回答以[确认记录](../questionnaires/远程电脑平台完整需求确认表.md)为准；设计默认值不是追加的用户答卷。
@@ -21,7 +27,7 @@
 
 | 部分 | 实施基线 | 原因 |
 | --- | --- | --- |
-| 业务 API、供货与售后编排、调度 | Java 17+、Spring Boot、Maven；模块化单体，API 与 worker 可分别运行 | 适合订单、事务、运营和用户熟悉的开发方式 |
+| 业务 API、供货与售后编排、调度 | Java 21 LTS、Spring Boot 4.1.x、Maven Wrapper 3.9.14；模块化单体，API 与 worker 可分别运行 | 适合订单、事务、运营和用户熟悉的开发方式 |
 | 业务数据库 | MySQL InnoDB；开发环境已发现 8.0.44，生产建议经验证的 8.4 LTS | 所有权、金额、幂等与任务需要事务和持久化 |
 | 三个网页产品 | Vue 3＋TypeScript，公共样式、组件和类型复用 | 网页端、管理端、供应商端独立入口 |
 | 桌面客户端与被控端 | 固定 RustDesk Rust 核心及其桌面界面集成 | Windows／Mac 原生权限、采集、输入和编码 |

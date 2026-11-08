@@ -21,7 +21,9 @@ const members = computed(() =>
   ),
 );
 function machine(id: string) {
-  return state.machines.find((m) => m.assignedTo === id);
+  return state.machines.find(
+    (m) => m.assignedTo === id || m.pendingAssignmentTo === id,
+  );
 }
 function disable(id: string) {
   const member = state.members.find((m) => m.id === id);
@@ -35,8 +37,7 @@ function disable(id: string) {
 <template>
   <section class="page-heading">
     <div>
-      <p class="eyebrow">A TEAM, INDIVIDUAL SPACES</p>
-      <h1>团队与子账号<span class="greeting-dot">.</span></h1>
+      <h1>团队与子账号</h1>
       <p>每个人一份独立环境，按团队需要灵活分配。</p>
     </div>
     <button class="button primary" @click="openDialog('member')">
@@ -134,7 +135,11 @@ function disable(id: string) {
               <div v-if="machine(member.id)" class="table-device">
                 <Icon name="monitor" :size="17" /><span
                   >{{ machine(member.id)?.code
-                  }}<small>{{ machine(member.id)?.name }}</small></span
+                  }}<small>{{
+                    machine(member.id)?.pendingAssignmentTo
+                      ? "交接处理中"
+                      : machine(member.id)?.name
+                  }}</small></span
                 >
               </div>
               <span v-else class="small-muted">尚未分配</span>

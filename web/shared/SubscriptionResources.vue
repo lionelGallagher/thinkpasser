@@ -23,7 +23,7 @@ const supplier = computed(() =>
 );
 const show = ref(false),
   reference = ref(""),
-  providers = ref<AI[]>(["claude"]),
+  providers = ref<AI[]>([]),
   price = ref(280),
   capacity = ref(1),
   until = ref(""),
@@ -33,7 +33,7 @@ function submit() {
   try {
     registerSubscriptionResource(
       reference.value,
-      providers.value,
+      supplier.value?.canActivateAi ? providers.value : [],
       Math.round(price.value * 100),
       capacity.value,
       new Date(until.value).getTime(),
@@ -49,7 +49,15 @@ function submit() {
 <template>
   <section class="section-heading">
     <div>
-      <h2>卡／订阅侧资源</h2>
+      <h2>
+        {{
+          admin
+            ? "供卡与开通资源"
+            : supplier?.canActivateAi
+              ? "开通服务资源"
+              : "供卡资源"
+        }}
+      </h2>
       <p>记录脱敏供方引用与真实能力，资源不等于客户 AI 已开通。</p>
     </div>
     <button
@@ -58,7 +66,7 @@ function submit() {
       :disabled="supplier?.state !== 'approved'"
       @click="show = true"
     >
-      <Icon name="plus" :size="16" />登记订阅资源
+      <Icon name="plus" :size="16" />登记供货资源
     </button>
   </section>
   <section class="panel table-scroll">
@@ -66,7 +74,7 @@ function submit() {
       <thead>
         <tr>
           <th>供方资源引用</th>
-          <th>支持服务</th>
+          <th>资源用途</th>
           <th>演示供货报价</th>
           <th>可供量／有效期</th>
           <th>验收状态</th>
@@ -82,6 +90,9 @@ function submit() {
             }}</small>
           </td>
           <td>
+            <span v-if="record.subtype === 'payment_card'" class="small-muted"
+              >支付卡资源 · 不含账号开通</span
+            >
             <span
               v-for="provider in record.providers"
               :key="provider"
@@ -129,11 +140,7 @@ function submit() {
       :size="16"
     />不填写完整卡号、CVV或第三方密码。可供量是供方报送的服务能力，不代表官方允许一张卡开通多少账号。
   </div>
-  <BaseModal
-    v-if="show"
-    title="登记卡／订阅侧资源"
-    eyebrow="SUBSCRIPTION RESOURCE"
-    @close="show = false"
+  <BaseModal v-if="show" title="登记卡／订阅侧资源" @close="show = false"
     ><form class="modal-form" @submit.prevent="submit">
       <label class="field"
         >供方脱敏资源引用<input
@@ -142,8 +149,8 @@ function submit() {
           required
           maxlength="100"
       /></label>
-      <div class="field">
-        <span>支持的服务</span
+      <div v-if="supplier?.canActivateAi" class="field">
+        <span>可执行的开通服务</span
         ><label
           v-for="provider in ['claude', 'codex'] as AI[]"
           :key="provider"

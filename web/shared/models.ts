@@ -18,6 +18,9 @@ export interface Member {
   firstLogin: boolean;
 }
 export interface Entitlement {
+  id: string;
+  orderId: string;
+  unitId: string;
   provider: AI;
   state: "preparing" | "available" | "interrupted" | "expired" | "terminated";
   promisedFrom: number;
@@ -37,6 +40,8 @@ export interface Machine {
   leaseStart: number;
   expiresAt: number;
   assignedTo: string | null;
+  pendingAssignmentTo: string | null;
+  waitIntervals: [number, number][];
   state: "online" | "preparing" | "unknown" | "resetting";
   ai: Entitlement[];
   priceMinor: number;
@@ -56,9 +61,9 @@ export interface Product {
   disk: number;
   priceMinor: number;
   available: boolean;
-  badge?: string;
 }
 export interface OrderUnit {
+  entitlementIds: string[];
   id: string;
   aiEmail?: string;
   machineId: string;
@@ -83,6 +88,7 @@ export interface Supplier {
   name: string;
   kind: "computer" | "subscription" | "both";
   selfOperated: boolean;
+  canActivateAi?: boolean;
   state: "applied" | "approved" | "suspended";
   contact: string;
   leadHours: number;
@@ -93,7 +99,9 @@ export interface SupplyTask {
   orderId: string;
   unitId: string;
   machineId: string;
-  kind: "computer_prepare" | "claude" | "codex";
+  kind: "computer_prepare" | "card_supply" | "claude" | "codex";
+  entitlementId?: string;
+  supplierResourceId?: string;
   state: TaskState;
   targetEmail: string;
   createdAt: number;
@@ -120,7 +128,7 @@ export interface Activity {
   tone: "green" | "blue" | "amber";
 }
 export interface DemoState {
-  version: 1;
+  version: 2;
   currentAccountId: string;
   members: Member[];
   machines: Machine[];
@@ -132,6 +140,7 @@ export interface DemoState {
   activities: Activity[];
 }
 export interface SubscriptionResource {
+  subtype: "payment_card" | "activation_service";
   id: string;
   supplierId: string;
   externalRef: string;
@@ -233,3 +242,10 @@ export function proratedRefund(
       settled,
   );
 }
+
+export const TASK_NAME = {
+  computer_prepare: "电脑准备",
+  card_supply: "供卡准备",
+  claude: "Claude Code 开通",
+  codex: "Codex 开通",
+};

@@ -1,0 +1,2216 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:thinkpasser:remote-signaling:v1",
+  "title": "Decoded authenticated JWS payload; not an unsigned network message",
+  "oneOf": [
+    {
+      "type": "object",
+      "properties": {
+        "messageType": {
+          "const": "DeviceSyncRequest"
+        },
+        "messageId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "sentAt": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "body": {
+          "$ref": "#/$defs/DeviceSyncRequest"
+        }
+      },
+      "required": [
+        "messageType",
+        "messageId",
+        "sentAt",
+        "body"
+      ],
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "properties": {
+        "messageType": {
+          "const": "DevicePolicySnapshot"
+        },
+        "messageId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "sentAt": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "body": {
+          "$ref": "#/$defs/DevicePolicySnapshot"
+        }
+      },
+      "required": [
+        "messageType",
+        "messageId",
+        "sentAt",
+        "body"
+      ],
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "properties": {
+        "messageType": {
+          "const": "ClientProof"
+        },
+        "messageId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "sentAt": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "body": {
+          "$ref": "#/$defs/ClientProof"
+        }
+      },
+      "required": [
+        "messageType",
+        "messageId",
+        "sentAt",
+        "body"
+      ],
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "properties": {
+        "messageType": {
+          "const": "SessionReady"
+        },
+        "messageId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "sentAt": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "body": {
+          "$ref": "#/$defs/SessionReady"
+        }
+      },
+      "required": [
+        "messageType",
+        "messageId",
+        "sentAt",
+        "body"
+      ],
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "properties": {
+        "messageType": {
+          "const": "SessionRevoke"
+        },
+        "messageId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "sentAt": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "body": {
+          "$ref": "#/$defs/SessionRevoke"
+        }
+      },
+      "required": [
+        "messageType",
+        "messageId",
+        "sentAt",
+        "body"
+      ],
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "properties": {
+        "messageType": {
+          "const": "CloseAck"
+        },
+        "messageId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "sentAt": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "body": {
+          "$ref": "#/$defs/CloseAck"
+        }
+      },
+      "required": [
+        "messageType",
+        "messageId",
+        "sentAt",
+        "body"
+      ],
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "properties": {
+        "messageType": {
+          "const": "RenewGrant"
+        },
+        "messageId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "sentAt": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "body": {
+          "$ref": "#/$defs/RenewGrant"
+        }
+      },
+      "required": [
+        "messageType",
+        "messageId",
+        "sentAt",
+        "body"
+      ],
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "properties": {
+        "messageType": {
+          "const": "RenewAck"
+        },
+        "messageId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "sentAt": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "body": {
+          "$ref": "#/$defs/RenewAck"
+        }
+      },
+      "required": [
+        "messageType",
+        "messageId",
+        "sentAt",
+        "body"
+      ],
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "properties": {
+        "messageType": {
+          "const": "AgentResult"
+        },
+        "messageId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "sentAt": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "body": {
+          "$ref": "#/$defs/AgentResult"
+        }
+      },
+      "required": [
+        "messageType",
+        "messageId",
+        "sentAt",
+        "body"
+      ],
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "properties": {
+        "messageType": {
+          "const": "ClientHello"
+        },
+        "messageId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "sentAt": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "body": {
+          "$ref": "#/$defs/ClientHello"
+        }
+      },
+      "required": [
+        "messageType",
+        "messageId",
+        "sentAt",
+        "body"
+      ],
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "properties": {
+        "messageType": {
+          "const": "AgentHeartbeat"
+        },
+        "messageId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "sentAt": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "body": {
+          "$ref": "#/$defs/AgentHeartbeat"
+        }
+      },
+      "required": [
+        "messageType",
+        "messageId",
+        "sentAt",
+        "body"
+      ],
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "properties": {
+        "messageType": {
+          "const": "AgentPoll"
+        },
+        "messageId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "sentAt": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "body": {
+          "$ref": "#/$defs/AgentPoll"
+        }
+      },
+      "required": [
+        "messageType",
+        "messageId",
+        "sentAt",
+        "body"
+      ],
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "properties": {
+        "messageType": {
+          "const": "DeviceCommandPayload"
+        },
+        "messageId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "sentAt": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "body": {
+          "$ref": "#/$defs/DeviceCommandPayload"
+        }
+      },
+      "required": [
+        "messageType",
+        "messageId",
+        "sentAt",
+        "body"
+      ],
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "properties": {
+        "messageType": {
+          "const": "AgentPollResult"
+        },
+        "messageId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "sentAt": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "body": {
+          "$ref": "#/$defs/AgentPollResult"
+        }
+      },
+      "required": [
+        "messageType",
+        "messageId",
+        "sentAt",
+        "body"
+      ],
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "properties": {
+        "messageType": {
+          "const": "AgentCommand"
+        },
+        "messageId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "sentAt": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "body": {
+          "$ref": "#/$defs/AgentCommand"
+        }
+      },
+      "required": [
+        "messageType",
+        "messageId",
+        "sentAt",
+        "body"
+      ],
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "properties": {
+        "messageType": {
+          "const": "SessionActivated"
+        },
+        "messageId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "sentAt": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "body": {
+          "$ref": "#/$defs/SessionActivated"
+        }
+      },
+      "required": [
+        "messageType",
+        "messageId",
+        "sentAt",
+        "body"
+      ],
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "properties": {
+        "messageType": {
+          "const": "SessionActivationAck"
+        },
+        "messageId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "sentAt": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "body": {
+          "$ref": "#/$defs/SessionActivationAck"
+        }
+      },
+      "required": [
+        "messageType",
+        "messageId",
+        "sentAt",
+        "body"
+      ],
+      "additionalProperties": false
+    }
+  ],
+  "$defs": {
+    "DeviceSyncRequest": {
+      "type": "object",
+      "properties": {
+        "deviceIdentityId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "bootId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 2048
+        },
+        "agentInstanceId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "sequence": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "lastPolicyVersion": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "lastSessionEpoch": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "activeSessions": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "sessionId": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "connectionId": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "epoch": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 9007199254740991
+              },
+              "connectionGeneration": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 9007199254740991
+              },
+              "deviceIdentityId": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "policyVersion": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 9007199254740991
+              },
+              "state": {
+                "type": "string",
+                "enum": [
+                  "pending",
+                  "active",
+                  "closing"
+                ]
+              }
+            },
+            "required": [
+              "sessionId",
+              "connectionId",
+              "epoch",
+              "connectionGeneration",
+              "deviceIdentityId",
+              "policyVersion",
+              "state"
+            ],
+            "additionalProperties": false
+          },
+          "maxItems": 1000
+        }
+      },
+      "required": [
+        "deviceIdentityId",
+        "bootId",
+        "agentInstanceId",
+        "sequence",
+        "lastPolicyVersion",
+        "lastSessionEpoch",
+        "activeSessions"
+      ],
+      "additionalProperties": false
+    },
+    "DevicePolicySnapshot": {
+      "type": "object",
+      "properties": {
+        "deviceIdentityId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "computerId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "bootId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 2048
+        },
+        "policyVersion": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "sessionEpoch": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "serverTime": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "validUntil": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "leaseExpiresAt": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "allocationId": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "format": "uuid"
+        },
+        "assignmentId": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "format": "uuid"
+        },
+        "leaseVersion": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "assignmentVersion": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "credentialVersion": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "accountAuthVersion": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "challengeId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "challenge": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 2048
+        },
+        "permittedSessions": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "maxItems": 1000
+        },
+        "capabilities": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": [
+              "screen",
+              "input",
+              "system_audio",
+              "clipboard",
+              "files",
+              "export_readonly"
+            ]
+          },
+          "maxItems": 1000
+        }
+      },
+      "required": [
+        "deviceIdentityId",
+        "computerId",
+        "bootId",
+        "policyVersion",
+        "sessionEpoch",
+        "serverTime",
+        "validUntil",
+        "leaseExpiresAt",
+        "allocationId",
+        "assignmentId",
+        "leaseVersion",
+        "assignmentVersion",
+        "credentialVersion",
+        "accountAuthVersion",
+        "challengeId",
+        "challenge",
+        "permittedSessions",
+        "capabilities"
+      ],
+      "additionalProperties": false
+    },
+    "ClientProof": {
+      "type": "object",
+      "properties": {
+        "sessionId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "connectionId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "epoch": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "connectionGeneration": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "deviceIdentityId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "policyVersion": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "challengeId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "nonce": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 2048
+        },
+        "clientKeyThumbprint": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 2048
+        },
+        "channelBinding": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "purpose": {
+          "enum": [
+            "connect",
+            "renew",
+            "resume"
+          ]
+        }
+      },
+      "required": [
+        "sessionId",
+        "connectionId",
+        "epoch",
+        "connectionGeneration",
+        "deviceIdentityId",
+        "policyVersion",
+        "challengeId",
+        "nonce",
+        "clientKeyThumbprint",
+        "channelBinding",
+        "purpose"
+      ],
+      "additionalProperties": false
+    },
+    "SessionReady": {
+      "type": "object",
+      "properties": {
+        "sessionId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "connectionId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "epoch": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "connectionGeneration": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "deviceIdentityId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "policyVersion": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "leaseVersion": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "assignmentVersion": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "credentialVersion": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "accountAuthVersion": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "bootId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 2048
+        },
+        "remoteInstanceId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "challengeId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "clientKeyThumbprint": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 2048
+        },
+        "channelBinding": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "rustdeskAuth": {
+          "const": "passed"
+        },
+        "capabilities": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": [
+              "screen",
+              "input",
+              "system_audio",
+              "clipboard",
+              "files"
+            ]
+          },
+          "maxItems": 1000
+        }
+      },
+      "required": [
+        "sessionId",
+        "connectionId",
+        "epoch",
+        "connectionGeneration",
+        "deviceIdentityId",
+        "policyVersion",
+        "leaseVersion",
+        "assignmentVersion",
+        "credentialVersion",
+        "accountAuthVersion",
+        "bootId",
+        "remoteInstanceId",
+        "challengeId",
+        "clientKeyThumbprint",
+        "channelBinding",
+        "rustdeskAuth",
+        "capabilities"
+      ],
+      "additionalProperties": false
+    },
+    "SessionRevoke": {
+      "type": "object",
+      "properties": {
+        "sessionId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "connectionId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "epoch": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "connectionGeneration": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "deviceIdentityId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "policyVersion": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "commandId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "reason": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 2048
+        },
+        "issuedAt": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "scope": {
+          "enum": [
+            "session",
+            "connection"
+          ]
+        }
+      },
+      "required": [
+        "sessionId",
+        "connectionId",
+        "epoch",
+        "connectionGeneration",
+        "deviceIdentityId",
+        "policyVersion",
+        "commandId",
+        "reason",
+        "issuedAt",
+        "scope"
+      ],
+      "additionalProperties": false
+    },
+    "CloseAck": {
+      "type": "object",
+      "properties": {
+        "sessionId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "connectionId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "epoch": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "connectionGeneration": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "deviceIdentityId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "policyVersion": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "commandId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "bootId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 2048
+        },
+        "inputReleased": {
+          "const": true
+        },
+        "closedChannels": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": [
+              "screen",
+              "input",
+              "system_audio",
+              "clipboard",
+              "files"
+            ]
+          },
+          "uniqueItems": true,
+          "minItems": 5,
+          "maxItems": 5
+        },
+        "closedAt": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "scope": {
+          "enum": [
+            "session",
+            "connection"
+          ]
+        }
+      },
+      "required": [
+        "sessionId",
+        "connectionId",
+        "epoch",
+        "connectionGeneration",
+        "deviceIdentityId",
+        "policyVersion",
+        "commandId",
+        "bootId",
+        "inputReleased",
+        "closedChannels",
+        "closedAt",
+        "scope"
+      ],
+      "additionalProperties": false
+    },
+    "RenewGrant": {
+      "type": "object",
+      "properties": {
+        "sessionId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "connectionId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "epoch": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "connectionGeneration": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "deviceIdentityId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "policyVersion": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "leaseVersion": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "assignmentVersion": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "credentialVersion": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "accountAuthVersion": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "jti": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "grant": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 2048
+        },
+        "expiresAt": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "deliveryChallengeId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "deliveryChallenge": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 2048
+        }
+      },
+      "required": [
+        "sessionId",
+        "connectionId",
+        "epoch",
+        "connectionGeneration",
+        "deviceIdentityId",
+        "policyVersion",
+        "leaseVersion",
+        "assignmentVersion",
+        "credentialVersion",
+        "accountAuthVersion",
+        "jti",
+        "grant",
+        "deliveryChallengeId",
+        "deliveryChallenge",
+        "expiresAt"
+      ],
+      "additionalProperties": false
+    },
+    "RenewAck": {
+      "type": "object",
+      "properties": {
+        "sessionId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "connectionId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "epoch": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "connectionGeneration": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "deviceIdentityId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "policyVersion": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "leaseVersion": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "assignmentVersion": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "credentialVersion": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "accountAuthVersion": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "jti": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "actualExpiresAt": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "bootId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 2048
+        },
+        "deliveryChallengeId": {
+          "type": "string",
+          "format": "uuid"
+        }
+      },
+      "required": [
+        "sessionId",
+        "connectionId",
+        "epoch",
+        "connectionGeneration",
+        "deviceIdentityId",
+        "policyVersion",
+        "leaseVersion",
+        "assignmentVersion",
+        "credentialVersion",
+        "accountAuthVersion",
+        "jti",
+        "deliveryChallengeId",
+        "actualExpiresAt",
+        "bootId"
+      ],
+      "additionalProperties": false
+    },
+    "AgentResult": {
+      "type": "object",
+      "properties": {
+        "eventId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "deviceIdentityId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "commandId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "operationId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "bootId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 2048
+        },
+        "agentInstanceId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "remoteInstanceId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "sequence": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "challengeId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "policyVersion": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "leaseVersion": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "assignmentVersion": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "credentialVersion": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "accountAuthVersion": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "state": {
+          "type": "string",
+          "enum": [
+            "accepted",
+            "effect_reported",
+            "failed",
+            "unknown",
+            "not_configured",
+            "rejected"
+          ]
+        },
+        "probeResults": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ProbeResult"
+          },
+          "maxItems": 1000
+        },
+        "evidenceRef": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 2048
+        },
+        "reasonCode": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 2048
+        },
+        "occurredAt": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        }
+      },
+      "required": [
+        "eventId",
+        "deviceIdentityId",
+        "commandId",
+        "operationId",
+        "bootId",
+        "agentInstanceId",
+        "sequence",
+        "challengeId",
+        "policyVersion",
+        "leaseVersion",
+        "assignmentVersion",
+        "credentialVersion",
+        "accountAuthVersion",
+        "state",
+        "probeResults",
+        "occurredAt"
+      ],
+      "additionalProperties": false
+    },
+    "ProbeResult": {
+      "type": "object",
+      "properties": {
+        "kind": {
+          "type": "string",
+          "enum": [
+            "desktop",
+            "credential_auth",
+            "image",
+            "data_cleanup",
+            "private_logins",
+            "external_isolation"
+          ]
+        },
+        "state": {
+          "type": "string",
+          "enum": [
+            "pass",
+            "fail",
+            "unknown"
+          ]
+        },
+        "evidenceRef": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 2048
+        },
+        "observedAt": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        }
+      },
+      "required": [
+        "kind",
+        "state",
+        "evidenceRef",
+        "observedAt"
+      ],
+      "additionalProperties": false
+    },
+    "ClientHello": {
+      "type": "object",
+      "properties": {
+        "sessionId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "connectionId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "epoch": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "connectionGeneration": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "deviceIdentityId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "policyVersion": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "challengeId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "nonce": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 2048
+        },
+        "clientKeyThumbprint": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 2048
+        },
+        "channelBinding": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "grantJti": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "purpose": {
+          "enum": [
+            "connect",
+            "renew",
+            "resume"
+          ]
+        }
+      },
+      "required": [
+        "sessionId",
+        "connectionId",
+        "epoch",
+        "connectionGeneration",
+        "deviceIdentityId",
+        "policyVersion",
+        "challengeId",
+        "nonce",
+        "clientKeyThumbprint",
+        "channelBinding",
+        "grantJti",
+        "purpose"
+      ],
+      "additionalProperties": false
+    },
+    "RemoteGrant": {
+      "type": "object",
+      "properties": {
+        "iss": {
+          "type": "string",
+          "format": "uri"
+        },
+        "aud": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 4096
+        },
+        "sub": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "tenantId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "deviceIdentityId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "leaseId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "allocationId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "assignmentId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "sid": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "epoch": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "jti": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "iat": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "nbf": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "exp": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "leaseExpiresAtMs": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "leaseVersion": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "assignmentVersion": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "credentialVersion": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "accountAuthVersion": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "cnf": {
+          "type": "object",
+          "properties": {
+            "jkt": {
+              "type": "string",
+              "pattern": "^[A-Za-z0-9_-]{43}$"
+            }
+          },
+          "required": [
+            "jkt"
+          ],
+          "additionalProperties": false
+        },
+        "capabilities": {
+          "type": "array",
+          "items": {
+            "enum": [
+              "screen",
+              "input",
+              "system_audio",
+              "clipboard",
+              "files"
+            ]
+          },
+          "uniqueItems": true,
+          "minItems": 1,
+          "maxItems": 5
+        }
+      },
+      "required": [
+        "iss",
+        "aud",
+        "sub",
+        "tenantId",
+        "deviceIdentityId",
+        "leaseId",
+        "allocationId",
+        "assignmentId",
+        "sid",
+        "epoch",
+        "jti",
+        "iat",
+        "nbf",
+        "exp",
+        "leaseExpiresAtMs",
+        "leaseVersion",
+        "assignmentVersion",
+        "credentialVersion",
+        "accountAuthVersion",
+        "cnf",
+        "capabilities"
+      ],
+      "additionalProperties": false
+    },
+    "JwsProtectedHeader": {
+      "type": "object",
+      "properties": {
+        "alg": {
+          "const": "Ed25519"
+        },
+        "kid": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 4096
+        },
+        "typ": {
+          "enum": [
+            "tp-remote-grant-v1+jwt",
+            "tp-device-message-v1+jws",
+            "tp-client-message-v1+jws",
+            "tp-policy-message-v1+jws"
+          ]
+        }
+      },
+      "required": [
+        "alg",
+        "kid",
+        "typ"
+      ],
+      "additionalProperties": false
+    },
+    "AgentHeartbeat": {
+      "type": "object",
+      "properties": {
+        "bootId": {
+          "type": "string"
+        },
+        "agentInstanceId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "sequence": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "remoteProcessId": {
+          "type": "string"
+        },
+        "desktopProbe": {
+          "type": "string",
+          "enum": [
+            "pass",
+            "fail",
+            "unknown"
+          ]
+        },
+        "credentialVersion": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        }
+      },
+      "required": [
+        "bootId",
+        "agentInstanceId",
+        "sequence",
+        "desktopProbe"
+      ],
+      "additionalProperties": false
+    },
+    "AgentPoll": {
+      "type": "object",
+      "properties": {
+        "bootId": {
+          "type": "string"
+        },
+        "agentInstanceId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "sequence": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        }
+      },
+      "required": [
+        "bootId",
+        "agentInstanceId",
+        "sequence"
+      ],
+      "additionalProperties": false
+    },
+    "DeviceCommandPayload": {
+      "type": "object",
+      "properties": {
+        "commandId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "operationId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "computerId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "kind": {
+          "type": "string",
+          "enum": [
+            "restart_remote",
+            "reboot_os",
+            "rotate_credential",
+            "close_session",
+            "reset_machine",
+            "verify_machine"
+          ]
+        },
+        "issuedAt": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "expiresAt": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "expectedBootId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 2048
+        },
+        "expectedRemoteInstanceId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "policyVersion": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "leaseVersion": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "assignmentVersion": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "credentialVersion": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "challengeId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "payload": {
+          "type": "object"
+        },
+        "accountAuthVersion": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        }
+      },
+      "required": [
+        "commandId",
+        "operationId",
+        "computerId",
+        "kind",
+        "issuedAt",
+        "expiresAt",
+        "expectedBootId",
+        "policyVersion",
+        "leaseVersion",
+        "assignmentVersion",
+        "credentialVersion",
+        "challengeId",
+        "payload",
+        "accountAuthVersion"
+      ],
+      "additionalProperties": false,
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "kind": {
+                "const": "restart_remote"
+              }
+            },
+            "required": [
+              "kind"
+            ]
+          },
+          "then": {
+            "properties": {
+              "payload": {
+                "type": "object",
+                "properties": {},
+                "required": [],
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "kind": {
+                "const": "reboot_os"
+              }
+            },
+            "required": [
+              "kind"
+            ]
+          },
+          "then": {
+            "properties": {
+              "payload": {
+                "type": "object",
+                "properties": {},
+                "required": [],
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "kind": {
+                "const": "rotate_credential"
+              }
+            },
+            "required": [
+              "kind"
+            ]
+          },
+          "then": {
+            "properties": {
+              "payload": {
+                "type": "object",
+                "properties": {
+                  "targetCredentialVersion": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 9007199254740991
+                  },
+                  "credentialDeliveryId": {
+                    "type": "string",
+                    "format": "uuid"
+                  }
+                },
+                "required": [
+                  "targetCredentialVersion",
+                  "credentialDeliveryId"
+                ],
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "kind": {
+                "const": "close_session"
+              }
+            },
+            "required": [
+              "kind"
+            ]
+          },
+          "then": {
+            "properties": {
+              "payload": {
+                "type": "object",
+                "properties": {
+                  "sessionId": {
+                    "type": "string",
+                    "format": "uuid"
+                  },
+                  "epoch": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 9007199254740991
+                  },
+                  "connectionId": {
+                    "type": "string",
+                    "format": "uuid"
+                  }
+                },
+                "required": [
+                  "sessionId",
+                  "epoch",
+                  "connectionId"
+                ],
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "kind": {
+                "const": "reset_machine"
+              }
+            },
+            "required": [
+              "kind"
+            ]
+          },
+          "then": {
+            "properties": {
+              "payload": {
+                "type": "object",
+                "properties": {
+                  "templateVersion": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 2048
+                  },
+                  "eraseScope": {
+                    "enum": [
+                      "customer_volumes",
+                      "full_machine"
+                    ]
+                  },
+                  "approvalEvidenceRef": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 2048
+                  }
+                },
+                "required": [
+                  "templateVersion",
+                  "eraseScope",
+                  "approvalEvidenceRef"
+                ],
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "kind": {
+                "const": "verify_machine"
+              }
+            },
+            "required": [
+              "kind"
+            ]
+          },
+          "then": {
+            "properties": {
+              "payload": {
+                "type": "object",
+                "properties": {
+                  "probeKinds": {
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "enum": [
+                        "desktop",
+                        "credential_auth",
+                        "image",
+                        "data_cleanup",
+                        "private_logins",
+                        "external_isolation"
+                      ]
+                    },
+                    "minItems": 1,
+                    "uniqueItems": true,
+                    "maxItems": 6
+                  }
+                },
+                "required": [
+                  "probeKinds"
+                ],
+                "additionalProperties": false
+              }
+            }
+          }
+        }
+      ]
+    },
+    "AgentPollResult": {
+      "type": "object",
+      "properties": {
+        "command": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/AgentCommand"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "serverTime": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        }
+      },
+      "required": [
+        "command",
+        "serverTime"
+      ],
+      "additionalProperties": false
+    },
+    "AgentCommand": {
+      "type": "object",
+      "properties": {
+        "commandId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "kind": {
+          "type": "string",
+          "enum": [
+            "restart_remote",
+            "reboot_os",
+            "rotate_credential",
+            "close_session",
+            "reset_machine",
+            "verify_machine"
+          ]
+        },
+        "expiresAt": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "envelope": {
+          "type": "string",
+          "description": "平台签名 compact JWS；解码消息 body 为 DeviceCommandPayload，外层 commandId/kind/expiresAt 必须与签名载荷一致。"
+        }
+      },
+      "required": [
+        "commandId",
+        "kind",
+        "expiresAt",
+        "envelope"
+      ],
+      "additionalProperties": false
+    },
+    "SessionActivated": {
+      "type": "object",
+      "properties": {
+        "sessionId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "connectionId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "epoch": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "connectionGeneration": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "deviceIdentityId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "policyVersion": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "activationId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "leaseVersion": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "assignmentVersion": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "credentialVersion": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "accountAuthVersion": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "jti": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "expiresAt": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "capabilities": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": [
+              "screen",
+              "input",
+              "system_audio",
+              "clipboard",
+              "files"
+            ]
+          },
+          "maxItems": 1000
+        }
+      },
+      "required": [
+        "sessionId",
+        "connectionId",
+        "epoch",
+        "connectionGeneration",
+        "deviceIdentityId",
+        "policyVersion",
+        "activationId",
+        "leaseVersion",
+        "assignmentVersion",
+        "credentialVersion",
+        "accountAuthVersion",
+        "jti",
+        "expiresAt",
+        "capabilities"
+      ],
+      "additionalProperties": false
+    },
+    "SessionActivationAck": {
+      "type": "object",
+      "properties": {
+        "sessionId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "connectionId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "epoch": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "connectionGeneration": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "deviceIdentityId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "policyVersion": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "activationId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "bootId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 2048
+        },
+        "actualExpiresAt": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "readyAt": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "capabilities": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": [
+              "screen",
+              "input",
+              "system_audio",
+              "clipboard",
+              "files"
+            ]
+          },
+          "maxItems": 1000
+        }
+      },
+      "required": [
+        "sessionId",
+        "connectionId",
+        "epoch",
+        "connectionGeneration",
+        "deviceIdentityId",
+        "policyVersion",
+        "activationId",
+        "bootId",
+        "actualExpiresAt",
+        "readyAt",
+        "capabilities"
+      ],
+      "additionalProperties": false
+    }
+  }
+}

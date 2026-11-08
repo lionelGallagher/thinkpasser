@@ -49,7 +49,15 @@ const nav = computed(() => {
   if (portal === "supplier")
     return [
       { id: "overview", name: "工作台", icon: "overview" },
-      { id: "resources", name: "我的资源", icon: "server" },
+      {
+        id: "resources",
+        name:
+          state.suppliers.find((s) => s.id === ui.supplierId)?.kind ===
+          "subscription"
+            ? "供卡与开通资源"
+            : "我的电脑资源",
+        icon: "server",
+      },
       { id: "tasks", name: "供货任务", icon: "package" },
       { id: "settlement", name: "结算记录", icon: "wallet" },
       { id: "settings", name: "供应商资料", icon: "settings" },
@@ -58,11 +66,18 @@ const nav = computed(() => {
     return [
       { id: "machines", name: "我的电脑", icon: "monitor" },
       { id: "desktop", name: "远控工作区", icon: "terminal" },
+      ...(isMain.value
+        ? [
+            { id: "marketplace", name: "选购电脑", icon: "boxes" },
+            { id: "orders", name: "我的订单", icon: "orders" },
+            { id: "team", name: "团队与子账号", icon: "users" },
+          ]
+        : []),
       { id: "accounts", name: "账号管理", icon: "users" },
       { id: "settings", name: "客户端设置", icon: "settings" },
     ];
   return [
-    { id: "overview", name: "工作空间", icon: "overview" },
+    { id: "overview", name: "控制台", icon: "overview" },
     { id: "marketplace", name: "选购电脑", icon: "boxes" },
     { id: "machines", name: "我的电脑", icon: "monitor" },
     ...(isMain.value
@@ -77,13 +92,7 @@ const nav = computed(() => {
 const currentPage = computed(
   () => nav.value.find((n) => n.id === route.value)?.name || "工作空间",
 );
-const title = computed(() =>
-  portal === "admin"
-    ? "Thinkpasser Console"
-    : portal === "supplier"
-      ? "Thinkpasser Partners"
-      : "Thinkpasser",
-);
+const title = "Thinkpasser";
 function navigate(id: string) {
   location.hash = id;
   ui.sidebarOpen = false;
@@ -96,7 +105,7 @@ onMounted(() => window.addEventListener("hashchange", syncRoute));
 onBeforeUnmount(() => window.removeEventListener("hashchange", syncRoute));
 const forbidden = computed(
   () =>
-    portal === "web" &&
+    (portal === "web" || portal === "desktop") &&
     !isMain.value &&
     ["team", "orders", "marketplace"].includes(route.value),
 );
@@ -133,35 +142,10 @@ const forbidden = computed(
               ? "平台运营中心"
               : portal === "supplier"
                 ? "供货合作伙伴"
-                : "YOUR NEXT WORKSPACE"
+                : "独享电脑"
           }}</small></span
         ></a
       >
-      <div class="workspace-select">
-        <span class="workspace-avatar">{{
-          portal === "admin" ? "T" : portal === "supplier" ? "P" : "S"
-        }}</span>
-        <div>
-          <strong>{{
-            portal === "admin"
-              ? "平台内部工作区"
-              : portal === "supplier"
-                ? "合作伙伴工作区"
-                : "Studio 工作空间"
-          }}</strong
-          ><span>{{ portalLabel(portal) }}</span>
-        </div>
-        <Icon name="chevronDown" :size="14" />
-      </div>
-      <p class="nav-label">
-        {{
-          portal === "web"
-            ? "WORKSPACE"
-            : portal === "desktop"
-              ? "DESKTOP"
-              : "CONSOLE"
-        }}
-      </p>
       <nav class="main-nav" aria-label="主要导航">
         <a
           v-for="item in nav"
@@ -177,29 +161,8 @@ const forbidden = computed(
         >
       </nav>
       <div class="sidebar-bottom">
-        <div class="sidebar-tip">
-          <span class="tip-icon"
-            ><Icon
-              :name="portal === 'supplier' ? 'package' : 'sparkles'" /></span
-          ><strong>{{
-            portal === "supplier"
-              ? "让每次供货更简单"
-              : "你的下一台电脑，在这里"
-          }}</strong>
-          <p>
-            {{
-              portal === "supplier"
-                ? "统一任务、交付和结算，专注做好每一份服务。"
-                : "独享环境，自由选择 AI 工具。把精力留给值得创造的事。"
-            }}
-          </p>
-          <a :href="portal === 'supplier' ? '#tasks' : '/web/#marketplace'"
-            >{{ portal === "supplier" ? "查看供货任务" : "探索电脑配置" }}
-            <Icon name="arrowRight" :size="14"
-          /></a>
-        </div>
         <a class="support-link" href="/web/#tickets"
-          ><Icon name="help" /><span>需要帮助？联系支持</span
+          ><Icon name="help" /><span>服务支持</span
           ><Icon name="external" :size="13"
         /></a>
         <div class="version-row">
@@ -234,22 +197,6 @@ const forbidden = computed(
           }}</strong>
         </div>
         <div class="topbar-actions">
-          <a class="quiet-link" href="/web/#marketplace"
-            ><Icon name="globe" :size="15" /><span>产品网站</span></a
-          ><span class="topbar-separator"></span
-          ><button
-            class="icon-button notification-button"
-            aria-label="查看通知"
-            @click="
-              notify(
-                '演示通知：你有 ' +
-                  state.tasks.filter((t) => t.state === 'reported').length +
-                  ' 项供货结果待验收',
-              )
-            "
-          >
-            <Icon name="bell" /><i></i>
-          </button>
           <div
             v-if="portal === 'web' || portal === 'desktop'"
             class="account-menu"
@@ -303,17 +250,21 @@ const forbidden = computed(
       <div class="demo-notice">
         <span><Icon name="activity" :size="14" /> 交互演示</span>
         <p>示例数据仅保存在本机，不产生真实收款、订阅开通或远控操作。</p>
-        <div class="portal-links">
-          <a href="/web/" :class="{ selected: portal === 'web' }">客户端网页</a
-          ><a href="/admin/" :class="{ selected: portal === 'admin' }">管理端</a
-          ><a href="/supplier/" :class="{ selected: portal === 'supplier' }"
-            >供应商端</a
-          ><a
-            href="/client/preview/"
-            :class="{ selected: portal === 'desktop' }"
-            >桌面预览</a
-          >
-        </div>
+        <details class="portal-switch">
+          <summary>切换演示端</summary>
+          <div class="portal-links">
+            <a href="/web/" :class="{ selected: portal === 'web' }">用户端</a
+            ><a href="/admin/" :class="{ selected: portal === 'admin' }"
+              >管理端</a
+            ><a href="/supplier/" :class="{ selected: portal === 'supplier' }"
+              >供应商端</a
+            ><a
+              href="/client/preview/"
+              :class="{ selected: portal === 'desktop' }"
+              >桌面预览</a
+            >
+          </div>
+        </details>
       </div>
       <main
         id="main-content"
@@ -363,8 +314,7 @@ const forbidden = computed(
         </template>
       </main>
       <footer class="page-footer">
-        <span>© {{ new Date().getFullYear() }} Thinkpasser</span
-        ><span>独享电脑 · 连接更多可能</span
+        <span>© {{ new Date().getFullYear() }} Thinkpasser</span><span></span
         ><a href="/web/#tickets">服务支持 <Icon name="arrowUp" :size="12" /></a>
       </footer>
     </div>

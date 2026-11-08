@@ -57,12 +57,8 @@ function cancel(id: string) {
 <template>
   <section class="page-heading">
     <div>
-      <p class="eyebrow">
-        {{ admin ? "ORDER & DELIVERY OPERATIONS" : "EVERY ORDER, CLEARLY" }}
-      </p>
       <h1>
-        {{ admin ? "订单与交付" : "我的订单"
-        }}<span class="greeting-dot">.</span>
+        {{ admin ? "订单与交付" : "我的订单" }}
       </h1>
       <p>
         {{

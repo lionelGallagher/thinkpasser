@@ -57,22 +57,7 @@ function submit() {
 </script>
 <template>
   <div class="auth-layout">
-    <section class="auth-story">
-      <span class="small-overline">A SPACE OF YOUR OWN</span>
-      <h1>好想法，<br />值得一个好环境。</h1>
-      <p>一台独享电脑，一套顺手的工具。<br />从任何地方，继续创造。</p>
-      <div class="auth-story-lines">
-        <span><Icon name="monitor" :size="19" />Windows / Mac 独享电脑</span
-        ><span
-          ><Icon name="sparkles" :size="19" />Claude Code、Codex 自由搭配</span
-        ><span
-          ><Icon name="shield" :size="19" />平台身份与机器凭据独立管理</span
-        >
-      </div>
-      <span class="auth-story-bottom">THINKPASSER / YOUR NEXT WORKSPACE</span>
-    </section>
     <section class="auth-form-panel">
-      <p class="eyebrow">WELCOME TO THINKPASSER</p>
       <h2>{{ register ? "创建工作空间" : "登录你的工作空间" }}</h2>
       <p class="auth-subtitle">当前为界面演示，不会发送邮件或创建真实登录。</p>
       <div v-if="!register" class="segmented">
