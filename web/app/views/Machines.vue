@@ -9,6 +9,8 @@ import {
   state,
   currentAccount,
   isMain,
+  isTeam,
+  confirmPersonalActivation,
   myMachines,
   visibleMachines,
   openDialog,
@@ -22,6 +24,7 @@ import {
   AI_NAME,
   COUNTRY,
   canConnect,
+  canExport,
   phase,
   remaining,
   date,
@@ -31,7 +34,7 @@ const props = defineProps<{ desktop?: boolean }>();
 const tab = ref("mine"),
   search = ref("");
 const machines = computed(() =>
-  (tab.value === "team" && !props.desktop
+  (isTeam.value && tab.value === "team"
     ? visibleMachines.value
     : myMachines.value
   ).filter(
@@ -56,16 +59,17 @@ function connect(m: Machine) {
       <h1>我的电脑</h1>
       <p>你的环境、你的工具，随时接着上次的工作继续。</p>
     </div>
-    <a v-if="isMain" class="button primary" href="/web/#marketplace"
+    <a v-if="isMain" class="button primary" href="#marketplace"
       ><Icon name="plus" :size="17" />选购电脑</a
     >
   </section>
   <div class="filter-bar">
     <div class="segmented">
       <button :class="{ selected: tab === 'mine' }" @click="tab = 'mine'">
-        分配给我 <span>{{ myMachines.length }}</span></button
+        {{ isTeam ? "分配给我" : "全部电脑" }}
+        <span>{{ myMachines.length }}</span></button
       ><button
-        v-if="isMain && !desktop"
+        v-if="isMain && isTeam"
         :class="{ selected: tab === 'team' }"
         @click="tab = 'team'"
       >
@@ -204,9 +208,18 @@ function connect(m: Machine) {
       <div class="machine-actions">
         <button
           v-if="
-            phase(machine, now) === 'export_only' &&
-            machine.assignedTo === currentAccount.id
+            !isTeam &&
+            machine.state === 'online' &&
+            phase(machine, now) === 'desktop' &&
+            !machine.assignedTo
           "
+          class="button primary"
+          @click="confirmPersonalActivation(machine.id)"
+        >
+          切换到这台电脑
+        </button>
+        <button
+          v-if="canExport(machine, currentAccount, now)"
           class="button primary"
           @click="safely(() => downloadExport(machine.id))"
         >
@@ -265,11 +278,7 @@ function connect(m: Machine) {
           : '请联系团队主账号，为你分配一台独享电脑。'
     "
     icon="monitor"
-    ><button
-      v-if="isMain && !desktop"
-      class="button primary"
-      @click="tab = 'team'"
-    >
+    ><button v-if="isMain" class="button primary" @click="tab = 'team'">
       查看团队资源
     </button></EmptyState
   >

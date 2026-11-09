@@ -67,7 +67,13 @@ import {
   resetDemo,
   switchAccount,
   openDesktop,
+  createMember,
+  openDialog,
+  unassign,
+  assign,
+  completeDemoHandoff,
 } from "../shared/store";
+import { products } from "../shared/catalog";
 let wrapper: VueWrapper | undefined;
 async function settle() {
   await flushPromises();
@@ -88,7 +94,7 @@ function app(portal = "web", route = "overview") {
 beforeEach(() => {
   localStorage.clear();
   sessionStorage.clear();
-  resetDemo();
+  resetDemo("team");
   document.body.dataset.portal = "web";
   location.hash = "overview";
   vi.spyOn(HTMLDialogElement.prototype, "showModal").mockImplementation(
@@ -106,6 +112,106 @@ afterEach(() => {
   vi.useRealTimers();
 });
 describe("四端组件交互", () => {
+  it("桌面团队主账号可看到待分配资源，个人仍无此入口", async () => {
+    app("desktop", "machines");
+    await settle();
+    await button("团队资源").trigger("click");
+    expect(wrapper!.findAll(".machine-card")).toHaveLength(5);
+    expect(wrapper!.text()).toContain("分配电脑");
+  });
+  it("开通团队的实际入口保留已有电脑和订单", async () => {
+    resetDemo("personal");
+    app("web", "settings");
+    await settle();
+    const before = JSON.stringify({
+      machines: state.machines,
+      orders: state.orders,
+    });
+    await button("开通团队空间").trigger("click");
+    await settle();
+    expect(state.workspaceKind).toBe("team");
+    expect(wrapper!.find(".main-nav").text()).toContain("团队与子账号");
+    expect(
+      JSON.stringify({ machines: state.machines, orders: state.orders }),
+    ).toBe(before);
+  });
+  it("商品价格变化会取消已勾选的费用确认", async () => {
+    app("web", "marketplace");
+    await settle();
+    await wrapper!.find(".product-price .button").trigger("click");
+    await settle();
+    await wrapper!.find(".consent input").setValue(true);
+    products[0]!.priceMinor += 1000;
+    await nextTick();
+    expect(
+      document.querySelector<HTMLInputElement>(".consent input")!.checked,
+    ).toBe(false);
+    const count = state.orders.length;
+    await wrapper!.find(".checkout-layout").trigger("submit");
+    expect(state.orders).toHaveLength(count);
+    expect(wrapper!.find(".form-error").text()).toContain("确认");
+  });
+  it("续订展示原目标账号，不再要求生成新邮箱", async () => {
+    app("web", "machines");
+    await settle();
+    openDialog("checkout", "m-01", "renewal");
+    await settle();
+    expect(wrapper!.find("dialog").text()).toContain("续订原账号");
+    expect(wrapper!.find("dialog").text()).toContain(
+      "workspace-m-01@example.invalid",
+    );
+    expect(wrapper!.find('dialog input[type="email"]').exists()).toBe(false);
+  });
+  it("收回确认后分配变化，不能误收回后来新分配的机器", async () => {
+    app("web", "team");
+    await settle();
+    const row = wrapper!
+      .findAll("tbody tr")
+      .find((r) => r.text().includes("lin@example.invalid"))!;
+    await row
+      .findAll("button")
+      .find((b) => b.text().trim() === "收回")!
+      .trigger("click");
+    unassign("m-02");
+    assign("m-03", "a-lin", "preserve_files");
+    completeDemoHandoff("m-03");
+    await button("确认").trigger("click");
+    expect(state.machines.find((m) => m.id === "m-03")!.assignedTo).toBe(
+      "a-lin",
+    );
+    expect(wrapper!.text()).toContain("分配已变化");
+  });
+  it.each(["web", "desktop"])(
+    "%s个人界面不显示主子账号和团队分配",
+    async (portal) => {
+      resetDemo("personal");
+      app(portal, "machines");
+      await settle();
+      expect(wrapper!.text()).toContain("个人账号");
+      expect(wrapper!.find(".main-nav").text()).not.toContain("团队与子账号");
+      expect(wrapper!.find(".content").text()).not.toContain("分配给我");
+      expect(wrapper!.find(".content").text()).not.toContain("团队资源");
+      expect(wrapper!.findAll(".machine-card")).toHaveLength(1);
+    },
+  );
+  it("新子账号先改密，不能直接使用其他业务页面", async () => {
+    createMember("新同事", "first@example.invalid", "temporary-password");
+    switchAccount(state.members.at(-1)!.id);
+    app("web", "machines");
+    await settle();
+    expect(wrapper!.text()).toContain("首次登录需要修改密码");
+    expect(wrapper!.find(".profile-password").exists()).toBe(true);
+    expect(wrapper!.findAll(".machine-card")).toHaveLength(0);
+  });
+  it("已停用账号不能继续停留业务页面", async () => {
+    switchAccount("a-lin");
+    app("web", "machines");
+    await settle();
+    state.members.find((m) => m.id === "a-lin")!.enabled = false;
+    await nextTick();
+    expect(wrapper!.text()).toContain("账号已停用");
+    expect(wrapper!.findAll(".machine-card")).toHaveLength(0);
+  });
   it("桌面主账号可选购，切为子账号后禁止购买页面", async () => {
     app("desktop", "marketplace");
     await settle();

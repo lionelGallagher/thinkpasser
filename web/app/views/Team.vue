@@ -33,6 +33,24 @@ function disable(id: string) {
     member.enabled ? "演示账号已启用" : "演示账号已停用；真实撤权待后端执行",
   );
 }
+function confirmReclaim(accountId: string, label: string) {
+  const target = machine(accountId);
+  if (!target) return;
+  const machineId = target.id,
+    version = target.leaseVersion;
+  askConfirm("收回 " + label + " 的电脑？保留文件环境并撤销原连接授权。", () =>
+    safely(() => {
+      const current = state.machines.find((m) => m.id === machineId);
+      if (
+        !current ||
+        current.leaseVersion !== version ||
+        current.assignedTo !== accountId
+      )
+        throw new Error("分配已变化，请重新确认");
+      unassign(machineId);
+    }),
+  );
+}
 </script>
 <template>
   <section class="page-heading">
@@ -155,14 +173,7 @@ function disable(id: string) {
                 ><button
                   v-if="machine(member.id)"
                   class="text-link muted"
-                  @click="
-                    askConfirm(
-                      '收回 ' +
-                        member.name +
-                        ' 的电脑？将保留文件环境并撤销原连接授权。',
-                      () => safely(() => unassign(machine(member.id)!.id)),
-                    )
-                  "
+                  @click="confirmReclaim(member.id, member.name)"
                 >
                   收回</button
                 ><button

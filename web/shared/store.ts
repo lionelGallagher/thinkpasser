@@ -5,6 +5,8 @@ import {
   AI_NAME,
   DAY,
   canConnect,
+  canExport,
+  occupiesAccount,
   phase,
   type AI,
   type DemoState,
@@ -12,9 +14,11 @@ import {
   type Product,
   type Portal,
 } from "./models";
-export const STORAGE_KEY = "thinkpasser.interactive-demo.v2";
+export const STORAGE_KEY = "thinkpasser.interactive-demo.v3";
 const id = (prefix: string) => prefix + "-" + crypto.randomUUID().slice(0, 8);
-function initialState(): DemoState {
+function initialState(
+  workspaceKind: DemoState["workspaceKind"] = "personal",
+): DemoState {
   const now = Date.now();
   const machine = (
     pid: string,
@@ -38,6 +42,8 @@ function initialState(): DemoState {
       leaseStart: now - (30 - days) * DAY,
       expiresAt: now + days * DAY,
       assignedTo,
+      exportOwnerId: assignedTo,
+      customerOwned: true,
       pendingAssignmentTo: null,
       waitIntervals: [],
       state: "online",
@@ -52,6 +58,10 @@ function initialState(): DemoState {
         unitId:
           mid === "m-01" ? "u-01" : mid === "m-05" ? "u-05" : "seed-" + mid,
         provider,
+        targetEmail:
+          mid === "m-05"
+            ? "workspace@example.invalid"
+            : "workspace-" + mid + "@example.invalid",
         state: "available",
         promisedFrom: now - 10 * DAY,
         promisedUntil: now + days * DAY,
@@ -76,8 +86,9 @@ function initialState(): DemoState {
   machines[4]!.ai[0]!.state = "preparing";
   machines[4]!.ai[0]!.promisedFrom = 0;
   machines[4]!.ai[0]!.promisedUntil = 0;
-  return {
-    version: 2,
+  const initial: DemoState = {
+    version: 3,
+    workspaceKind,
     subscriptionResources: [
       {
         id: "sr-ai-01",
@@ -292,6 +303,15 @@ function initialState(): DemoState {
       },
     ],
   };
+  if (workspaceKind === "personal") {
+    initial.members = initial.members.slice(0, 1);
+    initial.machines = initial.machines.slice(0, 1);
+    initial.orders = initial.orders.slice(0, 1);
+    initial.tasks = initial.tasks.filter((task) => task.kind === "card_supply");
+    initial.tickets = [];
+    initial.activities = initial.activities.slice(0, 1);
+  }
+  return initial;
 }
 function load(): DemoState {
   try {
@@ -299,7 +319,8 @@ function load(): DemoState {
     if (value) {
       const data = JSON.parse(value);
       if (
-        data.version === 2 &&
+        data.version === 3 &&
+        ["personal", "team"].includes(data.workspaceKind) &&
         Array.isArray(data.members) &&
         Array.isArray(data.machines) &&
         Array.isArray(data.tasks) &&
@@ -331,13 +352,27 @@ export const currentAccount = computed(
 export const myMachines = computed(() =>
   state.machines.filter(
     (m) =>
+      (!isTeam.value &&
+        currentAccount.value.role === "main" &&
+        m.customerOwned !== false) ||
       m.assignedTo === currentAccount.value.id ||
-      m.pendingAssignmentTo === currentAccount.value.id,
+      m.pendingAssignmentTo === currentAccount.value.id ||
+      canExport(m, currentAccount.value),
   ),
+);
+export const isTeam = computed(() => state.workspaceKind === "team");
+export const accountLabel = computed(() =>
+  !isTeam.value
+    ? "个人账号"
+    : currentAccount.value.role === "main"
+      ? "主账号"
+      : "子账号",
 );
 export const isMain = computed(() => currentAccount.value.role === "main");
 export const visibleMachines = computed(() =>
-  isMain.value ? state.machines : myMachines.value,
+  isMain.value
+    ? state.machines.filter((m) => m.customerOwned !== false)
+    : myMachines.value,
 );
 export const ui = reactive({
   dialog: null as
@@ -390,7 +425,18 @@ export function closeDialog() {
 }
 export function askConfirm(message: string, action: () => void) {
   ui.targetId = message;
-  ui.confirmAction = action;
+  const actorId = state.currentAccountId;
+  const workspaceKind = state.workspaceKind;
+  ui.confirmAction = () => {
+    if (
+      state.currentAccountId !== actorId ||
+      state.workspaceKind !== workspaceKind ||
+      !currentAccount.value.enabled ||
+      currentAccount.value.firstLogin
+    )
+      throw new Error("操作账号已变化，请重新确认");
+    action();
+  };
   ui.dialog = "confirm";
 }
 export function switchAccount(accountId: string) {
@@ -399,7 +445,7 @@ export function switchAccount(accountId: string) {
   state.currentAccountId = accountId;
   ui.activeMachineId = "";
   ui.sidebarOpen = false;
-  ui.dialog = null;
+  closeDialog();
   notify(
     "已切换到 " +
       member.name +
@@ -408,17 +454,23 @@ export function switchAccount(accountId: string) {
   );
   location.hash = "machines";
 }
-export function resetDemo() {
+export function resetDemo(
+  workspaceKind: DemoState["workspaceKind"] = state.workspaceKind,
+) {
   resetCatalog();
   ui.supplierId = "s-compute";
   ui.sidebarOpen = false;
-  Object.assign(state, initialState());
+  Object.assign(state, initialState(workspaceKind));
   ui.activeMachineId = "";
   closeDialog();
   notify("演示数据已恢复");
 }
 function mainOnly() {
-  if (!isMain.value || !currentAccount.value.enabled)
+  if (
+    !isMain.value ||
+    !currentAccount.value.enabled ||
+    currentAccount.value.firstLogin
+  )
     throw new Error("此操作需要主账号");
 }
 function log(
@@ -450,6 +502,7 @@ export function openDesktop(machineId: string) {
 }
 export function createMember(name: string, email: string, password: string) {
   mainOnly();
+  if (!isTeam.value) throw new Error("请先开通团队空间，再创建子账号");
   if (!name.trim() || !email.includes("@") || password.length < 12)
     throw new Error("请填写姓名、有效邮箱和至少12位初始密码");
   if (state.members.some((m) => m.email.toLowerCase() === email.toLowerCase()))
@@ -478,10 +531,7 @@ export function assign(
     throw new Error("电脑尚未交付、已到期或不可用");
   if (
     state.machines.some(
-      (other) =>
-        other.id !== machineId &&
-        (other.assignedTo === accountId ||
-          other.pendingAssignmentTo === accountId),
+      (other) => other.id !== machineId && occupiesAccount(other, accountId),
     )
   )
     throw new Error("该账号已有一台电脑，请先收回原分配");
@@ -510,14 +560,12 @@ export function completeDemoHandoff(machineId: string) {
     throw new Error("交接条件不满足，保持待核验");
   if (
     state.machines.some(
-      (other) =>
-        other.id !== m.id &&
-        (other.assignedTo === target.id ||
-          other.pendingAssignmentTo === target.id),
+      (other) => other.id !== m.id && occupiesAccount(other, target.id),
     )
   )
     throw new Error("目标账号存在其他分配");
   m.assignedTo = target.id;
+  m.exportOwnerId = target.id;
   m.pendingAssignmentTo = null;
   m.credentialVersion++;
   m.leaseVersion++;
@@ -528,6 +576,8 @@ export function unassign(machineId: string) {
   mainOnly();
   const m = getMachine(machineId);
   if (m.state === "resetting") throw new Error("重置已开始，请先核验操作结果");
+  m.exportOwnerId =
+    phase(m) === "export_only" ? (m.exportOwnerId ?? m.assignedTo) : null;
   m.assignedTo = null;
   m.pendingAssignmentTo = null;
   m.credentialVersion++;
@@ -554,25 +604,38 @@ export function createOrder(
   email: string | string[],
 ): OrderResult {
   mainOnly();
+  if (
+    new Set(ai).size !== ai.length ||
+    ai.some((provider) => !["claude", "codex"].includes(provider))
+  )
+    throw new Error("AI选择重复或无效");
   if (!Number.isInteger(quantity) || quantity < 1 || quantity > 10)
     throw new Error("请选择1到10台电脑");
+  if (!isTeam.value && kind === "new" && quantity !== 1)
+    throw new Error("个人空间每次购买一台；多人使用请开通团队空间");
   const unitCount = kind === "new" ? quantity : 1;
+  const existing = machineId ? getMachine(machineId) : null;
+  const needsTarget = ai.some(
+    (provider) =>
+      kind !== "renewal" || !existing || !knownAiEmail(existing, provider),
+  );
   const targetEmails = Array.isArray(email)
     ? email.map((item) => item.trim())
     : [email.trim()];
   if (
     ai.length &&
+    needsTarget &&
     (targetEmails.length !== unitCount ||
       targetEmails.some((item) => !item.includes("@")))
   )
     throw new Error("请为每台电脑分别提供本次AI开通的目标邮箱");
   if (
     ai.length &&
+    needsTarget &&
     new Set(targetEmails.map((item) => item.toLowerCase())).size !==
       targetEmails.length
   )
     throw new Error("多台电脑请分别确认目标账号，不能自动共用同一订阅");
-  const existing = machineId ? getMachine(machineId) : null;
   if (kind === "new" && (!product || !product.available))
     throw new Error("此配置当前缺货");
   if (
@@ -604,6 +667,8 @@ export function createOrder(
   const total =
     (base + ai.reduce((sum, a) => sum + AI_PRICE[a], 0)) *
     (kind === "new" ? quantity : 1);
+  if (!Number.isSafeInteger(total) || total <= 0)
+    throw new Error("报价金额超出可处理范围");
   const oid = id("TP"),
     units = Array.from(
       { length: kind === "new" ? quantity : 1 },
@@ -611,6 +676,14 @@ export function createOrder(
         id: id("unit"),
         entitlementIds: [],
         aiEmail: ai.length ? targetEmails[index] : undefined,
+        aiEmails: Object.fromEntries(
+          ai.map((provider) => [
+            provider,
+            kind === "renewal" && existing
+              ? knownAiEmail(existing, provider) || targetEmails[index]
+              : targetEmails[index],
+          ]),
+        ),
         machineId: existing?.id ?? "",
         state: "preparing" as const,
         ai: [...ai],
@@ -624,6 +697,8 @@ export function createOrder(
     amountMinor: total,
     productName: product?.name ?? existing!.name,
     productSnapshot: product ? { ...product } : undefined,
+    quoteLeaseVersion: existing?.leaseVersion,
+    quotedComputerUntil: existing?.expiresAt,
     units,
     aiEmail: targetEmails[0],
   });
@@ -652,6 +727,11 @@ export function simulatePayment(
       const current = getMachine(unit.machineId);
       if (phase(current, now) === "none" || current.state === "resetting")
         throw new Error("此租约已不能恢复原环境");
+      if (
+        order.quoteLeaseVersion !== current.leaseVersion ||
+        order.quotedComputerUntil !== current.expiresAt
+      )
+        throw new Error("电脑期限或状态已变化，旧报价失效，请重新确认后下单");
       if (order.type === "ai_addon") {
         if (phase(current, now) !== "desktop")
           throw new Error("电脑已到期，不能继续此AI加购");
@@ -688,6 +768,8 @@ export function simulatePayment(
         leaseStart: 0,
         expiresAt: 0,
         assignedTo: null,
+        exportOwnerId: null,
+        customerOwned: true,
         pendingAssignmentTo: null,
         waitIntervals: [],
         state: "preparing",
@@ -718,6 +800,7 @@ export function simulatePayment(
         orderId: order.id,
         unitId: unit.id,
         provider,
+        targetEmail: unit.aiEmails?.[provider] ?? unit.aiEmail ?? order.aiEmail,
         state: "preparing",
         promisedFrom: promiseFrom,
         promisedUntil: order.type === "new" ? 0 : m.expiresAt,
@@ -748,7 +831,7 @@ export function simulatePayment(
         targetEmail:
           kind === "computer_prepare"
             ? ""
-            : (unit.aiEmail ?? order.aiEmail ?? ""),
+            : (unit.aiEmails?.[kind] ?? unit.aiEmail ?? order.aiEmail ?? ""),
         createdAt: now,
         deadline: now + 4 * 3600000,
         evidence: "",
@@ -791,7 +874,12 @@ export function verifyTask(taskId: string) {
   task.state = "verified";
   const order = state.orders.find((o) => o.id === task.orderId);
   const unit = order?.units.find((u) => u.id === task.unitId);
-  if (unit && order) {
+  if (
+    unit &&
+    order &&
+    unit.state === "preparing" &&
+    order.state === "preparing"
+  ) {
     const verified = state.tasks.filter(
       (t) =>
         t.orderId === order.id &&
@@ -813,7 +901,7 @@ export function verifyTask(taskId: string) {
 export function deliverUnit(orderId: string, unitId: string) {
   const order = state.orders.find((o) => o.id === orderId),
     unit = order?.units.find((u) => u.id === unitId);
-  if (!order || !unit || unit.state !== "ready")
+  if (!order || !unit || unit.state !== "ready" || order.state !== "preparing")
     throw new Error("电脑及所购 AI 尚未全部验收");
   const m = getMachine(unit.machineId),
     now = Date.now();
@@ -877,6 +965,18 @@ export function deliverUnit(orderId: string, unitId: string) {
       m.leaseVersion++;
     }
   }
+  if (
+    !isTeam.value &&
+    order.type === "new" &&
+    !state.machines.some(
+      (other) =>
+        other.id !== m.id && occupiesAccount(other, state.currentAccountId),
+    )
+  ) {
+    m.assignedTo = state.currentAccountId;
+    m.exportOwnerId = state.currentAccountId;
+    m.leaseVersion++;
+  }
   unit.state = "delivered";
   if (order.units.every((u) => u.state === "delivered"))
     order.state = "delivered";
@@ -890,6 +990,8 @@ export function createTicket(
   description: string,
 ) {
   const m = getMachine(machineId);
+  if (!currentAccount.value.enabled || currentAccount.value.firstLogin)
+    throw new Error("请先完成账号验证");
   if (!isMain.value && m.assignedTo !== currentAccount.value.id)
     throw new Error("只能为自己的电脑提交工单");
   if (description.trim().length < 8)
@@ -952,6 +1054,7 @@ export function registerResource(
     leaseStart: 0,
     expiresAt: 0,
     assignedTo: null,
+    customerOwned: false,
     pendingAssignmentTo: null,
     waitIntervals: [],
     state: "preparing",
@@ -996,7 +1099,7 @@ export function requestRestart(machineId: string, internalOperator = false) {
 }
 export function downloadExport(machineId: string) {
   const m = getMachine(machineId);
-  if (m.assignedTo !== currentAccount.value.id || phase(m) !== "export_only")
+  if (!canExport(m, currentAccount.value))
     throw new Error("当前账号没有此电脑的保留期导出权限");
   const text =
     "Thinkpasser 演示导出清单\n电脑：" +
@@ -1034,7 +1137,10 @@ export function registerSubscriptionResource(
     supplier.kind === "computer"
   )
     throw new Error("当前供方未开通卡／订阅供货权限");
-  if (!externalRef.trim() || /^[0-9]{12,19}$/.test(externalRef.trim()))
+  if (
+    !externalRef.trim() ||
+    /^[0-9]{12,19}$/.test(externalRef.replace(/[\s-]/g, ""))
+  )
     throw new Error("请填写供方脱敏资源引用，不填写完整卡号");
   if (!supplier.canActivateAi && providers.length)
     throw new Error("纯供卡资源不能申报 AI 开通能力");
@@ -1085,7 +1191,8 @@ function onDemoStorage(event: StorageEvent) {
   try {
     const incoming = JSON.parse(event.newValue) as DemoState;
     if (
-      incoming.version !== 2 ||
+      incoming.version !== 3 ||
+      !["personal", "team"].includes(incoming.workspaceKind) ||
       !Array.isArray(incoming.members) ||
       !Array.isArray(incoming.machines) ||
       !Array.isArray(incoming.orders) ||
@@ -1100,11 +1207,20 @@ function onDemoStorage(event: StorageEvent) {
     )
       return;
     if (JSON.stringify(state) !== event.newValue) {
+      const identityChanged =
+        state.currentAccountId !== incoming.currentAccountId ||
+        state.workspaceKind !== incoming.workspaceKind;
       Object.assign(state, incoming);
+      if (
+        identityChanged ||
+        !currentAccount.value.enabled ||
+        currentAccount.value.firstLogin
+      )
+        closeDialog();
       const active = state.machines.find(
         (machine) => machine.id === ui.activeMachineId,
       );
-      if (active && !canConnect(active, currentAccount.value))
+      if (!active || !canConnect(active, currentAccount.value))
         ui.activeMachineId = "";
     }
   } catch {}
@@ -1114,3 +1230,75 @@ if (import.meta.hot)
   import.meta.hot.dispose(() =>
     window.removeEventListener("storage", onDemoStorage),
   );
+
+export function upgradeToTeam() {
+  mainOnly();
+  if (isTeam.value) return;
+  state.workspaceKind = "team";
+  closeDialog();
+  notify("已开通演示团队空间；现有订单、电脑和权益继续保留");
+}
+export function activatePersonalMachine(machineId: string) {
+  mainOnly();
+  if (isTeam.value) throw new Error("团队电脑请通过分配流程处理");
+  const target = getMachine(machineId);
+  if (
+    target.state !== "online" ||
+    phase(target) !== "desktop" ||
+    target.customerOwned === false
+  )
+    throw new Error("目标电脑尚未交付或不可用");
+  for (const previous of state.machines.filter(
+    (m) => m.id !== target.id && occupiesAccount(m, state.currentAccountId),
+  )) {
+    previous.assignedTo = null;
+    previous.exportOwnerId = null;
+    previous.pendingAssignmentTo = null;
+    previous.state = "resetting";
+    for (const ai of previous.ai) ai.state = "terminated";
+    previous.credentialVersion++;
+    previous.leaseVersion++;
+  }
+  target.assignedTo = state.currentAccountId;
+  target.exportOwnerId = state.currentAccountId;
+  target.leaseVersion++;
+  ui.activeMachineId = "";
+  notify("演示电脑已切换；旧机待清理，未执行真实重置或退款");
+}
+
+export function knownAiEmail(machine: Machine, provider: AI): string {
+  for (const item of machine.ai
+    .filter((a) => a.provider === provider && a.state !== "terminated")
+    .sort((a, b) => b.promisedUntil - a.promisedUntil)) {
+    const order = state.orders.find((o) => o.id === item.orderId);
+    const unit = order?.units.find((u) => u.id === item.unitId);
+    const email =
+      item.targetEmail ||
+      unit?.aiEmails?.[provider] ||
+      unit?.aiEmail ||
+      order?.aiEmail;
+    if (email) return email;
+  }
+  return "";
+}
+
+export function confirmPersonalActivation(machineId: string) {
+  const snapshot = () =>
+    JSON.stringify(
+      state.machines
+        .filter(
+          (m) =>
+            m.id === machineId || occupiesAccount(m, state.currentAccountId),
+        )
+        .map((m) => [m.id, m.leaseVersion, m.assignedTo, m.state]),
+    );
+  const expected = snapshot();
+  askConfirm(
+    "请先自行导出旧电脑文件。确认后旧机清空，旧电脑和 AI 剩余费用不退不抵；新机沿本次订单的交付时间计时。",
+    () => {
+      if (snapshot() !== expected)
+        throw new Error("电脑状态已变化，请重新确认切换");
+      activatePersonalMachine(machineId);
+    },
+  );
+}

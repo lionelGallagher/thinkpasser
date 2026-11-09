@@ -90,7 +90,7 @@ describe("跨入口状态与付款选择", () => {
     incoming.currentAccountId = "a-lin";
     window.dispatchEvent(
       new StorageEvent("storage", {
-        key: "thinkpasser.interactive-demo.v2",
+        key: "thinkpasser.interactive-demo.v3",
         newValue: JSON.stringify(incoming),
       }),
     );
@@ -192,7 +192,7 @@ describe("报价与等待时间的一致性", () => {
 });
 beforeEach(() => {
   vi.useRealTimers();
-  resetDemo();
+  resetDemo("team");
   location.hash = "";
 });
 describe("平台时间与费用边界", () => {

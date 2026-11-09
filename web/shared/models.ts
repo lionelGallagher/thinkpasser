@@ -22,6 +22,7 @@ export interface Entitlement {
   orderId: string;
   unitId: string;
   provider: AI;
+  targetEmail?: string;
   state: "preparing" | "available" | "interrupted" | "expired" | "terminated";
   promisedFrom: number;
   promisedUntil: number;
@@ -40,6 +41,8 @@ export interface Machine {
   leaseStart: number;
   expiresAt: number;
   assignedTo: string | null;
+  exportOwnerId?: string | null;
+  customerOwned?: boolean;
   pendingAssignmentTo: string | null;
   waitIntervals: [number, number][];
   state: "online" | "preparing" | "unknown" | "resetting";
@@ -66,6 +69,7 @@ export interface OrderUnit {
   entitlementIds: string[];
   id: string;
   aiEmail?: string;
+  aiEmails?: Partial<Record<AI, string>>;
   machineId: string;
   state: UnitState;
   ai: AI[];
@@ -76,6 +80,8 @@ export interface Order {
   paidAt?: number;
   paymentProvider?: "alipay" | "wechat" | "card" | "paypal";
   productSnapshot?: Product;
+  quoteLeaseVersion?: number;
+  quotedComputerUntil?: number;
   type: "new" | "renewal" | "ai_addon";
   state: "awaiting_payment" | "preparing" | "delivered" | "cancelled";
   amountMinor: number;
@@ -128,7 +134,8 @@ export interface Activity {
   tone: "green" | "blue" | "amber";
 }
 export interface DemoState {
-  version: 2;
+  version: 3;
+  workspaceKind: "personal" | "team";
   currentAccountId: string;
   members: Member[];
   machines: Machine[];
@@ -176,6 +183,27 @@ export function canConnect(machine: Machine, member: Member, now = Date.now()) {
     machine.assignedTo === member.id &&
     machine.state === "online" &&
     phase(machine, now) === "desktop"
+  );
+}
+export function occupiesAccount(
+  machine: Machine,
+  accountId: string,
+  now = Date.now(),
+) {
+  return (
+    machine.expiresAt > now &&
+    (machine.assignedTo === accountId ||
+      machine.pendingAssignmentTo === accountId)
+  );
+}
+export function canExport(machine: Machine, member: Member, now = Date.now()) {
+  return (
+    member.enabled &&
+    !member.firstLogin &&
+    (machine.exportOwnerId === undefined
+      ? machine.assignedTo
+      : machine.exportOwnerId) === member.id &&
+    phase(machine, now) === "export_only"
   );
 }
 export function money(minor: number) {

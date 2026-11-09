@@ -8,6 +8,8 @@ import {
   state,
   ui,
   isMain,
+  isTeam,
+  knownAiEmail,
   openDialog,
   closeDialog,
   createOrder,
@@ -33,6 +35,7 @@ import {
   date,
   remaining,
   phase,
+  occupiesAccount,
   type AI,
   type Portal,
 } from "../shared/models";
@@ -93,6 +96,30 @@ const ticketTargets = computed(() =>
     ? state.machines.filter((m) => m.state !== "preparing")
     : state.machines.filter((m) => m.assignedTo === state.currentAccountId),
 );
+const renewalTargets = computed(() =>
+  ui.mode === "renewal" && machine.value
+    ? ai.value
+        .map((provider) => ({
+          provider,
+          email: knownAiEmail(machine.value!, provider),
+        }))
+        .filter((item) => item.email)
+    : [],
+);
+const needsNewTarget = computed(() =>
+  ai.value.some(
+    (provider) =>
+      ui.mode !== "renewal" ||
+      !machine.value ||
+      !knownAiEmail(machine.value, provider),
+  ),
+);
+const personalReplacement = computed(
+  () =>
+    !isTeam.value &&
+    ui.mode === "new" &&
+    state.machines.some((m) => occupiesAccount(m, state.currentAccountId)),
+);
 const faultMachine = computed(() =>
   state.machines.find((m) => m.id === ticketMachine.value),
 );
@@ -144,6 +171,23 @@ watch(
       ];
   },
 );
+watch(
+  () =>
+    JSON.stringify([
+      ui.mode,
+      ai.value,
+      quantity.value,
+      total.value,
+      actualUntil.value,
+      machine.value?.leaseVersion,
+      emailSource.value,
+      email.value,
+      multipleEmails.value,
+    ]),
+  () => {
+    accepted.value = false;
+  },
+);
 watch(ticketMachine, () => {
   faultAi.value = aiOptions.value[0] || "claude";
 });
@@ -175,20 +219,23 @@ function submit(action: () => void) {
 function checkout() {
   if (!accepted.value) throw new Error("请先确认本次费用和实际服务期限");
   const count = ui.mode === "new" ? quantity.value : 1;
-  const targetEmail = !ai.value.length
-    ? ""
-    : emailSource.value === "platform"
-      ? Array.from(
-          { length: count },
-          () =>
-            "workspace+" + crypto.randomUUID().slice(0, 8) + "@example.invalid",
-        )
-      : count === 1
-        ? email.value
-        : multipleEmails.value
-            .split(/[\n,，;；]+/)
-            .map((item) => item.trim())
-            .filter(Boolean);
+  const targetEmail =
+    !ai.value.length || !needsNewTarget.value
+      ? ""
+      : emailSource.value === "platform"
+        ? Array.from(
+            { length: count },
+            () =>
+              "workspace+" +
+              crypto.randomUUID().slice(0, 8) +
+              "@example.invalid",
+          )
+        : count === 1
+          ? email.value
+          : multipleEmails.value
+              .split(/[\n,，;；]+/)
+              .map((item) => item.trim())
+              .filter(Boolean);
   const result = createOrder(
     product.value || null,
     ui.mode === "new" ? "" : ui.targetId,
@@ -232,7 +279,11 @@ function createSub() {
             }}</span>
           </div>
         </div>
-        <label v-if="ui.mode === 'new'" class="field"
+        <div v-if="personalReplacement" class="inline-note warning">
+          已有电脑继续使用；新机验收交付即起租，等待切换也计时。切换前请自行导出文件，旧电脑及
+          AI 剩余费用不退不抵。
+        </div>
+        <label v-if="ui.mode === 'new' && isTeam" class="field"
           >购买数量
           <div class="stepper">
             <button
@@ -287,14 +338,22 @@ function createSub() {
           ><b
             >{{ money(AI_PRICE[provider]) }}<small>/ 标准30天</small></b
           ></label
-        ><template v-if="ai.length"
-          ><label class="field"
-            >AI 开通邮箱来源<select v-model="emailSource">
+        ><template v-if="ai.length">
+          <div
+            v-for="target in renewalTargets"
+            :key="target.provider"
+            class="inline-note"
+          >
+            {{ AI_NAME[target.provider] }} 续订原账号：{{ target.email }}
+          </div>
+          <label v-if="needsNewTarget" class="field"
+            >新开通 AI 的邮箱来源<select v-model="emailSource">
               <option value="platform">由平台准备目标邮箱（演示）</option>
               <option value="customer">我提供指定邮箱</option>
             </select></label
           ><label
             v-if="
+              needsNewTarget &&
               emailSource === 'customer' &&
               (ui.mode !== 'new' || quantity === 1)
             "
@@ -307,7 +366,10 @@ function createSub() {
           /></label>
           <label
             v-if="
-              emailSource === 'customer' && ui.mode === 'new' && quantity > 1
+              needsNewTarget &&
+              emailSource === 'customer' &&
+              ui.mode === 'new' &&
+              quantity > 1
             "
             class="field"
             >每台电脑的指定邮箱<textarea
@@ -775,7 +837,7 @@ function createSub() {
       </div>
       <div class="modal-actions">
         <button
-          v-if="isMain && phase(machine) === 'desktop'"
+          v-if="isMain && isTeam && phase(machine) === 'desktop'"
           class="button"
           @click="openDialog('assign', machine.id)"
         >

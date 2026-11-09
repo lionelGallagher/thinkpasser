@@ -376,6 +376,211 @@
         ]
       },
       "valid": true
+    },
+    {
+      "name": "reset assignment requires destructive confirmation",
+      "schema": "Assign",
+      "value": {
+        "accountId": "11111111-1111-4111-8111-111111111111",
+        "expectedVersion": 1,
+        "environmentMode": "reset"
+      },
+      "valid": false
+    },
+    {
+      "name": "renewal can reference existing approved AI account",
+      "schema": "QuoteRequest",
+      "value": {
+        "kind": "renewal",
+        "leaseId": "11111111-1111-4111-8111-111111111111",
+        "ai": [
+          "claude"
+        ],
+        "aiAccounts": [
+          {
+            "provider": "claude",
+            "source": "existing",
+            "aiAccountId": "11111111-1111-4111-8111-111111111111"
+          }
+        ]
+      },
+      "valid": true
+    },
+    {
+      "name": "existing AI source cannot silently replace email",
+      "schema": "QuoteRequest",
+      "value": {
+        "kind": "renewal",
+        "leaseId": "11111111-1111-4111-8111-111111111111",
+        "ai": [
+          "claude"
+        ],
+        "aiAccounts": [
+          {
+            "provider": "claude",
+            "source": "existing",
+            "aiAccountId": "11111111-1111-4111-8111-111111111111",
+            "email": "other@example.invalid"
+          }
+        ]
+      },
+      "valid": false
+    },
+    {
+      "name": "cash compensation requires verified time interval",
+      "schema": "TicketDecision",
+      "value": {
+        "outcome": "computer_compensation",
+        "reason": "verified fault",
+        "expectedVersion": 1,
+        "evidenceRef": "evidence:probe"
+      },
+      "valid": false
+    },
+    {
+      "name": "fault termination requires customer accepted offer",
+      "schema": "TicketDecision",
+      "value": {
+        "outcome": "terminate_unit_refund",
+        "reason": "severe fault",
+        "expectedVersion": 1,
+        "evidenceRef": "evidence:probe"
+      },
+      "valid": false
+    },
+    {
+      "name": "personal registration is supported",
+      "schema": "Register",
+      "value": {
+        "email": "personal@example.invalid",
+        "password": "long-password-123",
+        "challengeId": "11111111-1111-4111-8111-111111111111",
+        "code": "123456",
+        "workspaceKind": "personal"
+      },
+      "valid": true
+    },
+    {
+      "name": "formatted PAN cannot become supplier reference",
+      "schema": "SubscriptionResourceRegistration",
+      "value": {
+        "resourceKind": "card_subscription",
+        "subtype": "payment_card",
+        "externalRef": "4111 1111 1111 1111",
+        "providers": [],
+        "quoteCurrency": "CNY",
+        "costMinor": 10000,
+        "capacity": 1,
+        "validUntil": 1800000000000
+      },
+      "valid": false
+    },
+    {
+      "name": "new order cannot smuggle existing account from another lease",
+      "schema": "QuoteRequest",
+      "valid": false,
+      "value": {
+        "kind": "new",
+        "productId": "11111111-1111-4111-8111-111111111111",
+        "quantity": 1,
+        "ai": [
+          "claude"
+        ],
+        "aiAccounts": [
+          {
+            "provider": "claude",
+            "source": "existing",
+            "aiAccountId": "11111111-1111-4111-8111-111111111111"
+          }
+        ]
+      }
+    },
+    {
+      "name": "preparing customer machine has no fictitious active lease",
+      "schema": "Machine",
+      "valid": true,
+      "value": {
+        "id": "11111111-1111-4111-8111-111111111111",
+        "leaseId": null,
+        "code": "TP-US-NEW",
+        "name": "Windows",
+        "os": "windows",
+        "country": "US",
+        "region": "Los Angeles",
+        "cpu": "CPU",
+        "memoryGb": 16,
+        "diskGb": 512,
+        "status": "preparing",
+        "expiresAt": 0,
+        "retentionEndsAt": 0,
+        "access": "none",
+        "version": 1,
+        "ai": []
+      }
+    },
+    {
+      "name": "ticket response needs the original fault description and scope",
+      "schema": "Ticket",
+      "valid": false,
+      "value": {
+        "id": "11111111-1111-4111-8111-111111111111",
+        "state": "open",
+        "reportedAt": 1800000000000
+      }
+    },
+    {
+      "name": "supplier does not inherit customer workspace",
+      "schema": "Account",
+      "value": {
+        "id": "11111111-1111-4111-8111-111111111111",
+        "role": "supplier",
+        "email": "supplier@example.invalid",
+        "enabled": true,
+        "mustChangePassword": false,
+        "authVersion": 1
+      },
+      "valid": true
+    },
+    {
+      "name": "customer account declares personal workspace",
+      "schema": "Account",
+      "value": {
+        "id": "11111111-1111-4111-8111-111111111111",
+        "role": "main",
+        "email": "supplier@example.invalid",
+        "enabled": true,
+        "mustChangePassword": false,
+        "authVersion": 1,
+        "workspaceKind": "personal"
+      },
+      "valid": true
+    },
+    {
+      "name": "customer account cannot omit workspace",
+      "schema": "Account",
+      "value": {
+        "id": "11111111-1111-4111-8111-111111111111",
+        "role": "main",
+        "email": "supplier@example.invalid",
+        "enabled": true,
+        "mustChangePassword": false,
+        "authVersion": 1
+      },
+      "valid": false
+    },
+    {
+      "name": "subaccount cannot exist in personal workspace",
+      "schema": "Account",
+      "value": {
+        "id": "11111111-1111-4111-8111-111111111111",
+        "role": "sub",
+        "email": "supplier@example.invalid",
+        "enabled": true,
+        "mustChangePassword": false,
+        "authVersion": 1,
+        "workspaceKind": "personal"
+      },
+      "valid": false
     }
   ]
 }

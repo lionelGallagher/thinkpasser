@@ -1,14 +1,14 @@
 # 本轮验证记录
 
-日期：2026-11-08。范围为生产实施设计、接口／消息／状态契约及本地演示前端；不代表生产平台已接通。前一提交为 `3e5141d`，本轮没有重新执行 npm ci 或安装 Java／MySQL 生产环境。
+日期：2026-11-09。范围为生产实施设计、接口／消息／状态契约及本地演示前端；不代表生产平台已接通。本轮复核起点为 `b4a3af2`，本轮没有重新执行 npm ci 或安装 Java／MySQL 生产环境。
 
 | 检查 | 实际结果 |
 | --- | --- |
-| npm run build | TypeScript 检查和 Vite 构建通过，生成四个 HTML 入口；共享 JS 约217KB、CSS约54KB（未压缩传输体积） |
-| npm run test:ui | 45项通过，含精确权益交付、重叠等待、交接预留、跨到期退出、纯供卡与开通能力、桌面购买及子账号拒绝 |
+| npm run build | TypeScript 检查和 Vite 构建通过，生成四个 HTML 入口；共享 JS 约224KB、CSS约54KB（未压缩传输体积） |
+| npm run test:ui | 67项通过；新增个人／团队路径、保留期分配与导出、旧报价拒绝、迟到验收、账号与机器确认绑定、原账号续订等回归场景 |
 | npm test | 44项现有参考测试通过，含固定上游文件哈希校验；参考协议不是新生产协议的实现证明 |
-| validate_design.py --full | OpenAPI格式、823个引用、83个接口、115个Schema、17个状态机、16组事务归属通过 |
-| 字段／消息案例 | 29组HTTP字段正反例、12组远控消息正反例通过；20份消息Schema与OpenAPI定义一致 |
+| validate_design.py --full | OpenAPI格式、902个引用、91个接口、122个Schema、19个状态机、16组事务归属通过 |
+| 字段／消息案例 | 43组HTTP字段正反例、12组远控消息正反例通过；21份消息Schema与OpenAPI定义一致 |
 | 原始需求 | git diff确认 docs/questionnaires 未修改；原13题原始回答继续通过校验 |
 | Markdown链接 | 校验范围内全部本地文档链接有效 |
 | npm audit | 当前锁定依赖0个已报告漏洞 |
@@ -16,6 +16,10 @@
 | git diff --check | 通过；部分文件的Git换行转换提示不属于空白错误 |
 
 前端测试使用 Vue 实际挂载与 happy-dom。DOM 驱动只负责选取元素、输入和触发事件，不模拟布局、焦点、媒体传输或真实设备执行。HTTP200也不等于浏览器渲染验证。
+
+## 最新全面复核
+
+[复核与个人路径](11-review-and-personal-workspace.md)记录16类问题及处理方式。默认演示为个人空间，个人首单自动交付本人；团队开通保留既有数据。首批6个新增复现用例在原代码全部失败，修正后通过。后端新增部分为设计／契约，不是已实现API。
 
 ## 已修正的闭环
 
@@ -43,9 +47,9 @@
 
 | 文件 | SHA-256（LF规范化） |
 | --- | --- |
-| backend/contracts/openapi.json | 5656a03bd17781674062e7f2fc4af75c2c6b7939d380af6ed81b256d5c0b1184 |
-| backend/contracts/state-machines.json | 890be119e15f4fa7c16a20d83241cf477b871f0a27ff3d19279f2b2c70dd456e |
-| backend/contracts/remote-signaling.schema.json | 7cfcff24f9ac22d52f7ec5287ec445041e92805da25bbce82afcdc10764b9b53 |
+| backend/contracts/openapi.json | 25f3fd902c354fa2c3c9a66462f55bb80e0e062a264bd22225d771457fe6e7ee |
+| backend/contracts/state-machines.json | bd2a700543683ea0171403762dd08e87ada1781079bf3fce2f6e00c42c530889 |
+| backend/contracts/remote-signaling.schema.json | e74aa6098f43ca2d16181f917ffc4c87ea9b904fa7d8c738a76e2192862f7b5d |
 | package-lock.json | 94688181ad528088f4fb9b61778382a7be9715a24d04fa1ae5fc26292471191b |
 
 实施入口见[生产蓝图](08-production-implementation.md)、[端到端矩阵](09-end-to-end-matrix.md)、[远控协议](10-remote-protocol.md)；复现命令见[前端交接](07-frontend-handoff.md)。

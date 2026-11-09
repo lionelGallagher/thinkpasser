@@ -2,6 +2,8 @@
 
 四个端共用的业务与控制服务目录。前端不能单独确认到账、发放租约、判断库存或授予远控权限。
 
+个人空间／团队升级、个人自动分配、显式换机及本轮修正接口见[全面复核](../docs/design/11-review-and-personal-workspace.md)。后端本轮仍只调整契约与设计，未实现Java业务服务。
+
 业务后端设计采用Java／Spring Boot＋MySQL InnoDB，以Maven构建；现有Node模块承担规则与协议验证。详细字段、事务、包职责和API见[开发交接](../docs/design/README.md)及[接口契约](contracts/openapi.json)，当前尚未创建生产Java应用。
 
 生产实施基线为 Java 21 LTS、Spring Boot 4.1.x、Spring JDBC、Flyway、Maven Wrapper 3.9.14、MySQL 8.4 LTS。[生产蓝图](../docs/design/08-production-implementation.md)给出模块、锁序、任务、资金、秘密和运维方案；[业务矩阵](../docs/design/09-end-to-end-matrix.md)及[远控协议](../docs/design/10-remote-protocol.md)作为实现验收入口。本轮不创建 Java 业务代码或执行数据库迁移。

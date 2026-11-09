@@ -2,7 +2,7 @@
   "openapi": "3.1.1",
   "info": {
     "title": "Thinkpasser implementation contract",
-    "version": "0.2.0-design",
+    "version": "0.3.0-design",
     "description": "详细设计契约；所有端点待实现。时间为UTC epoch毫秒；金额为最小货币单位。外部支付回调由渠道独立协议接入。"
   },
   "servers": [
@@ -5859,6 +5859,553 @@
           }
         }
       }
+    },
+    "/me/workspace": {
+      "get": {
+        "operationId": "getWorkspace",
+        "summary": "getWorkspace",
+        "description": "业务规则见 docs/design/11-review-and-personal-workspace.md。非外部动作完成证明。",
+        "x-roles": [
+          "main",
+          "sub"
+        ],
+        "x-transaction": "T01",
+        "parameters": [],
+        "responses": {
+          "400": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "401": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "403": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "404": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "409": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "422": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "429": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "503": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "200": {
+            "description": "已取得状态或已受理",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Workspace"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/me/workspace/upgrade-to-team": {
+      "post": {
+        "operationId": "upgradeWorkspaceToTeam",
+        "summary": "upgradeWorkspaceToTeam",
+        "description": "业务规则见 docs/design/11-review-and-personal-workspace.md。非外部动作完成证明。",
+        "x-roles": [
+          "main"
+        ],
+        "x-transaction": "T02",
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 16,
+              "maxLength": 128
+            }
+          }
+        ],
+        "responses": {
+          "400": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "401": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "403": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "404": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "409": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "422": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "429": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "503": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "200": {
+            "description": "已取得状态或已受理",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Workspace"
+                }
+              }
+            }
+          }
+        },
+        "x-idempotency": "actor+operation+key, hash canonical request; conflict => 409",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Version"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/machines/{machineId}/activate": {
+      "post": {
+        "operationId": "activatePersonalMachine",
+        "summary": "activatePersonalMachine",
+        "description": "业务规则见 docs/design/11-review-and-personal-workspace.md。非外部动作完成证明。",
+        "x-roles": [
+          "main"
+        ],
+        "x-transaction": "T05",
+        "parameters": [
+          {
+            "name": "machineId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 16,
+              "maxLength": 128
+            }
+          }
+        ],
+        "responses": {
+          "400": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "401": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "403": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "404": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "409": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "422": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "429": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "503": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "202": {
+            "description": "已取得状态或已受理",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PersonalActivation"
+                }
+              }
+            }
+          }
+        },
+        "x-idempotency": "actor+operation+key, hash canonical request; conflict => 409",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PersonalActivationRequest"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/personal-activations/{activationId}": {
+      "get": {
+        "operationId": "getPersonalActivation",
+        "summary": "getPersonalActivation",
+        "description": "业务规则见 docs/design/11-review-and-personal-workspace.md。非外部动作完成证明。",
+        "x-roles": [
+          "main"
+        ],
+        "x-transaction": "T05",
+        "parameters": [
+          {
+            "name": "activationId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "400": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "401": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "403": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "404": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "409": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "422": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "429": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "503": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "200": {
+            "description": "已取得状态或已受理",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PersonalActivation"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/tickets/{ticketId}/offers": {
+      "post": {
+        "operationId": "createTicketOffer",
+        "summary": "createTicketOffer",
+        "description": "业务规则见 docs/design/11-review-and-personal-workspace.md。非外部动作完成证明。",
+        "x-roles": [
+          "admin"
+        ],
+        "x-transaction": "T10",
+        "parameters": [
+          {
+            "name": "ticketId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 16,
+              "maxLength": 128
+            }
+          }
+        ],
+        "responses": {
+          "400": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "401": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "403": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "404": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "409": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "422": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "429": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "503": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "201": {
+            "description": "已取得状态或已受理",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TicketOffer"
+                }
+              }
+            }
+          }
+        },
+        "x-idempotency": "actor+operation+key, hash canonical request; conflict => 409",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TicketOfferRequest"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/tickets/{ticketId}/offer": {
+      "get": {
+        "operationId": "getTicketOffer",
+        "summary": "getTicketOffer",
+        "description": "业务规则见 docs/design/11-review-and-personal-workspace.md。非外部动作完成证明。",
+        "x-roles": [
+          "main"
+        ],
+        "x-transaction": "T10",
+        "parameters": [
+          {
+            "name": "ticketId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "400": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "401": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "403": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "404": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "409": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "422": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "429": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "503": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "200": {
+            "description": "已取得状态或已受理",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TicketOffer"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/tickets/{ticketId}/offer/accept": {
+      "post": {
+        "operationId": "acceptTicketOffer",
+        "summary": "acceptTicketOffer",
+        "description": "业务规则见 docs/design/11-review-and-personal-workspace.md。非外部动作完成证明。",
+        "x-roles": [
+          "main"
+        ],
+        "x-transaction": "T10",
+        "parameters": [
+          {
+            "name": "ticketId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 16,
+              "maxLength": 128
+            }
+          }
+        ],
+        "responses": {
+          "400": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "401": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "403": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "404": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "409": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "422": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "429": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "503": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "200": {
+            "description": "已取得状态或已受理",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Ticket"
+                }
+              }
+            }
+          }
+        },
+        "x-idempotency": "actor+operation+key, hash canonical request; conflict => 409",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TicketOfferAcceptance"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/agent/session-events": {
+      "post": {
+        "operationId": "reportRemoteSessionEvent",
+        "summary": "reportRemoteSessionEvent",
+        "description": "JWS解码后仅允许SessionReady、SessionActivationAck、CloseAck、RenewAck。按mTLS身份及消息ID去重入inbox，再由T07应用；202不等于已激活。",
+        "x-roles": [
+          "agent"
+        ],
+        "x-transaction": "T13",
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 16,
+              "maxLength": 128
+            }
+          }
+        ],
+        "responses": {
+          "400": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "401": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "403": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "404": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "409": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "422": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "429": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "503": {
+            "$ref": "#/components/responses/BusinessError"
+          },
+          "202": {
+            "description": "已取得状态或已受理",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Ack"
+                }
+              }
+            }
+          }
+        },
+        "x-idempotency": "actor+operation+key, hash canonical request; conflict => 409",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SignedDeviceMessage"
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "deviceMTLS": []
+          }
+        ]
+      }
     }
   },
   "components": {
@@ -5980,6 +6527,13 @@
             "type": "integer",
             "minimum": 1,
             "maximum": 9007199254740991
+          },
+          "workspaceKind": {
+            "type": "string",
+            "enum": [
+              "personal",
+              "team"
+            ]
           }
         },
         "required": [
@@ -5990,7 +6544,55 @@
           "mustChangePassword",
           "authVersion"
         ],
-        "additionalProperties": false
+        "additionalProperties": false,
+        "allOf": [
+          {
+            "if": {
+              "properties": {
+                "role": {
+                  "enum": [
+                    "main",
+                    "sub"
+                  ]
+                }
+              },
+              "required": [
+                "role"
+              ]
+            },
+            "then": {
+              "required": [
+                "workspaceKind"
+              ]
+            },
+            "else": {
+              "not": {
+                "required": [
+                  "workspaceKind"
+                ]
+              }
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "role": {
+                  "const": "sub"
+                }
+              },
+              "required": [
+                "role"
+              ]
+            },
+            "then": {
+              "properties": {
+                "workspaceKind": {
+                  "const": "team"
+                }
+              }
+            }
+          }
+        ]
       },
       "AccountList": {
         "type": "object",
@@ -6167,6 +6769,14 @@
             "type": "string",
             "minLength": 6,
             "maxLength": 6
+          },
+          "workspaceKind": {
+            "type": "string",
+            "enum": [
+              "personal",
+              "team"
+            ],
+            "default": "personal"
           }
         },
         "required": [
@@ -6405,7 +7015,8 @@
                   "type": "string",
                   "enum": [
                     "platform",
-                    "customer"
+                    "customer",
+                    "existing"
                   ]
                 },
                 "email": {
@@ -6415,6 +7026,10 @@
                 "unitOrdinal": {
                   "type": "integer",
                   "minimum": 1
+                },
+                "aiAccountId": {
+                  "type": "string",
+                  "format": "uuid"
                 }
               },
               "required": [
@@ -6438,6 +7053,28 @@
                     "required": [
                       "email"
                     ]
+                  }
+                },
+                {
+                  "if": {
+                    "properties": {
+                      "source": {
+                        "const": "existing"
+                      }
+                    },
+                    "required": [
+                      "source"
+                    ]
+                  },
+                  "then": {
+                    "required": [
+                      "aiAccountId"
+                    ],
+                    "not": {
+                      "required": [
+                        "email"
+                      ]
+                    }
                   }
                 }
               ]
@@ -6552,6 +7189,37 @@
                 }
               }
             }
+          },
+          {
+            "if": {
+              "properties": {
+                "kind": {
+                  "enum": [
+                    "new",
+                    "ai_addon"
+                  ]
+                }
+              },
+              "required": [
+                "kind"
+              ]
+            },
+            "then": {
+              "properties": {
+                "aiAccounts": {
+                  "items": {
+                    "properties": {
+                      "source": {
+                        "enum": [
+                          "platform",
+                          "customer"
+                        ]
+                      }
+                    }
+                  }
+                }
+              }
+            }
           }
         ]
       },
@@ -6600,6 +7268,23 @@
             "type": "string",
             "minLength": 1,
             "maxLength": 2048
+          },
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/QuoteLine"
+            },
+            "maxItems": 100
+          },
+          "leaseVersion": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9007199254740991
+          },
+          "quotedComputerUntil": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9007199254740991
           }
         },
         "required": [
@@ -6609,7 +7294,8 @@
           "expiresAt",
           "disclosures",
           "disclosureHash",
-          "termsVersion"
+          "termsVersion",
+          "items"
         ],
         "additionalProperties": false
       },
@@ -6892,7 +7578,10 @@
             "format": "uuid"
           },
           "leaseId": {
-            "type": "string",
+            "type": [
+              "string",
+              "null"
+            ],
             "format": "uuid"
           },
           "os": {
@@ -6907,12 +7596,12 @@
           },
           "expiresAt": {
             "type": "integer",
-            "minimum": 1,
+            "minimum": 0,
             "maximum": 9007199254740991
           },
           "retentionEndsAt": {
             "type": "integer",
-            "minimum": 1,
+            "minimum": 0,
             "maximum": 9007199254740991
           },
           "access": {
@@ -6960,8 +7649,22 @@
                 },
                 "promisedUntil": {
                   "type": "integer",
-                  "minimum": 1,
+                  "minimum": 0,
                   "maximum": 9007199254740991
+                },
+                "promisedFrom": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 9007199254740991
+                },
+                "aiAccountId": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "targetAccountLabel": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 2048
                 }
               },
               "required": [
@@ -6971,6 +7674,60 @@
               ],
               "additionalProperties": false
             }
+          },
+          "code": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 2048
+          },
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 2048
+          },
+          "region": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 2048
+          },
+          "cpu": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 2048
+          },
+          "memoryGb": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9007199254740991
+          },
+          "diskGb": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9007199254740991
+          },
+          "status": {
+            "enum": [
+              "preparing",
+              "online",
+              "unknown",
+              "handoff",
+              "resetting",
+              "quarantined"
+            ]
+          },
+          "pendingAccountId": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "uuid"
+          },
+          "exportOwnerAccountId": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "uuid"
           }
         },
         "required": [
@@ -6982,9 +7739,55 @@
           "retentionEndsAt",
           "access",
           "version",
-          "ai"
+          "ai",
+          "code",
+          "name",
+          "region",
+          "cpu",
+          "memoryGb",
+          "diskGb",
+          "status"
         ],
-        "additionalProperties": false
+        "additionalProperties": false,
+        "allOf": [
+          {
+            "if": {
+              "properties": {
+                "status": {
+                  "const": "preparing"
+                }
+              },
+              "required": [
+                "status"
+              ]
+            },
+            "then": {
+              "properties": {
+                "access": {
+                  "const": "none"
+                }
+              }
+            },
+            "else": {
+              "properties": {
+                "leaseId": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "expiresAt": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "maximum": 9007199254740991
+                },
+                "retentionEndsAt": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "maximum": 9007199254740991
+                }
+              }
+            }
+          }
+        ]
       },
       "MachineList": {
         "type": "object",
@@ -7039,7 +7842,8 @@
         },
         "required": [
           "accountId",
-          "expectedVersion"
+          "expectedVersion",
+          "environmentMode"
         ],
         "additionalProperties": false,
         "allOf": [
@@ -7051,6 +7855,24 @@
             },
             "then": {
               "required": [
+                "confirmationToken"
+              ]
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "environmentMode": {
+                  "const": "reset"
+                }
+              },
+              "required": [
+                "environmentMode"
+              ]
+            },
+            "then": {
+              "required": [
+                "confirmationId",
                 "confirmationToken"
               ]
             }
@@ -7618,14 +8440,70 @@
             "type": "integer",
             "minimum": 1,
             "maximum": 9007199254740991
+          },
+          "leaseId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "machineId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "reporterId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "kind": {
+            "enum": [
+              "computer_fault",
+              "ai_fault"
+            ]
+          },
+          "aiEntitlementId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "description": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 10000
+          },
+          "acceptedOfferId": {
+            "type": "string",
+            "format": "uuid"
           }
         },
         "required": [
           "id",
           "state",
-          "reportedAt"
+          "reportedAt",
+          "leaseId",
+          "machineId",
+          "reporterId",
+          "kind",
+          "description",
+          "version"
         ],
-        "additionalProperties": false
+        "additionalProperties": false,
+        "allOf": [
+          {
+            "if": {
+              "properties": {
+                "kind": {
+                  "const": "ai_fault"
+                }
+              },
+              "required": [
+                "kind"
+              ]
+            },
+            "then": {
+              "required": [
+                "aiEntitlementId"
+              ]
+            }
+          }
+        ]
       },
       "TicketList": {
         "type": "object",
@@ -7681,14 +8559,67 @@
             "type": "integer",
             "minimum": 1,
             "maximum": 9007199254740991
+          },
+          "acceptedOfferId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "evidenceRef": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 2048
           }
         },
         "required": [
           "outcome",
           "reason",
-          "expectedVersion"
+          "expectedVersion",
+          "evidenceRef"
         ],
-        "additionalProperties": false
+        "additionalProperties": false,
+        "allOf": [
+          {
+            "if": {
+              "properties": {
+                "outcome": {
+                  "enum": [
+                    "computer_compensation",
+                    "ai_terminate_refund"
+                  ]
+                }
+              },
+              "required": [
+                "outcome"
+              ]
+            },
+            "then": {
+              "required": [
+                "verifiedFrom",
+                "verifiedUntil"
+              ]
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "outcome": {
+                  "enum": [
+                    "fault_replace",
+                    "terminate_unit_refund"
+                  ]
+                }
+              },
+              "required": [
+                "outcome"
+              ]
+            },
+            "then": {
+              "required": [
+                "acceptedOfferId"
+              ]
+            }
+          }
+        ]
       },
       "SupplierApplication": {
         "type": "object",
@@ -8648,6 +9579,11 @@
             "type": "integer",
             "minimum": 1,
             "maximum": 9007199254740991
+          },
+          "afterRemoteCursor": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 2048
           }
         },
         "required": [
@@ -8750,11 +9686,25 @@
             "type": "integer",
             "minimum": 1,
             "maximum": 9007199254740991
+          },
+          "remoteEvents": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SignedDeviceMessage"
+            },
+            "maxItems": 10
+          },
+          "nextRemoteCursor": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 2048
           }
         },
         "required": [
           "command",
-          "serverTime"
+          "serverTime",
+          "remoteEvents",
+          "nextRemoteCursor"
         ],
         "additionalProperties": false
       },
@@ -9036,7 +9986,7 @@
             "minLength": 3,
             "maxLength": 100,
             "not": {
-              "pattern": "^[0-9]{12,19}$"
+              "pattern": "^[\\s-]*[0-9](?:[\\s-]*[0-9]){11,18}[\\s-]*$"
             }
           },
           "providers": {
@@ -9129,7 +10079,7 @@
             "minLength": 3,
             "maxLength": 100,
             "not": {
-              "pattern": "^[0-9]{12,19}$"
+              "pattern": "^[\\s-]*[0-9](?:[\\s-]*[0-9]){11,18}[\\s-]*$"
             }
           },
           "providers": {
@@ -12169,6 +13119,357 @@
           "clientProof",
           "previousConnectionId",
           "expectedConnectionGeneration"
+        ],
+        "additionalProperties": false
+      },
+      "Workspace": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "kind": {
+            "enum": [
+              "personal",
+              "team"
+            ]
+          },
+          "ownerAccountId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "canCreateSubaccounts": {
+            "type": "boolean"
+          },
+          "version": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9007199254740991
+          }
+        },
+        "required": [
+          "id",
+          "kind",
+          "ownerAccountId",
+          "canCreateSubaccounts",
+          "version"
+        ],
+        "additionalProperties": false,
+        "allOf": [
+          {
+            "if": {
+              "properties": {
+                "kind": {
+                  "const": "personal"
+                }
+              },
+              "required": [
+                "kind"
+              ]
+            },
+            "then": {
+              "properties": {
+                "canCreateSubaccounts": {
+                  "const": false
+                }
+              }
+            }
+          }
+        ]
+      },
+      "PersonalActivationRequest": {
+        "type": "object",
+        "properties": {
+          "expectedVersion": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9007199254740991
+          },
+          "previousMachineId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "expectedPreviousVersion": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9007199254740991
+          },
+          "confirmationId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "confirmationToken": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 2048
+          }
+        },
+        "required": [
+          "expectedVersion",
+          "confirmationId",
+          "confirmationToken"
+        ],
+        "additionalProperties": false,
+        "allOf": [
+          {
+            "if": {
+              "required": [
+                "previousMachineId"
+              ]
+            },
+            "then": {
+              "required": [
+                "expectedPreviousVersion"
+              ]
+            }
+          }
+        ]
+      },
+      "PersonalActivation": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "targetMachineId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "previousMachineId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "state": {
+            "enum": [
+              "waiting_close",
+              "activating",
+              "completed",
+              "exception"
+            ]
+          },
+          "operationId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "version": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9007199254740991
+          }
+        },
+        "required": [
+          "id",
+          "targetMachineId",
+          "state",
+          "version"
+        ],
+        "additionalProperties": false
+      },
+      "QuoteLine": {
+        "type": "object",
+        "properties": {
+          "unitOrdinal": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9007199254740991
+          },
+          "kind": {
+            "enum": [
+              "computer",
+              "claude",
+              "codex"
+            ]
+          },
+          "amountMinor": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
+          },
+          "currency": {
+            "type": "string",
+            "pattern": "^[A-Z]{3}$"
+          },
+          "periodMs": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9007199254740991
+          },
+          "startsAtDelivery": {
+            "type": "boolean"
+          },
+          "promisedFrom": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9007199254740991
+          },
+          "promisedUntil": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9007199254740991
+          }
+        },
+        "required": [
+          "unitOrdinal",
+          "kind",
+          "amountMinor",
+          "currency",
+          "periodMs",
+          "startsAtDelivery"
+        ],
+        "additionalProperties": false
+      },
+      "TicketOfferRequest": {
+        "type": "object",
+        "properties": {
+          "expectedVersion": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9007199254740991
+          },
+          "choices": {
+            "type": "array",
+            "items": {
+              "enum": [
+                "fault_replace",
+                "terminate_unit_refund"
+              ]
+            },
+            "uniqueItems": true,
+            "minItems": 1,
+            "maxItems": 2
+          },
+          "evidenceRef": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 2048
+          }
+        },
+        "required": [
+          "expectedVersion",
+          "choices",
+          "evidenceRef"
+        ],
+        "additionalProperties": false
+      },
+      "TicketOffer": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "ticketId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "choices": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "choice": {
+                  "enum": [
+                    "fault_replace",
+                    "terminate_unit_refund"
+                  ]
+                },
+                "refundItems": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "orderItemId": {
+                        "type": "string",
+                        "format": "uuid"
+                      },
+                      "receiptId": {
+                        "type": "string",
+                        "format": "uuid"
+                      },
+                      "amountMinor": {
+                        "type": "integer",
+                        "minimum": 0,
+                        "maximum": 9007199254740991
+                      },
+                      "currency": {
+                        "type": "string",
+                        "pattern": "^[A-Z]{3}$"
+                      }
+                    },
+                    "required": [
+                      "orderItemId",
+                      "receiptId",
+                      "amountMinor",
+                      "currency"
+                    ],
+                    "additionalProperties": false
+                  },
+                  "maxItems": 100
+                }
+              },
+              "required": [
+                "choice",
+                "refundItems"
+              ],
+              "additionalProperties": false
+            },
+            "maxItems": 2
+          },
+          "disclosureHash": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$"
+          },
+          "expiresAt": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9007199254740991
+          },
+          "ticketVersion": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9007199254740991
+          }
+        },
+        "required": [
+          "id",
+          "ticketId",
+          "choices",
+          "disclosureHash",
+          "expiresAt",
+          "ticketVersion"
+        ],
+        "additionalProperties": false
+      },
+      "TicketOfferAcceptance": {
+        "type": "object",
+        "properties": {
+          "offerId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "choice": {
+            "enum": [
+              "fault_replace",
+              "terminate_unit_refund"
+            ]
+          },
+          "acceptedDisclosureHash": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$"
+          },
+          "expectedVersion": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9007199254740991
+          }
+        },
+        "required": [
+          "offerId",
+          "choice",
+          "acceptedDisclosureHash",
+          "expectedVersion"
         ],
         "additionalProperties": false
       }

@@ -9,6 +9,10 @@ import {
   currentAccount,
   myMachines,
   isMain,
+  accountLabel,
+  isTeam,
+  confirmPersonalActivation,
+  askConfirm,
   openDesktop,
   safely,
   openDialog,
@@ -20,6 +24,7 @@ import {
   date,
   COUNTRY,
   canConnect,
+  canExport,
 } from "../../shared/models";
 const tickets = computed(() =>
   state.tickets.filter(
@@ -40,7 +45,7 @@ const pendingOrders = computed(() =>
   <section class="page-heading">
     <div>
       <h1>我的电脑</h1>
-      <p>{{ currentAccount.name }} · {{ isMain ? "主账号" : "子账号" }}</p>
+      <p>{{ currentAccount.name }} · {{ accountLabel }}</p>
     </div>
     <a v-if="isMain" class="button primary" href="#marketplace"
       ><Icon name="plus" :size="16" />添加电脑</a
@@ -89,7 +94,19 @@ const pendingOrders = computed(() =>
       </dl>
       <div class="primary-device-actions">
         <button
-          v-if="phase(machine, now) === 'export_only'"
+          v-if="
+            !isTeam &&
+            machine.state === 'online' &&
+            phase(machine, now) === 'desktop' &&
+            !machine.assignedTo
+          "
+          class="button primary"
+          @click="confirmPersonalActivation(machine.id)"
+        >
+          切换到这台电脑
+        </button>
+        <button
+          v-if="canExport(machine, currentAccount, now)"
           class="button primary"
           @click="safely(() => downloadExport(machine.id))"
         >

@@ -170,7 +170,12 @@ function cancel(id: string) {
             }}</span
           >
           <div class="unit-progress">
-            <span :class="{ done: true }">付款</span><i></i
+            <span
+              :class="{
+                done: ['preparing', 'delivered'].includes(order.state),
+              }"
+              >付款</span
+            ><i></i
             ><span
               :class="{
                 done: unit.state === 'ready' || unit.state === 'delivered',

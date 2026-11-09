@@ -2,6 +2,8 @@
 
 这是实现规范，不是已上线能力说明。后端本轮只设计；现有页面使用本地演示数据。已确认商业规则见[需求记录](../plans/2026-11-08-remote-computer-requirements.md)，字段以 [OpenAPI](../../backend/contracts/openapi.json)、[状态模型](../../backend/contracts/state-machines.json)和[远控消息](../../backend/contracts/remote-signaling.schema.json)为准。下文的时限、容量和运维目标为工程初值，不是新添加的客户承诺。
 
+个人是默认客户路径，团队在需要多人管理时开通；不是所有客户都先走企业主子账号。个人购买、交付自动使用、换机和升级，以及本轮发现的明确问题见[个人路径与全面复核](11-review-and-personal-workspace.md)。
+
 ## 1. 技术决定
 
 | 层 | 采用方案 | 实现边界 |

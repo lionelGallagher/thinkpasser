@@ -1,5 +1,9 @@
 # 数据关系与事务详细设计
 
+## 个人与团队空间
+
+customer tenant增加workspace_kind(personal/team)，默认personal。accounts.role的main在个人模式是内部拥有者权限，界面不称主账号；personal禁止新增sub。开通团队同一tenant内更新模式／版本，保留全部订单、租约和AI。T12个人首次交付锁原付款人控制位并自动绑定本人；已有机则走显式personalActivation，不自动销毁旧环境。详见[个人路径与复核](11-review-and-personal-workspace.md)。
+
 ## 数据约定
 
 MySQL InnoDB，UTF-8。UUID 在 API 为字符串；数据库首期用 CHAR(36) ASCII，避免跨语言二进制排序歧义。金额 BIGINT 最小货币单位＋三字母币种；Java 运算使用 long／BigInteger，累计分摊先算整数分子后统一取整。时间 BIGINT UTC 毫秒，与现有租期纯规则一致；区间统一左闭右开，恰好到期即禁止完整远控。

@@ -5,6 +5,9 @@ import Status from "../../shared/Status.vue";
 import {
   state,
   currentAccount,
+  accountLabel,
+  isTeam,
+  upgradeToTeam,
   notify,
   switchAccount,
   safely,
@@ -134,7 +137,7 @@ function savePassword() {
         <h3>{{ currentAccount.name }}</h3>
         <p>{{ currentAccount.email }}</p>
         <Status :tone="currentAccount.firstLogin ? 'amber' : 'green'">{{
-          currentAccount.firstLogin ? "首次登录需要修改密码" : "演示账号"
+          currentAccount.firstLogin ? "首次登录需要修改密码" : accountLabel
         }}</Status>
       </div>
       <form
@@ -151,9 +154,12 @@ function savePassword() {
             required /></label
         ><button class="button primary" type="submit">完成演示改密</button>
       </form>
+      <button v-if="!isTeam" class="button" @click="upgradeToTeam">
+        开通团队空间
+      </button>
       <p class="settings-explainer">
-        <Icon name="shield" :size="16" />手机 App 不在范围内。桌面客户端面向
-        Windows 和 Mac，真实原生能力随 RustDesk 集成验证。
+        <Icon name="shield" :size="16" />平台登录、电脑连接和 AI
+        登录分别管理。请保管账号凭据，切换账号不会合并使用权限。
       </p>
     </section>
   </div>

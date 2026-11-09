@@ -19,6 +19,8 @@
 10. [端到端矩阵](09-end-to-end-matrix.md)：各角色正常及异常业务的状态、幂等、收口和真实验收场景。
 11. [远控协议实施规范](10-remote-protocol.md)：注册、签名、消息、接管、重连、命令与导出执行条件。
 
+12. [全面复核与个人空间](11-review-and-personal-workspace.md)：个人／团队路径、复现问题、修正、资金／远控接口补全及生产阻断项。
+
 本轮已运行的检查、结果与未验证项见[验证记录](verification.md)。
 
 字段契约：[OpenAPI](../../backend/contracts/openapi.json)。状态与事务编号：[状态契约](../../backend/contracts/state-machines.json)。字段与状态冲突时先修订契约再实现，不能在四端分别发明规则。用户原始回答以[确认记录](../questionnaires/远程电脑平台完整需求确认表.md)为准；设计默认值不是追加的用户答卷。

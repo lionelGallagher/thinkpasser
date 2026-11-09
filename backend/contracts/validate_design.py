@@ -50,6 +50,11 @@ def run(full=False):
     assert model["transactions"]["T04"]["locks"] == model["globalLockOrder"]
     assert model["machines"]["computerInventory"]["transitions"]["clearing"] == ["inspection", "quarantined"]
     assert model["machines"]["lease"]["transitions"]["clearing"] == ["ended"]
+    assert "workspaceKind" in spec["components"]["schemas"]["Account"]["allOf"][0]["then"]["required"]
+    assert spec["components"]["schemas"]["Register"]["properties"]["workspaceKind"]["default"] == "personal"
+    assert "remoteEvents" in spec["components"]["schemas"]["AgentPollResult"]["required"]
+    assert spec["paths"]["/agent/session-events"]["post"]["security"] == [{"deviceMTLS": []}]
+    assert {"description", "leaseId", "kind"} <= set(spec["components"]["schemas"]["Ticket"]["required"])
     # Compare through canonical JSON so local ref names can change without schema drift.
     for name, schema in remote["$defs"].items():
         expected = json.dumps(spec["components"]["schemas"][name], ensure_ascii=False, sort_keys=True).replace("#/components/schemas/", "#/$defs/")

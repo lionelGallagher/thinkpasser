@@ -10,6 +10,10 @@
 
 直接实施从[生产实现蓝图](docs/design/08-production-implementation.md)开始：Java 21／Spring Boot 4.1.x／MySQL 8.4、RustDesk 原生核心、浏览器 WebRTC 适配、采购与资金对账、到期隔离及清理验收。配套[端到端业务矩阵](docs/design/09-end-to-end-matrix.md)和[设备／远控协议](docs/design/10-remote-protocol.md)。后端目前为设计与契约，尚未实现生产业务服务。
 
+个人使用从“我的电脑”开始：购买后自动给本人使用，不需要建立团队或子账号。需要多人协作时可开通团队空间，已有电脑、订单和 AI 权益继续保留。默认演示为个人；页面“切换演示”可查看独立团队示例。
+
+本轮复核的问题、修正及仍待生产验收项见[全面复核与个人路径](docs/design/11-review-and-personal-workspace.md)。
+
 ## 五个目录
 
 ```text

@@ -502,6 +502,50 @@
         "resume retains logical sid and closes previous generation before new transport",
         "server activation acknowledgement precedes data channel output"
       ]
+    },
+    "workspaceKind": {
+      "initial": "personal",
+      "terminal": [
+        "team"
+      ],
+      "transitions": {
+        "personal": [
+          "team"
+        ],
+        "team": []
+      },
+      "invariants": [
+        "upgrade preserves tenant account orders lease and AI identities",
+        "no downgrade while team resources exist",
+        "no upgrade during unresolved personal activation"
+      ]
+    },
+    "personalActivation": {
+      "initial": "waiting_close",
+      "terminal": [
+        "completed"
+      ],
+      "transitions": {
+        "waiting_close": [
+          "activating",
+          "exception"
+        ],
+        "activating": [
+          "completed",
+          "exception"
+        ],
+        "exception": [
+          "activating",
+          "completed"
+        ],
+        "completed": []
+      },
+      "invariants": [
+        "old all-channel close proof precedes account slot transfer",
+        "old AI platform rights terminate without rewriting paid interval",
+        "unknown old cleanup cannot enter sellable inventory",
+        "exception reconciliation uses original operation IDs"
+      ]
     }
   },
   "transactions": {

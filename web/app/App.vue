@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, onBeforeUnmount, ref } from "vue";
+import { computed, onMounted, onBeforeUnmount, ref, watch } from "vue";
 import Icon from "../shared/Icon.vue";
 import Status from "../shared/Status.vue";
 import EmptyState from "../shared/EmptyState.vue";
@@ -7,6 +7,10 @@ import {
   state,
   currentAccount,
   isMain,
+  isTeam,
+  accountLabel,
+  upgradeToTeam,
+  closeDialog,
   ui,
   switchAccount,
   safely,
@@ -33,6 +37,22 @@ const route = ref(
   location.hash.slice(1) || (portal === "desktop" ? "machines" : "overview"),
 );
 const menuOpen = ref(false);
+watch(
+  () => [
+    currentAccount.value.id,
+    currentAccount.value.enabled,
+    currentAccount.value.firstLogin,
+  ],
+  () => {
+    if (
+      (portal === "web" || portal === "desktop") &&
+      (!currentAccount.value.enabled || currentAccount.value.firstLogin)
+    ) {
+      closeDialog();
+      ui.activeMachineId = "";
+    }
+  },
+);
 const nav = computed(() => {
   if (portal === "admin")
     return [
@@ -70,7 +90,9 @@ const nav = computed(() => {
         ? [
             { id: "marketplace", name: "选购电脑", icon: "boxes" },
             { id: "orders", name: "我的订单", icon: "orders" },
-            { id: "team", name: "团队与子账号", icon: "users" },
+            ...(isTeam.value
+              ? [{ id: "team", name: "团队与子账号", icon: "users" }]
+              : []),
           ]
         : []),
       { id: "accounts", name: "账号管理", icon: "users" },
@@ -82,11 +104,14 @@ const nav = computed(() => {
     { id: "machines", name: "我的电脑", icon: "monitor" },
     ...(isMain.value
       ? [
-          { id: "team", name: "团队与子账号", icon: "users" },
+          ...(isTeam.value
+            ? [{ id: "team", name: "团队与子账号", icon: "users" }]
+            : []),
           { id: "orders", name: "我的订单", icon: "orders" },
         ]
       : []),
     { id: "tickets", name: "服务工单", icon: "help" },
+    { id: "settings", name: "账号设置", icon: "settings" },
   ];
 });
 const currentPage = computed(
@@ -209,7 +234,7 @@ const forbidden = computed(
               <span class="avatar">{{ currentAccount.name.slice(-2) }}</span
               ><span class="account-name"
                 >{{ currentAccount.name
-                }}<small>{{ isMain ? "主账号" : "子账号" }}</small></span
+                }}<small>{{ accountLabel }}</small></span
               ><Icon name="chevronDown" :size="14" />
             </button>
             <div v-if="menuOpen" class="dropdown-panel">
@@ -227,8 +252,14 @@ const forbidden = computed(
                 ><span
                   >{{ member.name
                   }}<small
-                    >{{ member.role === "main" ? "主账号" : "子账号" }} ·
-                    {{ member.email }}</small
+                    >{{
+                      !isTeam
+                        ? "个人账号"
+                        : member.role === "main"
+                          ? "主账号"
+                          : "子账号"
+                    }}
+                    · {{ member.email }}</small
                   ></span
                 ><Icon
                   v-if="member.id === state.currentAccountId"
@@ -238,6 +269,19 @@ const forbidden = computed(
               </button>
               <a class="support-link" href="#login" @click="menuOpen = false"
                 ><Icon name="plus" :size="14" />添加其他账号／查看登录</a
+              >
+              <button
+                v-if="!isTeam"
+                class="workspace-upgrade"
+                @click="
+                  upgradeToTeam();
+                  menuOpen = false;
+                "
+              >
+                开通团队空间
+              </button>
+              <a class="support-link" href="#settings" @click="menuOpen = false"
+                >账号设置</a
               >
               <div class="dropdown-note">每个账号只访问自己获分配的电脑。</div>
             </div>
@@ -251,7 +295,22 @@ const forbidden = computed(
         <span><Icon name="activity" :size="14" /> 交互演示</span>
         <p>示例数据仅保存在本机，不产生真实收款、订阅开通或远控操作。</p>
         <details class="portal-switch">
-          <summary>切换演示端</summary>
+          <summary>切换演示</summary>
+          <div class="segmented" aria-label="客户演示模式">
+            <button
+              v-for="kind in ['personal', 'team'] as const"
+              :key="kind"
+              :class="{ selected: state.workspaceKind === kind }"
+              @click="
+                askConfirm(
+                  '切换演示模式将恢复该模式的示例数据，当前本地演示更改会清除。',
+                  () => resetDemo(kind),
+                )
+              "
+            >
+              {{ kind === "personal" ? "个人使用" : "团队使用" }}
+            </button>
+          </div>
           <div class="portal-links">
             <a href="/web/" :class="{ selected: portal === 'web' }">用户端</a
             ><a href="/admin/" :class="{ selected: portal === 'admin' }"
@@ -272,7 +331,36 @@ const forbidden = computed(
         :class="{ 'desktop-content': route === 'desktop' }"
       >
         <EmptyState
-          v-if="forbidden"
+          v-if="
+            (portal === 'web' || portal === 'desktop') &&
+            !currentAccount.enabled
+          "
+          title="账号已停用"
+          description="请切换已保存的有效账号，或联系团队负责人。"
+          icon="lock"
+        />
+        <Settings
+          v-else-if="
+            (portal === 'web' || portal === 'desktop') &&
+            currentAccount.firstLogin
+          "
+          :desktop="portal === 'desktop'"
+        />
+        <EmptyState
+          v-else-if="
+            (portal === 'web' || portal === 'desktop') &&
+            !isTeam &&
+            route === 'team'
+          "
+          title="当前为个人空间"
+          description="开通团队后可创建子账号，已有电脑和订单继续保留。"
+          icon="users"
+          ><button class="button primary" @click="upgradeToTeam">
+            开通团队空间
+          </button></EmptyState
+        >
+        <EmptyState
+          v-else-if="forbidden"
           title="此页面需要主账号"
           description="子账号使用自己的电脑；购买和团队管理由主账号处理。"
           icon="lock"
@@ -318,7 +406,14 @@ const forbidden = computed(
         ><a href="/web/#tickets">服务支持 <Icon name="arrowUp" :size="12" /></a>
       </footer>
     </div>
-    <Dialogs :portal="portal" />
+    <Dialogs
+      v-if="
+        portal === 'admin' ||
+        portal === 'supplier' ||
+        (currentAccount.enabled && !currentAccount.firstLogin)
+      "
+      :portal="portal"
+    />
     <Transition name="toast"
       ><div v-if="ui.toast" class="toast" :class="ui.toastTone" role="status">
         <Icon :name="ui.toastTone === 'red' ? 'alert' : 'success'" /><span>{{

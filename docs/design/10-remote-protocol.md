@@ -101,3 +101,7 @@ sequenceDiagram
 逻辑会话和连接分别存表、分别有状态机。ConnectionAttempt.active 需要当前传输的激活回执；Session.active 只表示服务端已提交许可，单凭它不显示“桌面已连接”。任一阶段资格变化都递增撤权版本／epoch并关闭。激活 outbox 投递前重读当前代次和策略，设备拒绝已被更高 epoch／policyVersion取代的回执，重复 activationId 幂等。
 
 未出租机器的 policy、命令和 AgentResult 统一用 leaseVersion=0、assignmentVersion=0、accountAuthVersion=0 表示不存在该绑定；有绑定时使用真实正版本。credentialVersion 从实际每机凭据版本起计，不虚构租约版本1。结果必须匹配原命令和当次可信快照；零值不授予客户远控资格。
+
+## 控制面投递与待验证媒体协商
+
+设备入站`agent/session-events`与出站`agent/poll.remoteEvents`的字段和幂等见[复核记录](11-review-and-personal-workspace.md)。首期可用mTLS长轮询，不依赖未实现的WebSocket隐式通道。它们只承载授权控制消息；实际浏览器SDP／ICE、编码及通道绑定需随原生适配器单独完成并真机验收，未完成前不把此文档当可运行媒体协议。
